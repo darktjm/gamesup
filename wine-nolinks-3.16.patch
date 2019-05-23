@@ -1,0 +1,15 @@
+diff -ruN wine-1.9.4/dlls/shell32/shellpath.c wine-1.9.4/dlls/shell32/shellpath.c
+--- wine-1.9.4/dlls/shell32/shellpath.c	2016-02-19 08:54:19.000000000 -0600
++++ wine-1.9.4/dlls/shell32/shellpath.c	2016-02-27 20:49:57.342631015 -0600
+@@ -5828,7 +5828,11 @@
+      * 'My Videos', 'My Music' and 'Desktop' in advance, so that the
+      * _SHRegister*ShellFolders() functions will find everything nice and clean
+      * and thus will not attempt to create them in the profile directory. */
++    /* tjm: Actually, I'd prefer not to have Windows programs poking around
++     *      in $HOME, so don't ever do this. */
++#if 0
+     _SHCreateSymbolicLinks();
++#endif
+ 
+     hr = _SHRegisterUserShellFolders(TRUE);
+     if (SUCCEEDED(hr))

@@ -1,0 +1,100 @@
+#!/bin/sh
+test 0 = `id -u` && exit 1
+spid=`pidof syndaemon`
+test -n "$spid" && kill $spid
+test -n "$spid" && synclient TouchpadOff=0
+docd=
+doum=
+dounm=
+isdir=
+while :; do
+  case "$1" in
+    -d) isdir=y; shift ;;  # -d - 1st arg is dir, 2nd is cmd
+    -c) docd=y; shift ;;   # -c - cd to binary dir
+    -g) docd=g; shift ;;   # -g - cd to game dir
+    -w) doum=y; shift ;;   # -w - writeable game root
+    -u) dounm=y; shift ;;  # -u - unmount writable game root if mounted
+    *) break ;;
+  esac
+done
+cmd="$1"
+shift
+case "$cmd" in
+  # some wine games still need edge scrolling turned off
+# dosbox|wine|dowine) emu=y ;;
+  dosbox|wine) emu=y ;;
+  /*) emu=; d="$cmd" ;;
+  */*) emu=; cmd="$PWD/${cmd#./}"; d="$cmd" ;;
+  *) emu=; d="$PWD/" ;;
+esac
+if [ -n "$doum$dounm" ]; then
+  # Fucking gentoo can't keep mtab a link, even though it claims to do so
+  test -h /etc/mtab || sudo ln -sf /proc/self/mounts /etc/mtab
+  # only works w/ GOG games w/ "game/" subdir
+  gtop="${d%%/game/*}"
+  gname="${gtop##*/}"
+  mdir="$HOME/.local/share/game-mnt/$gname"
+  wdir="$HOME/.local/share/game-saves/$gname"
+  fusermount -u "$mdir" 2>/dev/null
+  test -n "$dounm" && exit 0
+  mkdir -p "$mdir" "$wdir"
+  if ! unionfs -o cow,uid=$(id -u) "$wdir=RW:$gtop/game=RO" "$mdir"; then
+    xmessage "$gname not mounted" &
+    exit 1
+  fi
+  d="$mdir/${d#*game/}"
+  case "$cmd" in
+    */*) cmd="$mdir/${cmd#*game/}" ;;
+  esac
+fi
+if [ -n "$isdir" ]; then
+  cmd="$1"
+  shift
+fi
+# for Linux games, ensure that the command actually exists
+if ! type "$cmd" >/dev/null 2>&1; then
+  xmessage "$cmd not mounted" &
+  exit 1
+fi
+case "$docd" in
+  g) if [ -n "$doum$dounm" ]; then
+        cd "$mdir"
+     else
+        cd "${d%%/game/}"
+     fi ;;
+  y) cd "${d%/*}" ;;
+esac
+# Prevent Wine from adding menu entries and desktop links.
+# Since I use dowine exclusively now, this is unnecessary
+#export WINEDLLOVERRIDES="${WINEDLLOVERRIDES}${WINEDLLOVERRIDES:+,}winemenubuilder.exe=d"
+# dosbox games don't need this, and windowed wine games don't, but fs wine
+# sometimes does..
+#test $emu || FvwmCommand "EdgeScroll 0 0"
+test $emu || FvwmCommand "DesktopSize 1x1"
+xset s off
+xset -dpms
+
+if [ -n "$LD_LIBRARY_PATH" ]; then
+  nonet env LD_LIBRARY_PATH="$LD_LIBRARY_PATH" "$cmd" "$@" & pid=$!
+else
+  nonet "$cmd" "$@" & pid=$!
+fi
+echo $pid >/tmp/.last-game
+# save cmd for save-game hack
+test $$ = "${save_game%%:*}" && echo "${save_game#*:}" >>/tmp/.last-game
+trap "kill $pid" 2 15
+wait $pid
+rm /tmp/.last-game
+cd
+test -n "$doum" && fusermount -u "$mdir"
+test $emu || FvwmCommand "DesktopSize 3x2"
+#test $emu || FvwmCommand "EdgeScroll 100 100 wrap"
+test -n "$spid" && syndaemon -k -d
+xgamma -g 1 >/dev/null 2>&1
+xrandr -s 0
+xset s on
+xset +dpms
+xrefresh
+#p="$PWD"
+#cd ..
+#fusermount -u "$p" 2>/dev/null

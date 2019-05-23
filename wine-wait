@@ -1,0 +1,15 @@
+#!/bin/sh
+ext=
+if [ x-e = "x$1" ]; then
+  ext="$2"; shift 2
+fi
+wineserver"$ext" -k
+wineserver"$ext" -f -p0 & pid=$!
+trap "wineserver$ext -k" 0
+# FIXME: use $WINEPREFIX/dosdevices/c:/windows/hh.exe's type/arch instead
+if [ win64 = "$WINEARCH" ]; then
+  wine64"$ext" "$@"
+else
+  wine"$ext" "$@"
+fi
+wait $pid

@@ -1,0 +1,11 @@
+#!/bin/sh
+for x; do
+  cd "$x" || exit 1
+  rm -rf .mojosetup
+  chmod -R og-rwx .
+  chmod -R g+rX .
+  cd ..
+  test -d /usr/local/games/"$x" && sudo mv /usr/local/games/"$x"{,.old}
+  sudo mv "$x" /usr/local/games
+  sudo chown -Rh root:games /usr/local/games/"$x"
+done

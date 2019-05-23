@@ -1,0 +1,6 @@
+#!/bin/sh
+test -f /tmp/.last-game || exit 0
+pid=`head -n 1 /tmp/.last-game`
+kill $pid
+sleep 1
+kill -9 $pid

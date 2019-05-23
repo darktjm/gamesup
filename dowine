@@ -1,0 +1,267 @@
+#!/bin/sh
+
+case "$1" in
+  --help|-h*) cat <<EOF
+Usage:
+ $0 [<opts>] <exec>
+  exec is either winetricks, some Wine exec (e.g. winecfg), or some .exe
+  respects WINEARCH, if set (i.e., use WINEARCH=win64 for 64-bit)
+  opts:
+    -w  Use wine-wait instead of wine (for programs that run in background)
+    -n  Allow built-in mono (.net) install/usage
+    -g  Allow built-in gecko install/usage
+    -b  install/uninstall built-in mono/gecko based on current flags
+    -k  Kill wine
+    -m  Mount windows overlay
+    -M  Dismount windows overlay
+    -s  use wine (default/stable - 4.0.x)
+    -d  use wine-d3d9 (latest) [may be older than -v]
+    -a  use wine-staging (staging+d3d9; same as "any") (latest) [may be older than -v]
+    -v  use wine-vanilla (latest)
+    -s2 use wine-2 (previous stable - 2.0.x)
+    -s3 use wine-3 (previous stable - 3.0.x (no d3d9))
+    -D  use winedbg/gdb
+    -V <exe> use <exe> as wine; may not work right
+EOF
+   exit 0 ;;
+esac
+
+# My wine prefixes operate as follows:
+#  - main prefix is some subdir of a dir named wine
+#  - reference prefix for current wine version is ~/.wine-ver or ~/.wine64-ver
+#  - reference prefix's windows is overlayed onto main prefix's windows
+#    writable version is .windows
+
+# assumes following patches to wine:
+#   - use real dirs instead of soft links for user dirs
+#   - don't create z: link to /
+
+# TODO:  fix .msi files for gecko/mono intalls (but nothing I run now uses
+#        them anyway, so who cares?)
+#        if gecko/mono updated, uninstall before update and then reinstall
+#        add option to mount/unumount .windows dir
+#        figure out how to override users/<yname> and mount that as well
+#        Add option to pick wine version (d3d9/any/vanilla; specific version)
+
+# Prevent Wine from adding menu entries and desktop links.
+export WINEDLLOVERRIDES="${WINEDLLOVERRIDES}${WINEDLLOVERRIDES:+;}winemenubuilder.exe=d"
+
+# quiet all but final run of wine
+wdb="$WINEDEBUG"
+export WINEDEBUG=fixme-all
+
+test win64 = "$WINEARCH" || export WINEARCH=win32
+
+prg=wine
+wp=wine
+dis_mono=y
+dis_gecko=y
+builtin_inst=
+kill_wine=
+mnt_wine=
+while :; do
+  case "$1" in
+     -s) wp=wine ;;
+     -d) wp=wine-d3d9 ;;
+     -a) wp=wine-staging ;;
+     -v) wp=wine-vanilla ;;
+     -s2) wp=wine-2 ;;
+     -s3) wp=wine-3 ;;
+     -V) wp="$2" ; shift ;;
+     -m) mnt_wine=y ;;
+     -M) mnt_wine=d ;;
+     -w)
+        prg=wine-wait ;;
+     -D)
+        prg=winedbg\ --gdb ;;
+     -n)
+        dis_mono= ;;
+     -g)
+        dis_gecko= ;;
+     -b)
+	builtin_inst=y ;;
+     -k)
+        kill_wine=y ;;
+     *) break ;;
+  esac
+  shift
+done
+
+winever="`$wp --version`"
+winever="${winever%% *}"
+winever="${winever#wine-}"
+wpver="${wp%-[0-9]*}" # strip off explicit ver from -V
+wpver="${wpver#wine}"
+
+# not sure why I set LIBGL_DRIVERS_PATH explicitly, but I used to do
+# it in a separate wrapper around wine, and now I've moved that here
+if [ win64 = "$WINEARCH" ]; then
+  wp=wine64${wp#wine}
+  export LIBGL_DRIVERS_PATH=/usr/lib64/dri
+else
+  export LIBGL_DRIVERS_PATH=/usr/lib32/dri
+fi
+# some games seem to use both, so I'll override the above
+export LIBGL_DRIVERS_PATH=/usr/lib32/dri:/usr/lib64/dri
+test wine = "$prg" && prg=$wp
+
+prefix_setup() {
+(
+  # just verify wine installation in current dir
+  # do an init/update
+  cd "${WINEPREFIX%/windows}"
+  $wp regedit /\? >/dev/null 2>&1
+  wineserver$wpver -w
+  # exit if update rather than init
+  test -d windows/drive_c || return
+  # my prefix has config in windows subdir and drive_c in main dir
+  # so move things around after init
+  mv windows .windows
+  mv .windows/drive_c/{.[^.],}* .
+  rmdir .windows/drive_c
+  mv .windows/{.[^.],}* windows
+  rmdir .windows
+  rm windows/dosdevices/c:
+  ln -s ../.. windows/dosdevices/c:
+  # enable wine-9
+  # set default GOG installer options
+  # enable opengl 4.5
+  # attempt to set USERPROFILE dir (doesn't work)
+cat <<"EOF" > $$.reg
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\DllRedirects]
+"d3d9"="d3d9-nine.dll"
+
+[HKEY_LOCAL_MACHINE\Software\GOG.com]
+"DefaultPackPath"="C:\\"
+"DesktopIcon"="OFF"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\GOG.com]
+"DefaultPackPath"="C:\\"
+"DesktopIcon"="OFF"
+
+[HKEY_CURRENT_USER\Software\Wine\Direct3D]
+"csmt"=dword:00000001
+"MaxVersionGL"=dword:00040005
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment]
+"USERPROFILE"="C:\\users\\user"
+
+EOF
+  $wp regedit $$.reg
+  rm $$.reg
+)
+}
+
+# figure out wine prefix from dir program runs from
+# assumes parent dir is wine (e.g. wine/prefix1 wine/prefix2 ...)
+case "$1" in
+  */winetricks) d="$PWD" ;;
+  /*)  d="${1%/*}" ;;
+  */*) d="$PWD/${1%/*}" ;;
+  *) d="$PWD" ;;
+esac
+while :; do
+  case "$d" in
+    */wine/*/*) d="${d%/*}" ;;
+    */wine/*)   break ;;
+    *) echo "Wine path unknown."; exit 1 ;;
+  esac
+done
+export WINEPREFIX="$d/windows"
+
+if [ -n "$kill_wine" ]; then
+  wineserver$wpver -k
+  exit $?
+fi
+
+# set up reference dir
+refdir="$HOME/.${wp%-[0-9]*}-${winever}"
+test -d "$refdir" || mkdir "$refdir"
+(WINEPREFIX="$refdir/windows" prefix_setup)
+
+# Prevent Wine from auto-installing gecko & mono
+test -n "$dis_mono" && WINEDLLOVERRIDES="${WINEDLLOVERRIDES};mscoree.dll=n"
+test -n "$dis_gecko" && WINEDLLOVERRIDES="${WINEDLLOVERRIDES};mshtml.dll=n"
+
+# piece of shit gentoo claims to only support /proc/mounts link now, but
+# yet somehow it keeps reverting to a file
+# having as a file ignores fusermounts
+test -h /etc/mtab || sudo ln -sf /proc/mounts /etc/mtab
+
+# automatically generate/update prefix before starting app
+# note that "fusermount -u" won't work if /etc/mtab isn't /proc/mounts
+fusermount -u "$WINEPREFIX" 2>/dev/null
+test d = "$mnt_wine" && exit 0
+wdir="${WINEPREFIX%/windows}"/.windows
+if [ ! -d "$wdir" ]; then
+  prefix_setup
+  wineserver$wpver -k
+  mv "$WINEPREFIX" "$wdir"
+  mkdir "$WINEPREFIX"
+else
+  test -f "$WINEPREFIX"/system.reg || unionfs -o cow,nonempty,uid=$(id -u) "$wdir=RW:$refdir/windows=RO" "$WINEPREFIX" || exit 1
+  prefix_setup
+  wineserver$wpver -k
+  fusermount -u "$WINEPREFIX" 2>/dev/null # don't want to mess in wdir while mounted
+fi
+# always recheck wdir - maybe too slow for comfort
+# then again, running prefix_setup twice is the real slowdown
+find "$wdir" -type f | while read -r x; do
+  cmp "$x" "$refdir/windows/${x#$wdir}" >/dev/null 2>&1 && rm "$x"
+done
+rm -f "$wdir"/dosdevices/c:
+find "$wdir" -depth -type d | while read -r x; do
+  test -d "$refdir/windows/${x#$wdir}" && rmdir "$x" 2>/dev/null
+done
+test -f "$WINEPREFIX"/system.reg || unionfs -o cow,nonempty,uid=$(id -u) "$wdir=RW:$refdir/windows=RO" "$WINEPREFIX" || exit 1
+test y = "$mnt_wine" && exit 0
+
+if [ -n "$builtin_inst" ]; then
+# This automatically installs gecko/mono if requested and not already done
+test -z "$dis_mono" -a ! -d "$d/windows/mono" && rm -f "$d/windows/.update-timestamp"
+test -z "$dis_gecko" -a ! -d "$d"/windows/system32/gecko/*/wine_gecko &&  rm -f "$d/windows/.update-timestamp"
+
+# And this ensures that gecko/mono is *not* installed if not requested
+case "$1" in
+  *.[eE][xX][eE])
+    if [ -n "$dis_mono" -a -d "$d/windows/mono" ]; then
+       echo "Mono installed, but not explicitly enabled with -m"   
+       wine uninstaller >/dev/null 2>&1
+       test -d "$d/windows/mono" && exit 1
+    fi
+    if [ -n "$dis_gecko" -a -d "$d"/windows/system32/gecko/*/wine_gecko ]; then
+      echo "Gecko installed, but not explicitly enabled with -g"
+      wine uninstaller >/dev/null 2>&1
+      test -d "$d"/windows/system32/gecko/*/wine_gecko && exit 1
+    fi
+    ;;
+esac
+fi
+
+case "$1" in
+  "") : ;;
+  winetricks|*/winetricks) env WINE="$wp" WINESERVER="wineserver$wpver" "$@" ;;
+  *) rm -f reg.[0-9]*.diff # ignore old diffs; probably not worth reading
+     $wp regedit -E 'c:\'reg.$$
+     if [ -f wine-keys.exe ]; then
+       echo Running wine-keys
+       nonet $wp wine-keys.exe & pidk=$!
+     else
+       pidk=
+     fi
+     test wine-wait = "$prg" -a "${wp%-[0-9]*}" = "$wp" && set -- -e "$wpver" "$@"
+     test wine-wait = "$prg" -a "${wp%-[0-9]*}" != "$wp" && set -- -e "$wpver"-"$winever" "$@"
+     nonet env LD_PRELOAD="$LD_PRELOAD" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" WINEDEBUG="$wdb" $prg "$@" & pid=$!
+     trap "kill $pid $pidk" TERM
+     wait $pid
+     test -n "$pidk" && kill $pidk
+     $wp regedit -E 'c:\'reg.$$.new
+     diff -au "$d/reg.$$" "$d/reg.$$.new" >"$d/reg.$$.diff"
+     rm "$d/reg.$$" "$d/reg.$$.new"
+     test -s "$d/reg.$$.diff" || rm "$d/reg.$$.diff" ;;
+esac
+
+wineserver$wpver -k
+fusermount -u "$WINEPREFIX"

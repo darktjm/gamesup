@@ -1,0 +1,3 @@
+mk nonet -Iiproute2-4.3.0/include iproute2-4.3.0/lib/namespace.o
+chown root nonet
+chmod +s nonet

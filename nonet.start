@@ -1,0 +1,6 @@
+#!/bin/sh
+ip netns add nonet
+ip -n nonet add add 127.0.0.1/8 dev lo
+ip -n nonet link set dev lo up
+#ip -n nonet route add default via 127.0.0.1
+ip -n nonet route add 127.0.0.0/8 via 127.0.0.1

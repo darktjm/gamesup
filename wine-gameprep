@@ -1,0 +1,39 @@
+#!/bin/sh
+cd "$1" || exit 1
+for x in goggame-*.ico gfw_high.ico; do
+   test -f "$x" || continue
+   convert "$x" "${x%.ico}.png"
+done
+# older games had 256x256 always, but some newer ones have 2x 128x128 instead
+# so just pick a 128x128 if no 256x256 exists (they're both the same)
+p256=
+p128=
+for x in *-{,1}[0-9].png; do
+  test -f "$x" || continue
+  f="`file \"\$x\"`"
+  case "$f" in
+    *"256 x 256"*RGBA*) p256="$x" ;;
+    *"128 x 128"*RGBA*) p128="$x" ;;
+  esac
+done
+test -z "$p256" && p256="$p128"
+for x in *-{,1}[0-9].png; do
+  test -f "$x" || continue
+  case "$x" in
+    "$p256") ;;
+    *) rm "$x" ;;
+  esac
+done
+chmod -R og-rwx .
+find . -type f -exec chmod -x {} \;
+chmod -R g+rX .
+test -h /usr/local/games/wine/"$1" -o -d /usr/local/games/wine/"$1" && sudo mv /usr/local/games/wine/"$1"{,.old}
+sudo cp -ral . /usr/local/games/wine/"$1"
+#find * -type f -exec ln -sf /usr/local/games/wine/"$1"/{} {} \;
+rm -rf *
+sudo chown -hR root:games /usr/local/games/wine/"$1"
+#rm *-{,1}[0-9].png 2>/dev/null
+cp -a /usr/local/games/wine/"$1"/*-{,1}[0-9].png . 2>/dev/null
+cd ..
+sudo chown root:games -h setup*.{bin,exe} 2>/dev/null
+sudo mv setup*.{bin,exe} /usr/local/games/wine/"$1"/. 2>/dev/null

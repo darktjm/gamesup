@@ -1,0 +1,11 @@
+--- wine-4.4/dlls/ntdll/directory.c	2019-03-15 15:18:31.000000000 -0500
++++ wine-4.4/dlls/ntdll/directory.c	2019-03-18 20:12:37.800923609 -0500
+@@ -2638,7 +2638,7 @@
+         char *p;
+         unix_name[pos + ret] = 0;
+         for (p = unix_name + pos ; *p; p++) if (*p == '\\') *p = '/';
+-        if (!redirect || (!strstr( unix_name, "/windows/") && strncmp( unix_name, "windows/", 8 )))
++        if (!redirect || !name_len || (!strstr( unix_name, "/windows/") && strncmp( unix_name, "windows/", 8 )))
+         {
+             if (!stat( unix_name, &st ))
+             {

@@ -1,0 +1,32 @@
+#!/bin/sh
+cd "$1" || exit 1
+rm -rf .mojosetup DOSBOX dosbox cloud_saves
+if [ ! -f support/icon.png ]; then
+  for x in goggame-*.ico gfw_high.ico; do
+    test -f "$x" || continue
+    convert "$x" "${x%.ico}.png"
+  done
+  for x in *-{,1}[0-9].png; do
+    test -f "$x" || continue
+    f="`file \"\$x\"`"
+    case "$f" in
+      *"256 x 256"*RGBA*) ;;
+      *) rm "$x" ;;
+    esac
+  done
+  find . -type f -exec chmod -x {} \;
+fi
+chmod -R og-rwx .
+chmod -R g+rX .
+cd ..
+test -d /usr/local/games/dosbox/"$1" -o -h /usr/local/games/dosbox/"$1" && sudo mv /usr/local/games/dosbox/"$1"{,.old}
+if [ -f "$1"/support/icon.png ]; then
+  sudo mv "$1" /usr/local/games/dosbox/"$1"
+else
+  sudo mkdir /usr/local/games/dosbox/"$1"
+  mv setup* "$1"/.
+  sudo mv "$1" /usr/local/games/dosbox/"$1"/data
+  sudo mv /usr/local/games/dosbox/"$1"/data/*.png /usr/local/games/dosbox/"$1" 2>/dev/null
+  sudo chmod o-rx /usr/local/games/dosbox/"$1"
+fi  
+sudo chown -Rh root:games /usr/local/games/dosbox/"$1"
