@@ -1,0 +1,16 @@
+#!/bin/sh
+test 0 = `id -u` || exec sudo "$0" "$@"
+
+mosen=/zzzzzz
+for x in /sys/class/input/event*/device/name; do
+  case "`cat $x`" in
+  	"Wireless Controller Motion Sensors")
+		ev=${x#*input/}
+		ev=${ev%%/*}
+		echo Removing $ev
+		rm /dev/input/$ev
+		exit 0
+		;;
+  esac
+done
+exit 1

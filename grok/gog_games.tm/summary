@@ -1,0 +1,68 @@
+\{(i=n=u=w=0);""}\{FOREACH (len(_hidden) == 0 && (_sn_linuxbroken || {_cmdtype != "Windows"} && {_cmdtype != "DOS"}))}
+\{(++i,n+=_sn_broken||_sn_linuxbroken,w+={_cmdtype == "Windows"},u+=_sn_uninstalled);""}\{END}
+\{i} Linux games (\{n} nonfunctional; \{w} converted to wine; \{u} uninstalled)
+
+\{(i=u=a=0);""}\{FOREACH (len(_hidden) == 0 && {_cmdtype == "DOS"})}
+\{(++i,a+=_sn_amiga,u+=_sn_uninstalled);""}\{END}
+\{i} DOS games (\{u} uninstalled, \{a} w/ Amiga alternates)
+  note:  bt1-3 are hidden in a Linux game; this accounts for 3 more Amiga games
+
+\{(i=n=u=l=t=0);""}\{FOREACH (len(_hidden) == 0 && {_cmdtype == "Windows"})}
+\{(++i,n+=_sn_broken,l+=_sn_linuxbroken,u+=_sn_uninstalled,t+={"_tjm" in _id});""}\{END}
+\{i} Wine games (\{n} nonfunctional; \{l} converted from Linux; \{u} uninstalled)
+  \{t} non-GOG
+
+\{(i=l=w=d=0);""}\{FOREACH (len(_hidden) > 0)}
+\{(++i,w+={_cmdtype=="Windows"},d+={_cmdtype=="DOS"},l+={_cmdtype!="Windows"}&&{_cmdtype!="DOS"});""}\{END}
+\{i} hidden games (\{l} Linux, \{w} Windows, \{d} DOS)
+
+\{(i=0);""}\{FOREACH (_sn_broken && !_sn_linuxbroken && {_cmdtype == "Windows"})}
+\{(i++);""}\{END}
+Currently \{i} unusable Wine-only games:\{(l=0);""}
+   \{FOREACH (_sn_broken && !_sn_linuxbroken && {_cmdtype == "Windows"})}
+\{IF (l + len(_cmd) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(_cmd));_cmd} \{END}
+
+\{(i=0);""}\{FOREACH (!_sn_broken && _sn_linuxbroken && {_cmdtype == "Windows"})}
+\{(i++);""}\{END}
+Currently \{i} unusable Linux games: (at least barely usable in wine)\{(l=0);""}
+   \{FOREACH (!_sn_broken && _sn_linuxbroken && {_cmdtype == "Windows"})}
+\{IF (l + len(_cmd) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(_cmd));_cmd} \{END}
+
+\{(i=0);""}\{FOREACH (_sn_broken && {_cmdtype == "Linux"})}
+\{(i++);""}\{END}
+Currently \{i} games unusable in both Linux and Wine\{(l=0);""}
+   \{FOREACH (_sn_broken && {_cmdtype == "Linux"})}
+\{c = {_cmd == "" ? _id : _cmd};""}\{IF (l + len(c) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(c));c} \{END}
+
+
+\{(i=0);""}\{FOREACH (_sn_nomovies)}
+\{(i++);""}\{END}
+Currently \{i} games with serious movie playback issues\{(l=0);""}
+   \{FOREACH (_sn_nomovies)}
+\{c = {_cmd == "" ? _id : _cmd};""}\{IF (l + len(c) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(c));c} \{END}
+
+\{(i=0);""}\{FOREACH (_sn_nomusic)}
+\{(i++);""}\{END}
+Currently \{i} games with no music (not sure if Konung ever had any)\{(l=0);""}
+   \{FOREACH (_sn_nomusic)}
+\{c = {_cmd == "" ? _id : _cmd};""}\{IF (l + len(c) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(c));c} \{END}
+
+\{(i=0);""}\{FOREACH (_sn_editorbroken)}
+\{(i++);""}\{END}
+Currently \{i} games with broken editors\{(l=0);""}
+   \{FOREACH (_sn_editorbroken)}
+\{c = {_cmd == "" ? _id : _cmd};""}\{IF (l + len(c) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(c));c} \{END}
+
+
+Note: the following have 3rd party Linux ports, so no point in messing
+with Windows (except nwn editor, and ctp2 until movies work):\{(l=0);""}
+   \{FOREACH (_sn_3plinux)}
+\{c = {_cmd == "" ? _id : _cmd};""}\{IF (l + len(c) > 73)}\{(l=0);""}
+   \{ENDIF}\{(l += 1 + len(c));c} \{END}
+

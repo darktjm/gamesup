@@ -382,10 +382,12 @@ infocom
 =======
 GOG.com doesn't sell many Infocom games, but I have enough that I made
 some support for it.  I store the games in /usr/local/games/inf.  All
-related files are renamed to the game name.  The script to run the
-game is a soft link to a common script (inf-game) that just invokes
-zoom.  The soft link is placed in /usr/local/bin, and, as with other
-such games, an appropriate disktop file is placed in
+related files are renamed to the game name, plus the appropriate
+extension (e.g. Planetfall for the data file, Planetfall.png for the
+icon, Planetfall.pdf for the manual).  The script to run the game is a
+soft link to a common script (inf-game) that just invokes zoom.  The
+soft link is placed in /usr/local/bin, and, as with other such games,
+an appropriate desktop file is placed in
 /usr/local/share/applications.  I use dos-gameprep for the Windows
 installers to extract the icon, and then delete everything but the
 game data (DATA/*.DAT), icon and manuals.  The only game for which I
@@ -477,7 +479,11 @@ bug in wine, which has been fixed in 4.6, I think.  Prior to that, I
 have to apply wine-dir64.patch.  Otherwise, any attempt to run a
 GOG.com installer in a 64-bit prefix will fail.
 
-As to gecko and mono, I install them in the reference directories, but 
+As to gecko and mono, I install them in the reference directories, but
+do not normally replicate that bit to the games' prefix.  In fact, I
+have not found one game that benefits from either of these, and all
+mono does is prevent installation of (working) .NET from MS for the
+games that need it.
 
 Usage:  dowine [options] exefile args
 
@@ -485,23 +491,23 @@ To create/use a 64-bit prefix, always set WINEARCH=win64 in the
 environment.  I may fix this in the future to set it if the prefix is
 already 64-bit.
 
-    Version selection:
-      -s = current stable, which is also the default wine
-      -s3 = 3.0.x (must be manually linked as wine-3)
-      -s2 = 2.0.x (must be manually linked as wine-2)
-      -d = wine-d3d9: latest with gallium-d3d9
-      -a = wine-staging: latest with staging+gallium-d3d9 (was wine-any, thus the a)
-      -v = wine-vanilla; latest vanilla wine
-      -V <exe> = use exe as the wine executable; probably doesn't work
-      -D = use winedbg for debugging; probably doesn't work right
-    Other:
-      -k = kill wine in this prefix
-      -m = mount the windows overlay
-      -M = dismount the windows overlay
-      -w = assume exe will exit before program finishes; use wine-wait
-      -n = allow built-in mono/.net install/usage (never works)
-      -g = allow built-in gecko install/usage (never works)
-      -b = change what's installed based on -n/-g flags
+  - Version selection:
+      - -s = current stable, which is also the default wine
+      - -s3 = 3.0.x (must be manually linked as wine-3)
+      - -s2 = 2.0.x (must be manually linked as wine-2)
+      - -d = wine-d3d9: latest with gallium-d3d9
+      - -a = wine-staging: latest with staging+gallium-d3d9 (was wine-any, thus the a)
+      - -v = wine-vanilla; latest vanilla wine
+      - -V <exe> = use exe as the wine executable; probably doesn't work
+      - -D = use winedbg for debugging; probably doesn't work right
+   - Other:
+      - -k = kill wine in this prefix
+      - -m = mount the windows overlay
+      - -M = dismount the windows overlay
+      - -w = assume exe will exit before program finishes; use wine-wait
+      - -n = allow built-in mono/.net install/usage (never works)
+      - -g = allow built-in gecko install/usage (never works)
+      - -b = change what's installed based on -n/-g flags
 
 A wine game uses an additional wrapper, wine-game.sh.  This uses an
 additional unionfs mount for the game root itself.  The game root is
@@ -527,6 +533,15 @@ A typical wine game launcher looks like this:
     . ${0%/*}/wine-game.sh
     exec dogame dowine -s Game\ Exe.exe
 
+Note that as mentioned above, this script name has the same name as
+the wine directory I installed it into; wine-game.sh depends on it,
+but you can set groot manually before invoking the script to make it
+something else.  I used to install exactly one pair of games in the
+same directory, with the second one changing groot, but I don't do
+that any more.  Actually, I did this with some other games as well,
+but they all launch from the same script with different command-line
+parameters, which does not necessitate setting groot.
+
 I always give the wine version flag, even though -s is always
 optional.  I end up having to retest all my wine games every version
 update, and having the version coded like that can help.
@@ -536,8 +551,112 @@ use a shell case statement on "$1" and exec the appropriate command.
 
 The wine-game.sh script adds a few command-line options to all that use it:
 
-   -u = unmount the game fusermount; it never gets unmounted otherwise
-   -U = just mount the game fusermount and exit
+   - -u = unmount the game unionfs; it never gets unmounted otherwise
+   - -U = just mount the game unionfs and exit
 
 Ignore the joystick button functions in there; I'll remove them soon
 and they do no harm.
+
+grok
+====
+I used to keep a plain text file, gog-status, with notes about all of
+my game installs.  When the number of games became large, and I also
+added more information to the file, I decided a database would be
+better.  To that end, I experimented with some tools and ended up
+making a Qt port of grok, available [here as well](
+https://bitbucket.org/darktjm/grok).  I have included my grok
+database devinition and templates under the grok directory; if you
+want to use them or try them out, copy them to ~/.grok first.  I have
+also included a few sample entries in the database, not chosen for
+their completeness (I am in the process of once again
+checking/updating all games' entries).  Note that I have a few changes
+to grok I have yet to check in at the time of this writing (including
+a generic SQL exporter that obsolets the "sql" template), and have
+discovered new bugs that I have yet to even document.  Use at your own
+risk.  Maybe I'll switch to libreoffice-base or krita and abandon my
+work on grok some day, but it's all just too much trouble.
+
+A quick note on the templates:  gcs outputs to a native GCStar
+database I used before I switched to grok.  sql-gcs exported to the
+same format exported by GCStar's SQL exporter, although I'm not sure
+what the point was, since GCStar can't import that format.  The sql
+template gives a more normal SQL export so I can use sqlite3 to query
+the database (which is sometimes easier than grok's own language).
+Finally, summary is an attempt at maintaining gog_status' global
+information more easily, and has the advantage of having some of its
+info read from the database itself.  This is my current output from
+summary; judge for yourself if I have too many games (I do):
+
+    188 Linux games (11 nonfunctional; 5 converted to wine; 25 uninstalled)
+    
+    98 DOS games (0 uninstalled, 11 w/ Amiga alternates)
+      note:  bt1-3 are hidden in a Linux game; this accounts for 3 more Amiga games
+    
+    309 Wine games (37 nonfunctional; 5 converted from Linux; 4 uninstalled)
+      3 non-GOG
+    
+    38 hidden games (16 Linux, 15 Windows, 7 DOS)
+    
+    Currently 37 unusable Wine-only games:
+       cmbo deadlock2 deadlock deusex2 fench fenchlh fog2 gciv inq inst legr mh 
+       mirror mi2  ppb-bru ppb-fj prod ppin rtk smbtas smstw civ3 pirates ss1 
+       calig lohtits3 lohtocs2 txex tr6 tron2 2w2 wh40kcg wh40krow wh40ksr x2 
+       xnext 
+    Currently 5 unusable Linux games: (at least barely usable in wine)
+       eschalon1 eschalon2 eschalon3 trine2 trine3 
+    Currently 6 games unusable in both Linux and Wine
+       observer aragami incrpede satellite_reign bards_tale vran 
+    
+    Currently 29 games with serious movie playback issues
+       anb rayne rayne2 ctp2 cors darkstone divinity2 ga gothic hnep hnep2 hnep3 
+       inq kq8 konung2 konung msn mh nwn omikron sacred silver kotor calig txex 
+       tr6 2w u9 xnext 
+    Currently 3 games with no music (not sure if Konung ever had any)
+       konung2 konung se4 
+    Currently 14 games with broken editors
+       aow3 divos dao elvenlegacy grimd homm5 homm5-toe ja2ub eisen nwn2 
+       spellforce witcher2 titq torch 
+    
+    Note: the following have 3rd party Linux ports, so no point in messing
+    with Windows (except nwn editor, and ctp2 until movies work):
+       aoc2 diablo eadorg ehtb expconq fs2 ja2 nwn oriente morrowind u4 exult 
+       exult openxcom openxcom 
+
+And no, I will not be adding my methods of Amiga game installation and
+execution at this time.
+
+ds4
+===
+I use a DualShock 4 controller now.  I used to use various cheap
+knockoffs, but they tend not to support vibration, LEDS, etc. at all
+on Linux, and have become harder and harder to reverse engineer.  I
+just wish I had thought of that earlier, when there were still
+DualShock 3s around, since I prefer not to have the touchpad, which
+makes the Start and Select (renamed to Share and Options) buttons hard
+to press.  The main issue I've found so far with it are the countless
+games that make assumptions about button mappings and the fact that
+Unity3D games don't like the extra devices created by Linux for the
+motion sensors (and maybe touchpad).  For the motion sensors only, I
+run the ds4-nomo command before the game, manually.  I'll probably end
+up adding that to dogame as well.
+
+I also use a script to disconnect the ds4 immediately when I'm done
+with it: ds4-down.  I also wrote a script to use with xfce4's generic
+monitor, which just displays text output of a command repeatedly:
+ds4-power.  This displays the current charging status.
+
+I also made a user-mode input driver (indrv) to completely override
+all devices with a new mapping, because my old input-kbd based evdev
+remappings don't work on the ds4 for some reason (but they did work on
+all my old controllers), and tracking down that reason seemed harder
+than just writing a uinput driver.  This works, but I'm not including
+the source here because it's not really useful and I don't want to
+answer support questions about it.  Maybe if I ever rewrite the axis
+support to work better, and figure out why it sometimes just craps out
+and stops working (but that may just be the games I used it with,
+which seem flaky sometimes).  I'd also like to convert this into a
+more general remapping tool with multiple profiles, keyboard and mouse
+support, chording support, "autofire" support and macro support
+(recording to a plain-text description for editing and binding, as
+well as of course replaying).  If I ever get the latter working, I'll
+upload it as a separate project here.

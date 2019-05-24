@@ -1,0 +1,10 @@
+#!/bin/sh
+test 0 = `id -u` || exec sudo "$0" "$@"
+
+power=/zzzzzz
+for x in /sys/class/power_supply/sony_controller_battery_*; do
+  power=$x
+  break
+done
+test -d $x || exit 1
+echo "disconnect ${power#*battery_}" | bluetoothctl

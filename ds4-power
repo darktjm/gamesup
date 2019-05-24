@@ -1,0 +1,16 @@
+#!/bin/sh
+power=/zzzzzz
+for x in /sys/class/power_supply/sony_controller_battery_*; do
+  power=$x/capacity
+  break
+done
+if [ -f $power ]; then
+  case `cat ${power%/*}/status` in
+    Charging) echo -n + ;;
+    Full) echo +++; exit 0 ;;
+    *) echo -n ' ' ;;
+  esac
+  cat $power
+else
+  echo "NC"
+fi

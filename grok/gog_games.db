@@ -1,0 +1,685 @@
+aarklash_legacy;Aarklash:  Legacy;Aarklash - Legacy;aarklash;Windows;3673332;1508514120;1.0_(19808);;;;2.0.2: needed d3dx9 or gfx is just blank screen\; fixed in staging/devel\
+used to need xact or no sound\
+*Bad key repeat issue (partly due to slow)\
+used to crash after running X seconds if not Win7\
+;;Stable 4.0;user dir: My Documents/Aarklash Legacy;user dir: My Documents/Aarklash Legacy;;;;;;;;;;1;;;;;;;;;;;;;;RolePlaying\;X-RTwP\;;;;
+afterlife;Afterlife;;;DOS;0;137172455;2.2.0.8;WONTPLAY:  city builder - not my kind of game;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+agarest_generations_of_war;Agarest:  Generations of War;Agarest - Generations of War;gow;Windows;5071976;5136171541;1.0_(19909);;agarest_generations_of_war_collectors_edition_upgrade\
+;;needs for videos & in-game music: quartz amstream devenum wmp9\
+* w/o: beep and frreeze w/ ActiveMovie window with gstreamer (used to give logo before death)\
+* w/LAVFilters instead: missing codec & silent videos & start menu\
+used to need for slow game: d3dx9_43 (still slow in places, but probably designed to be)\
+used to frequently crash on new game, and always when no DLC selected.  Seems OK as of 4.0.\
+Needs manual disable of (js) controller (dowine control joy.cpl)\
+Remapped controller in game dir: Agarest.ini.js\
+;Japanese voices only\; battle voices have no subtitles\
+Can export to gow0\
+God, what a grind.  I'm not sure I want to finish this.\
+;Stable 4.0;game dir: Agarest.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War;;;;;;;;;;;;;;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;;
+agarest_generations_of_war_2;Agarest:  Generations of War 2;Agarest - Generations of War 2;gow2;Windows;6822256;6990115440;1.0_(20458);;;Find config/save locations\
+Play w/o compile in background:  is it slow?\
+;needs for videos & in-game music: quartz amstream devenum wmp9\
+* w/o: beep and frreeze w/ ActiveMovie window with gstreamer (used to give logo before death)\
+* w/LAVFilters instead: missing codec & silent videos & start menu\
+used to need for slow game: d3dx9_43\
+\
+Needs manual disable of (js) controller (dowine control joy.cpl)\
+Remapped controller in game dir: Agarest2.ini.js\
+;Japanese voices only\; battle voices have no subtitles\
+Can import from gow0 (for what?)\
+Remapping controller also moves labels, so it's hard to guess what button to push.\
+X = B\
+SQ = A\
+O = X\
+T = Y\
+The start/back keys are swapped with L2/R2 and other oddities\
+Maybe it's possible to mess with manual config?\
+;Stable 4.0;game dir: Agarest2.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War 2;;;;;;;;;;;;;;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;;
+agarest_generations_of_war_zero;Agarest:  Generations of War Zero;Agarest - Generations of War Zero;gow0;Windows;5287672;5320415825;1.0_(20459);;;;needs for videos & in-game music: quartz amstream devenum wmp9\
+* w/o: beep and frreeze w/ ActiveMovie window with gstreamer (used to give logo before death)\
+* w/LAVFilters instead: missing codec & silent videos & start menu\
+used to need for slow game: d3dx9_43\
+\
+*   frequent crash on new game\
+*     no dlc: guaranteed crash\
+Needs manual disable of (js) controller (dowine control joy.cpl)\
+Remapped controller in game dir: Agarest.ini.js\
+;Japanese voices only\; battle voices have no subtitles\
+Can import from gow (for what?)\
+Can export to gow2\
+Remapping controller also moves labels, so it's hard to guess what button to push.\
+X = B\
+SQ = A\
+O = X\
+T = Y\
+The start/back keys are swapped with L2/R2 and other oddities\
+Maybe it's possible to mess with manual config?\
+;Stable 4.0;game dir: AgarestZero.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War Zero;;;;;;;;;;;;;;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;;
+age_of_wonders;Age of Wonders;Age of Wonders;aow;Windows;313084;194681768;1.36.0053_(22161);;;;      prefs:  Allow Resolution Switching\; 1280x720 (1920x1080 too small)\
+    Also creates datatype to associate AOW maps with editor\
+*   intro movie is black (sound only) w/o iv32 codec (from iv5setup.exe)\
+*   2.0.2: black screen\; ok in devel\
+    Also creates datatype to associate AOW maps with editor\
+*   intro movie is black (sound only) w/o iv32 codec (from iv5setup.exe)\
+*   2.0.2: black screen\; ok in devel\
+;-e -> Editor\
+;Stable 4.0;registry: Software\\Triumph Studios\\Age of Wonders;game dir: Save;;;;1;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;
+age_of_wonders_2_the_wizards_throne;Age of Wonders 2:  The Wizard's Throne;Age of Wonders 2;aow2;Windows;596956;437689912;2_1.20.0.3100_(22162);;;;      prefs:  Allow Resolution Switching\; 1280x720 (1920x1080 too small)\
+*   2.0.2: black screen\; ok in devel\
+*   black line just above UI, cutting through banner w/ Direct3D enabled\
+*   "Use Direct3D"+"Allow Resolution Switches"+"Show Intro" = crash\
+*      even w/o "Show Intro", "Replay Intro" will crash\
+*      often loses focus if intro not shown\
+*      may be fixed in gallium-d3d9, but can't use that any more\
+*      given broken Direct3D now, just disable it\
+    used to need manual resize w/ wmctrl after startup\
+;-s -> Setup app\
+-e -> Editor;Stable 4.0;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;
+age_of_wonders_3;Age of Wonders III Deluxe Edition;Age of Wonders III;aow3;Windows;4146536;2572346218;1.802_fix_(28713);;age_of_wonders_3_deluxe_edition_upgrade aka dragons_throne_scenario\
+age_of_wonders_3_eternal_lords\
+age_of_wonders_3_golden_realms\
+All at same version as main game;Document mods\
+;    editor uses registry for config: Software\\Triumph Studios\\Createor\\License\
+    note: old golden realms & eternal lords had different icons, but\
+     now no longer.  No matter: can only display 1 overall icon anyway\
+    Linux native port exists, but not from gog\
+    used to need d3dcompiler_43 to start properly, but seems OK other than:\
+*   2x HLSL shader parsing failed (but seems OK nonetheless)\
+    user content from steam, etc. requires use of launcher (-l)\
+      installs in UserContent dir in per-user config dir, but I soft-linked that into game dir so it gets stored as root:games\
+    includes editor (-e), but it has issues:\
+*     takes for bloody ever to start up (maybe that's normal)\
+*     on 2.0.2, hangs when creating or loading map\
+*     on 2.15, places 3D game view in upper-left instead of middle if not csmt\
+*     on 4.0, even though csmt is default, still does upper-left thing\
+;-l -> Game launcher (for installing mods)\
+-e -> Editor;Stable 4.0;user dir: My Documents/My Games/AoW3;user dir: My Documents/My Games/AoW3;;;;1;;;1;;;;;;;;;1;;;;;;;;StrategyGame\;;;;
+age_of_wonders_shadow_magic;Age of Wonders:  Shadow Magic;Age of Wonders - Shadow Magic;aow2sm;Windows;817804;591146632;1.30.0.2818_(22163);;;;*   2.0.2: black screen\; ok in devel\
+*   Black ground and otherwise corrupted gfx w/ direct3d enabled\
+    "Use Direct3D" option used to cause crash on startup\
+    used to need manual resize w/ wmctrl after startup\
+;-s -> Setup app\
+-e -> Editor\
+;Stable 4.0;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;
+alqadim_the_genies_curse;Al-Qadim:  The Genie's Curse;;;DOS;0;12483069;2.1.0.3;WONTPLAY:  DOS action game\; not for me;;;need to link drivers into main dir to make sound config work\
+mt32 music\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+albion;Albion;Albion;albion;DOS;144948;95805824;1.38_(28043);;;;No manual (got from missingdocs site)\
+mt32 music\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+amnesia_the_dark_descent;Amnesia:   The Dark Descent;;;Linux;0;1368076038;2.0.0.3;WONTPLAY:  survival horror.  Owned once, but no longer interested;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+an_elder_scrolls_legend_battlespire_game;An Elder Scrolls Legend:  Battlespire;Battlespire;battlespire;DOS;788032;641102752;1.5_(28043);;;Hide: too actiony\
+;haven't tried networking\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;X-ARPG\;;;;
+anachronox;Anachronox;;;Windows;0;1069242312;1.02_(22258);WONTPLAY:  ATB combat and sickening 3D and part 1 of never;;;    needs vb6run for GCT Setup tool (not needed once configured, or ever)\
+    Used to lead to complete 3D hw failure occasionally, but seems OK now\
+      radeon 0000:01:05.0: GPU lockup CP stall for more than 10000msec\
+Have widescreen patch (add/ANOX.7z)\; works OK (select high-res mode in options)\
+;;Stable 3.0;game dir: anoxdata/SAVE;game dir: anoxdata/SAVE;;;;;;;;;;;;;;;;;;;;;;;;;;;
+annas_quest;Anna's Quest;Annas Quest;aq;Linux;1087020;1098622793;2.1.0.3;;extra: setup_annas_quest_bonus_2.0.0.1.exe;;innoextracted bonus into prologue dir\
+;-p -> prologue\; must click in house before keys work\
+Completed\; no desire to get all achievements;;;;;;;;1;;;;;;;1;;;;;;;;;1;1;;AdventureGame\;;;;
+anomaly_2;Anomaly 2;Anomaly 2;anom2;Linux;2465176;2500896519;2.0.0.3;;;;Dies on startup.\
+fixed by:\
+https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
+;;;;;;;;;;;;;;;;;;;;;;;;;1;1;;ActionGame\;;;;
+anomaly_korea;Anomaly Korea;Anomaly Korea;anomk;Linux;487644;494467993;2.0.0.3;;;;Game gets to menu after logos/intro video, but starting game hangs with 100% cpu and spinning wait icon\
+fixed by:\
+https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
+\
+Preheated stream conflict. Serious performance degradation occured! Expected: textures/meshes/towers/tower-ground-d-01_e.texture, got: sounds/iPhone/Music/menu.ogg\
+Preheated stream conflict. Serious performance degradation occured! Expected: textures/meshes/towers/tower-ground-d-01_e.texture, got: sounds/iPhone/Music/menu.ogg\
+Preheated stream conflict. Serious performance degradation occured! Expected: textures/meshes/towers/tower-ground-d-01_e.texture, got: sounds/iPhone/Music/menu.ogg\
+Preheated stream conflict. Serious performance degradation occured! Expected: textures/meshes/towers/tower-ground-d-01_e.texture, got: sounds/iPhone/Music/menu.ogg\
+;;;;;;;;;;;;;;;;;;;;;;;;;1;1;;ActionGame\;;;;
+anomaly_warzone_earth;Anomaly Warzone Earth;Anomaly Warzone Earth;anom;Linux;435668;437917359;2.0.0.3;;;;With de-iconification, it displays logos and intro video and then permanent 100% CPU with spinning wait icon\
+fixed by:\
+https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
+;;;;;;;;;;;;;;;;;;;;;;;;;1;1;;ActionGame\;;;;
+anomaly_warzone_earth_mobile_campaign;Anomaly Warzone Earth Mobile Campaign;Anomaly Warzone Earth Mobile Campaign;anommc;Linux;263272;266250952;2.0.0.3;;;;Just gives spinning wait icon and 100% CPU on startup\
+fixed by:\
+https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
+;;;;;;;;;;;;;;;;;;;;;;;;;1;1;;ActionGame\;;;;
+another_world_20th_anniversary_edition;Another World 20th Anniversary Edition;Another World 20th Anniversary Edition;aw;Linux;119804;114294360;2.0.0.2;;;Finished -> Uninstall\
+;    had bad mouse pointer, but doesn't affect game\; seems to be magically fixed now\
+    seemed to be some corruption of menu screens (ok now)\
+    removed amd64 dir so system libraries are used instead\
+    includes 15th ann. edition (win only)\; not installed/tested\
+;Controller config is weird (sometimes fails)\
+;;;;;;;;1;;;;;;;;;;;;;;;;;;1;AdventureGame\;X-Action\;;;;
+anvil_of_dawn;Anvil of Dawn;Anvil of Dawn;anvd;DOS;565152;372244416;2.0.0.4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+aragami;Aragami;Aragami;aragami;Linux;7722836;6204621788;en_01_09_20943;;aragami_nightfall  en_gog_1_21278;See if Windows actually works with controller\
+Classify based on gameplay\
+;Game totally craps out with controller plugged in:\
+  Confused by touchpad and motion devices\
+  Wrong mapping\; assumes xbox pad (use indrv)\
+  Not sure if vibration even works...\
+  [now it even crashes if I use indrv]\
+;;;;;;;1;;;;;;;1;;;;;;;;;;;1;;1;ActionGame\;;;;
+arcanum_of_steamworks_and_magick_obscura;Arcanum:  Of Steamworks and Magick Obscura;Arcanum;arcanum;Windows;1166020;1167199224;1.0.7.4_hotfix_(24155);;;;*   no graphics with 2.0.2\
+*   playable, but bad graphic lag, esp. vertically (#23676) w/o -doublebuffer\
+*   now it's back to bad, even with -doublebuffer\; requires -no3d\
+*   now it's back to OK, so no -no3d needed\
+;;Stable 4.0;game dir: arcanum.cfg;game dir: modules/Arcanum/Save;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+armikrog;Armikrog.;Armikrog;armikrog;Linux;2832620;1531253340;2.5.0.6;;armikrog_soundtrack extras only\
+;Fix OS cursor not blanking?  Used to work.\
+Figure out how to skip resolution setting dialog\
+;  - Options menu item freezes game\
+  - Starting new game, skipping movie freezes game\
+Both fixed by LANG=C\
+  - OS cursor doesn't blank\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;
+atlantic_fleet;Atlantic Fleet;Atlantic Fleet;atlfl;Windows;394096;149545976;1.02_(17216);;;May need reinstall\; icon was missing.\
+Figure out how to skip resolution setting dialog\
+;;;Stable 4.0;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/options.dat;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/rnc.dat (and maybe others);;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;
+avadon_2_the_corruption;Avadon 2:  The Corruption;Avadon 2;avadon2;Windows;176880;168388544;1.0.1_(20651)j;;;;;;Stable 4.0;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avadon_the_black_fortress;Avadon:  The Black Fortress;Avadon;avadon;Windows;125312;116371840;1.0_(20651);;;;;;Stable 4.0;user dir: My Documents/Spiderweb Software/Avadon Saved Games;user dir: My Documents/Spiderweb Software/Avadon Saved Games;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum;Avernum;Avernum;av1;Windows;29424;16828104;2.1.0.4;;;;*   anims appear to have trouble playing (just final frame\; rest is black)\
+;;Stable 4.0;game dir: Data/Avernum.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum_2;Avernum 2;Avernum 2;av2;Windows;39532;18647984;2.1.0.4;;;;*   anims appear to have trouble playing (just final frame\; rest is black)\
+;;Stable 4.0;game dir: Data/Avernum2.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum_3;Avernum 3;Avernum 3;av3;Windows;45076;20387952;2.1.0.4;;;;;;Stable 4.0;game dir: Data/Avernum3.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum_4;Avernum 4;Avernum 4;av4;Windows;67952;26404600;2.1.0.5;;;;;;Stable 4.0;game dir: Data/Avernum4Settings.dat;game dir: Data/Save*;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum_5;Avernum 5;Avernum 5;av5;Windows;96880;35509096;2.1.0.4;;;;;;Stable 4.0;user dir: My Documents/Avernum 5 Saved Games/Avernum5Settings.dat;user dir: My Documents/Avernum 5 Saved Games/Save*;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+avernum_6;Avernum 6;Avernum 6;av6;Windows;111484;44542664;2.1.0.4;;;;;;Stable 4.0;user dir: My Documents/Avernum 6 Saved Games/Avernum6Settings.dat;user dir: My Documents/Avernum 6 Saved Games/Save*;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;
+oddworld_abes_oddysee;Oddworld:  Abe's Oddysee;Abes Oddysee;abeo;Windows;641332;385546400;1.0_(19071);;;;*   no video with stable 2.0\
+;;Stable 3.0.3;game dir: abe.ini;game dir: *.sav;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_complete_pack;The Incredible Adventures of Van Helsing -- Complete Pack;;;Windows;0;10213432020;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_ii_complete_pack;The Incredible Adventures of Van Helsing II -- Complete Pack;;;Windows;0;13085283853;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_iii;The Incredible Adventures of Van Helsing III;;;Windows;0;10933459189;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_final_cut_game;The Incredible Adventures of Van Helsing:  Final Cut;The Incredible Adventures of Van Helsing - Final Cut;vh;Windows;57656412;0;1.1.0b_(18633);;the_incredible_adventures_of_van_helsing_final_cut_textures_dlc\
+same version as main game\
+;Update\
+;    takes for bloody ever to start up (compiling shaders?)\
+    has 64-bit binaries, but dx only\; using GL instead\
+    note: check "auto login" before "offline mode" to disable login dialog;;Stable 3.0;registry: Software\\NeoCore Games\\Van Helsing Final Cut;user dir: Documents/NeocoreGames/Van Helsing Final Cut/SaveGame;;;;;;;;;1;;;;;;;;;;;;;;;;;;
+the_incredible_machine_3;The Incredible Machine 3;TIM 3;tim3;Windows;66332;31805336;2.1.0.22;;;Add snapshots to "save" solutions\
+;    Mostly timc w/ lower res and worse sound & interface\
+;;Stable 3.0;C:\\timwin.ini (!);C:\\TIM.SAV (!);;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_incredible_machine_even_more_contraptions;The Incredible Machine:  Even More Contraptions;TIM - Even More Contraptions;timc2;Windows;280324;203811224;2.1.0.22;;;Add snapshots to "save" solutions, and probably replay for old solutions\
+;*   doesn't save solutions, just a flag of done/not done\
+;;Stable 3.0;game dir: EvenMore.ini;game dir: Saved Games;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_legend_of_heroes_trails_in_the_sky;The Legend of Heroes:  Trails in the Sky;The Legend of Heroes - Trails in the Sky;lohtits;Windows;2588384;2422141728;2018.04.22_(20221);;;Retest with dx11?\
+Clean up multiple install dirs\
+Fix to use Stable 3.0;*   screwed up gfx w/o d3dx9_43\
+*   attempts to write to executable w/o d3dcompiler_43 (wtf?)\
+*   black, silent init movie w/ gstreamer\; fixed by quartz+amstream+LAVFilters\
+*   can esc past init movie, but after in-engine cutscene, it hangs\
+      can disable movies in config, though (bug 40288)\
+    note that in-game video is UNSKIPPABLE and very long/boring (much like all in-game cutscenes, actually)\
+*   note: I still managed to crash it, even in-game, randomly.\
+*     .exeCreateFile failed. Error: 32\
+    random crashes fixed by using ed6_win_DX9? but:\
+*      needs native d3dx9_43 to avoid massive graphic corruption\
+*   flickery, bad interiors (like random vertex data)\
+      fixed with gallium-d3d9 & ed6_win_DX9, but:\
+*   corrupted character textures in status menu with gallium-d3d9\
+;-c -> Configuration editor\
+;Development 3.15;user dir: Application Data/FALCOM/ED6/config.ini;user dir: Application Data/FALCOM/ED6/*.[sS][aA][vV];;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_legend_of_heroes_trails_of_cold_steel_ii;The Legend of Heroes:  Trails of  Cold Steel II;The Legend of Heroes Trails of Cold Steel II;lohtocs2;Windows;18612576;13047669796;_1.3.1_(20779);;the_legend_of_heroes_trails_of_cold_steel_ii_all_accessories\
+the_legend_of_heroes_trails_of_cold_steel_ii_all_glasses\
+the_legend_of_heroes_trails_of_cold_steel_ii_all_ridealongs\
+same versions as main game\
+;Retest, fix, gather config/save locations, icon\
+Finish lohtocs so game can be transferred\
+;Some kind of .NET dependency I have yet to work out\
+;;Development 3.15;;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;
+the_longest_journey;The Longest Journey;The Longest Journey;tlj;Windows;1871772;1654701488;2.0.0.12;;;Update\
+;    set full-screen mode in preferences.ini manually\
+*   starting in full-screen mode causes videos to fail sometimes\
+*   have to kill\; quit pops up invisible dialog;;Stable 3.0;game dir: preferences.ini;game dir: Save;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_secret_of_monkey_island_special_edition;The Secret of Monkey Island:  Special Edition;Monkey Island 1 SE;mi;Windows;2238612;1412207823;1.0_(18587);;;;   takes for bloody ever to install due to .net weirdness\
+;;Stable 3.0;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/Settings.ini;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/savegame.*;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_temple_of_elemental_evil;The Temple of Elemental Evil;Temple of Elemental Evil;toee;Windows;3067776;1298859120;1.0_(15416);;;Document mods better\
+Document config & save locations\
+Check/fix wine version\
+Update/reinstall\
+;    ok (mouse was erratic:  xorg bug 46976: now fixed)\
+    res 1280x720 (1920x1080 too small and not supported by tfe-x)\
+    needs writable ToEE.cfg if options are to be changed\
+    various co8 patches:\
+       [my custom patches to tfe-x are not necessary with manual stuff]\
+       toee - plain with: no intros, max hp, humble npc [2.15]\
+       toee-ec - "Extra Content" 8.1.0\
+          constant "cutscene" interruptions to gameplay\; uninstalled\
+       toee-kotb - keep on the borderlands 1.0.1\
+          boring\; uinstalled;;Stable 3.0;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;
+westport_independent_the;The Westport Independent;The Westport Independent;westport;Linux;61984;102471495;2.0.0.1;;;;    all assets duplicated for 32/64\; deleted 32-bit for space\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_witcher_2;The Witcher 2:  Assassins Of Kings -- Enhanced Edition;The Witcher 2 Assassins Of Kings Enhanced Edition;witcher2;Linux;23574064;21185900162;en_release_3_20150306204412_20992;;;Process/remove wine .vir\
+;*   slow\; probably requires a lot of tweaking before it's playable\
+*   editor is windows-only as extra (6474912921)\
+Editor notes:\
+installed in The WItcher 2 REDkit, 12473984K\
+*   Launcher.exe requires vcrun2010\
+*   Launcher.exe dies on startup (null pointer exception)\
+*     what needs top-level run support?\
+*       editor Configurator RedStrings scriptStudio.Release\
+*       userContentCooker userContentManager wcc\
+*     editor.exe seems stuck on "Loading main frame..." 100%+ CPU w/ gallium-d3d9\
+    should always invoke with "witcher2 -e editor"\; editor seems to be mainline\
+    didn't do much\; hard to say if editor fully functional, but at least it\
+      launches and does stuff (before it hung on compiling scripts);-e -> Editor\
+;Stable 3.0;;;;;;1;;;;;1;1;;;;;;1;;;;1;;;;;;;
+the_witcher;The Witcher:  Enhanced Edition -- Director's Cut;The Witcher Enhanced Edition;witcher;Windows;13990468;9662239219;1.5_(a)_(10712);;;find save location\
+;no saves yet\; don't know where\
+    needs writable System/Scintilla/nss.api for editor\
+*   needs native d3dx9 or everything is mostly blank\
+    with editor (-e) (seems ok, but mostly untested);-e -> Editor\
+;Stable 3.0;registry: Software\\CD Projekt RED\\Witcher;;;;;1;;;;;1;;;;;;;;;;;;;;;;;;
+thea_the_awakening;Thea:  The Awakening;Thea - The Awakening;thea;Windows;2230640;1102427144;1.20.3919.0_(19474);;;Reinstall directly into 64-bit prefix\
+;      * in save location is a random number assoicated w/ profile\; see registry:\
+        ProfileID_h313101827 - auto-corrected if only 1 in Saves dir?\
+    includes dlc: thea_story_bundle 1_20_1921\
+    includes (untested/disabled) multiplayer version\
+*   as of 2.15.0.17, must disable d3d11 to avoid using it\
+*     in dx11, requires dev for no crash, staging for no water\
+*     even after that, characters on-map are invisible, so don't use.\
+*       no amount of winetricks has any effect\
+*     remove windows/d3d11.dll as well\
+*     [maybe: set winver to winxp as well?]\
+Note:  many updates and wine versions later, I now use dx11/dxvk.\
+;;Stable 4.0;registry: Software\\MuHa Games\\Thea: The Awakening;game dir: Thea_Data/Saves/*/^profile;;;;;;;;;;;;;1;;1;;;;;;;;;;;;
+thunderscape;Thunderscape;Thunderscape;thunder;DOS;224664;192402184;2.0.0.3;;;Icon, maybe\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+tis100;TIS 100;TIS 100;;Linux;81496;36736270;en_11_27_2017_16765;;;Recreate exe, icon\
+Finished\; uninstall\
+;  programming game - finished except for optimization, and not entertaining\
+    enough to motivate me to spend more time on it\
+;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;
+titan_quest_anniversary_edition;Titan Quest -- Anniversary Edition;Titan Quest - Anniversary Edition;titq;Windows;6359884;8992264879;1.57_(21976);;titan_quest_ragnarok\
+same version as main game\
+;Document editor support executables\
+;*    Editor appears non-functional\
+;-e -> Editor\
+-e <exe> -> Editor support executable\
+;Stable 4.0;user dir: My Documents/My Games/Titan Quest - Immortal Throne/Settings;user dir: My Documents/My Games/Titan Quest - Immortal Throne/SaveData;;;;;;;;;;;;;1;;;1;;;;;;;;;;;
+tomb_raider_1;Tomb Raider;Tomb Raider 1;tr1;DOS;323668;254769280;20180105_(17652);;;Finished\; uninstall\
+;uses glide emu\
+    had to convert cd sound tracks to ogg (mp3 has no size) (also GAME.DAT)\
+    glide emu is slow and somewhat unreliable\
+;;;;;;;;;1;;;;;1;;;;;;;;;;;;;;;;;
+tomb_raider_2;Tomb Raider 2;Tomb Raider 2;tr2;Windows;313340;258553264;20180108_(17720);;;Finished\; uninstall\
+;    used to need no wm control or wierd movie placement\
+    setup tool used to take no mouse input (only kb)\
+    manual edit of registry gives full-screen resolution\
+;tr2 setup -> config program\
+;Stable 3.0;registry: Software\\Core Design\\Tom Raider II;game dir: savegame.*;;;;;1;;;;;;;;;;;;;;;;;;;;;;
+tomb_raider_3;Tomb Raider 3;Tomb Raider 3;tr3;Windows;483536;326262912;20171016_(15705);;;Finished\; uninstall\
+;    needs writable config.txt data.bin\
+    crashes on startup if winver > win98\
+ ;tr3 setup -> config program\
+;Stable 3.0;game dir: config.txt;game dir: savegame.*;;;;;1;;;;;;;;;;;;;;;;;;;;;;
+tomb_raider_the_last_revelation;Tomb Raider 4:  The Last Revelation;Tomb Raider 4;tr4;Windows;955840;807597008;20170914_(14963);;;;    setup tool used to take no mouse input (only kb)\
+    includes editor (-e) w/ same engine\; not sure how to use\
+*     maybe winroomedit?  but that crashes on startup\
+    includes extra level (-l) w/ same engine\; unskippable long init cutscene\
+    not sure how to exit to main menu\
+*   setting "MaxVersionGL"=dword:00040005 causes videos to be black;tr4 setup -> config editor\
+-e -> Editor\
+-l -> Times bonus level\
+;Stable 3.0;registry: Software\\Core Design\\Tomb Raider IV, Tomb Raider IV (Demo), Tomb Raider Level Editor;game dir: savegame.* */savegame.*;;;;1;;;;;;;;;;;;;;;;;;;;;;;
+tomb_raider_chronicles;Tomb Raider 5:  Chronicles;Tomb Raider 5;tr5;Windows;571356;476794248;20171024_(15901);;;See if there's a way to make it widescreen (seems fixed res)\
+;    not sure how to exit to main menu\
+    used to have laggy inventory\
+    used to have corrupted video on menu screen (texture blending error?)\
+*   setting "MaxVersionGL"=dword:00040005 causes videos to be black;tr5 setup -> Config editor\
+;Stable 3.0;registry: Software\\Core Design\\Tomb Raider Chronicles;game dir: savegame.*;;;;;;;;;;;;;;;;;;;;;;;;;;;
+tomb_raider_the_angel_of_darkness;Tomb Raider 6:  The Angel of Darkness;Tomb Raider 6;tr6;Windows;1419460;1427392232;20171016_(15707);;;Try to get running again\
+Gather save location\
+;*   error assertion on startup if videos can't play\
+*   if videos play (ffdshow + native crap), game iconifies\
+*     sometimes\; and sometimes it just dies miserably\
+*     [note: can't get videos to play any more];;Development 3.15;registry: Software\\Core Design\\TombRaiderAngelOfDarkness;;;;1;;;;;1;;;;;;;;;;;;;;;;;;;
+toonstruck;Toonstruck;Toonstruck;toonstruck;ScummVM;968620;964578415;en_gog_2_20292;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+torchlight;Torchlight;Torchlight;torch;Windows;1857032;0;2.0.0.12;;;Update\
+Fix editor (try with mono again\; try with more patience/electricity)\
+;*   nasty flashies with gallium-d3d9\
+*   editor refuses to start w/ mono, but works w/ dotnet30\
+*     or, it used to - now it just spins CPU for very long time\
+;-e -> Editor\
+;Stable 3.0;user dir: Application Data/runic games/torchlight/settings.txt;user dir: Application Data/runic games/torchlight/save;;;;1;;;;;;;;;;;;1;;;;;;;;;;;
+torchlight_ii;Torchlight II;Torchlight 2;torch2;Linux;1672996;1564459136;2.0.0.2;;;;    for mods, use launcher (-m) and select mod launch\
+ ;-m -> Launcher (mod manager)\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+torment_tides_of_numenera;Torment:  Tides of Numenera;Torment Tides of Numenera;ton;Linux;9262688;4286706881;2.3.0.4;;;Finish install: icon, notes\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+tower_of_time;Tower of Time;Tower of Time;;Linux;11101552;5884256264;1_4_0_11632_26994;;;Finish install:  EXE, icon, notes\
+FIgure out why so slow\
+;;;;;;;;;;;;;;1;1;;;;;;;;;;;;;;;;;
+transistor;Transistor;Transistor;transistor;Linux;3583536;2798809691;1_50440_8123_23365;;;;    no docs whatsoever\
+    Linux port does not support joysticks, but gives instructions as\
+      xbox pad button images;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+treasures_of_the_savage_frontier;Treasures of the Savage Frontier;Treasures of the Savage Frontier;sft;DOS;3140;21831835;2.0.0.2;;;;    opl snd, cga gfx - use Amiga version\
+;-A -> Amiga version\
+;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;
+trine_enchanted_edition;Trine -- Enchanted Edition;Trine Enchanted Edition;trine;Linux;1445512;1231206222;2.0.0.2;;;;    started included script once to create pre-init config\
+    separate initial config wrapper (-c)\
+*   jittery sound\; may need alsa reconfig;-c -> Configuration editor\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+trine_2_complete_story;Trine 2:  Complete Story;Trine 2 - Complete Story;trine2;Windows;3650616;3247908227;2.0.0.5;;trine_2_soundtracks_artbooks extras only\
+;Retry Linux version and delete one or the other\
+Does Windows version need staging?\
+windows 64-bit?;    started included script once to create pre-init config\
+    separate initial config wrapper (-c)\
+*   dies immediately with X protocol error\
+Windows version:\
+Trine 2 - Complete Story (4497252K) 2.01_build_447_(15973) (3937752988)\
+*   invisible menu text w/o staging\; using wine-any\
+;-c -> Configuration editor\
+;Staging 3.15;user dir: Application Data/Trine2/options.txt;user dir: Application Data/Trine2/*.fbs;;;;;;1;;;;;;;;;1;;;;;;;;;;;;
+trine_3_the_artifacts_of_power;Trine 3:  The Artifacts of Power;Trine 3 - The Artifacts of Power;trine3;Windows;3845400;3580061665;2.2.0.4;;;Retry Linux version and delete one or the other\
+Does Windows version really need staging?\
+Reinstall 64-bit\
+;*   started included script once to create pre-init config\
+*   separate initial config wrapper (-c)\
+*   either takes way too long to start up, or just hangs on startup\
+*     ... and takes system with it\
+Wine version:\
+Trine 3 - Artifacts of Power (4346292K) 1.11(build_3102)_(16714) (3994154766)\
+    64-bit binary\; must be installed in 32-bit first and transferred\
+*   black screen/nonfunctional in stable 3.0\
+*   invisible menu text w/o staging\; using wine-any\
+*   slow to start, slow to play;-c -> Configuration editor\
+;Staging 3.15;user dir: Application Data/Trine3/options.txt;user dir: Application Data/Trine3/*.fbs;;;;;;1;;;;1;;;;;1;;;;;;;;;;;;
+tron_20;TRON 2.0;TRON 2.0;tron2;Windows;2405332;1061174424;2.0.0.2;;;Try to get working in newer wine\
+collect save location\
+;*    dies on startup\
+;-c -> Configuration editor\
+;Staging 3.15;game dir: launchcmds.txt;;;;1;;;;;;;;;;;;;;;;;;;;;;;;
+two_worlds;Two Worlds Epic Edition;Two Worlds Epic Edition;2w;Windows;4256568;4004217953;2.2.0.23;;;;*   needs xact or no sound\
+*   had screwed up and missing graphics in stable 3.0, but seems ok now\
+*   Some minor graphic glitches with throbbing items and ext. glow (hdr?)\
+*   no movies, even w/ native quartz and lav\
+*     err:quartz:GetClassMediaFile Media class not found\
+*     installing wmp9/windowscodecs causes severe texture errors (why?)\
+    Installed mods to allow female hero (http://www.insidetwoworlds.com\; in add)\
+      Human Heroine for 1.6/1.7 - HumanHeroin.wd (silent conversations)\
+      Human Heroine for 1.6/1.7 - HumanHeroin16.wd (male conversation voice)\
+    [Note: "Linux" version is just win ver packaged with Wine]\
+    black menu in stable 2.0\; ok in 3.0;;Stable 3.0.3;registry: Software\\Reality Pump\\TwoWorlds;user dir: Saved Games/Two Worlds Saves;;;;;;;1;1;;;;;;;;;;;;;;;;;;;
+two_worlds_ii_castle_defense;Two Worlds II Castle Defense;Two Worlds II Castle Defense;2w2cd;Windows;213020;153786040;2.1.0.9;;;;    Used to need native quartz to show videos and get past lang selection\
+    Used to not work with gallium-d3d9\
+#   as of stable 3.0, white startup screen w/ gallium-d3d9;;Stable 3.0.3;user dir: Local Settings/Application Data/TW2CD/settings.dat;user dir: Local Settings/Application Data/TW2CD/savegame.dat;;;;;;;;;;;;;;;;;;;;;;;;;;;
+two_worlds_ii_velvet_edition;Two Worlds II:  Velvet Edition;Two Worlds II Velvet Edition;2w2;Windows;5334852;5407512883;2.0.6_(23167);;two_worlds_ii_call_of_the_tenebrae_dlc\
+same verison as main game\
+;Reinstall worldmerge after update\
+;    Installed Worldmerge 1.4a (https://www.moddb.com/mods/worldmerge\; in add)\
+*   Requires d3dcompiler_43 to run\
+*   Now dies early on, d3dcompiler_43 or not, in either executable\
+*     Oddly enough, the old installation (2w2.old) gets a little farther\
+*     Even more oddly, the old installation w/ the old binary gives an indication that worldmerge is installed, but the newer doesn't\
+note:  used to work fine\
+Fuck gog and their stupid "works with WIndows 10" bullshit\
+;To begin a new Worldmerge game:\
+  - make char in main campaign & save\
+ - start Pirates @ hard and import saved char w/o level-up\
+also, activate subtitles\
+;Development 3.18;registry: Software\\Reality Pump\\TwoWorlds2;user dir: Saved Games/Two Worlds II;;;1;;;;;;;;;;1;;;;;;;;;;;;;;
+tyranny_game;Tyranny;Tyranny;tyranny;Linux;15186080;8432418336;1_2_1_0158_15398;;tyranny_commander_edition_bonus effing ringtones\
+tyranny_bastards_wound\
+tyranny_tales_from_the_tiers\
+same versions as main game\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+tyrian_2000;Tyrian 2000;;;DOS;0;0;;WONTPLAY_FREE:  action game, not my thing;;Download installer?\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_2;Ultima II:  The Revenge of the Enchantress;Ultima 2;u2;DOS;4588;12858704;1.0_(22309);;;See if (superior) C64 version exists\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_3;Ultima III:  Exodus;Ultima 3;u3;DOS;11396;19617824;1.0_(22309);;;See if (superior) C64/Amiga version exists\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_4;Ultima IV:  Quest of the Avatar;;;Linux;0;17364072;2.1.0.46;WONTPLAY_FREE:  xu4 + ultima_iv;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_iv;Ultima IV:  Quest of the Avatar;Ultima 4;u4;Linux;5152;12537712;1.0_(22309);;;Uninstall and maybe hide in favor of xu4 (u4 already points to it)\
+At least move game dir out if xu4 doesn't need it\
+;;;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;
+ultima_9_ascension;Ultima IX:  Ascension;Ultima IX - Ascension;u9;Windows;1689372;968691528;2.0.0.14;;;recheck movies\
+collect config & save locations\
+;   iconifies on intro movie\; black video thereafter\
+   ok if movies are moved out of way (may need mpeg1 player)\
+   gfx ok if renderer set to "2" (d3dx9) and MultiPassChromaKey=0;;Stable 3.0;;;;;;;;;;1;;;;;;;;;;;;;;;;;;;
+ultima_underworld_1;Ultima Underworld;Ultima Underworld;uuw;DOS;37328;29124040;1.0_(22310);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_underworld_2;Ultima Underworld II;Ultima Underworld 2;uuw2;DOS;37420;28828344;1.0_(22309);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_v;Ultima V:  Warriors of Destiny;Ultima 5;u5;DOS;5128;13113440;1.0_(22309);;;See if (superior) Amiga version exists\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_vi;Ultima VI:  The False Prophet;Ultima 6;u6;DOS;7584;16404208;1.0_(22309);;;See if (superior) Amiga version exists\
+;;-s -> sound setup\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_vii_serpent_isle;Ultima VII:  Serpent Isle + The Silver Seed;Ultima 7 - Serpent Isle;exult;Linux;29260;23454224;1.0_(22309);;;Move dosbox game dir out\
+;Soft linked DOS dir direclty to /usr/share/exult/serpentisle\
+Using exult-9999::gentoo (1.5.0git)\
+;;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;
+ultima_vii_the_black_gate_the_forge_of_virtue;Ultima VII:  The Black Gate + The Forge of Virtue;Ultima 7;exult;Linux;25232;20994032;1.0_(22309);;;Move dosbox game dir out\
+;Soft linked DOS dir direclty to /usr/share/exult/blackgate\
+Using exult-9999::gentoo (1.5.0git)\
+;;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;
+ultima_8_gold_edition;Ultima VIII:  Pagan Gold Edition;Ultima 8;u8;DOS;102552;38733096;1.0_(22309);;;Find native port I heard rumors of\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_worlds_of_adventure_2_martian_dreams;Ultima Worlds of Adventure 2:  Martian Dreams;Ultima - Martian Dreams;mars;DOS;29880;34381785;1.0_(22309);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+worlds_of_ultima_the_savage_empire;Ultima Worlds of Adventure:  The Savage Empire;Ultima - The Savage Empire;savemp;DOS;43696;50374088;1.6_(22309);;;icon?\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ultima_1;Ultima:  The First Age of Darkness;Ultima 1;u1;DOS;4820;12814448;1.0_(22309);;;See if (superior) C64 version exists\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+underrail;UnderRail;UnderRail;underrail;Windows;2803492;2854999852;1.0.3.20_(17412);;;;*   required native .net/xna (included in binary)\
+*   gives parse error every startup (ignore)\
+*     now somehow forgets to install mscoree.dll\; new procedure:\
+        - install in mono prefix (-n)\
+	- uninstall mono\
+	- winetricks dotnet40\
+    used to require windowscodecs to get past save game error\
+    used to require manual kill on shutdown (or maybe it just takes forever)\
+;;Stable 3.0;user dir: My Documents/My Games/Underrail/config.dat;user dir: My Documents/My Games/Underrail/Saves;;;;;;;;;;;;;;;;;;;;;;;;;;;
+unmechanical;Unmechanical Extended;Unmechanical;;Linux;1548772;962206236;2.1.0.5;;;(Re)test new version\
+Recreate exe, icon\
+\
+;  Required manual editing of config file to prevent oversized unusable\
+    window (when I didn't have 1920x1080 native);  Finished\; no value in replaying, so uninstalled (new version not worth trying)\
+;;;;;;;;1;;;;;;;1;;;;;;;;;;;;;;;
+vampire_the_masquerade_bloodlines;Vampire:  The Masquerade -- Bloodlines;VtMB;vtmb;Windows;3937712;2689249961;1.2_(up_10.0)_(22135);;;Look into full user patch\
+;*   videos in corner and no menu (& no 3d?) w/ gallium-d3d9\
+;;Stable 3.0;game dir: Vampire/cfg;game dir: Vampire/SAVE;;;;;;;;;;;;;;;;;;;;;;;;;;;
+vampire_the_masquerade_redemption;Vampire:  The Masquerade -- Redemption;Vampire The Masquerade - Redemption;vtmr;Windows;1254128;859974624;2.0.0.3;;;;*   needs CSMT or gallium-d3d9 (otherwise just black/blank)\
+;;Stable 3.0;game dir: masquerade.ini;game dir: SaveGames;;;;;;;;;;;;;;;;;;;;;;;;;;;
+victor_vran;Victor Vran;Victor Vran;vran;Linux;4747148;4455559449;en_2_07_20171122_16619;;;Remove windows version entirely, since it's gone/broken anyway\
+Tried to get libstdc++ from older ABI, but needs more effort\
+Either get Linux version working or reinstall Windows version\
+;    made link from libcurl.so.4 to libcurl-gnutls.so.4 in i386/lib\
+*   still refuses to work (Trace/breakpoint trap)\
+      #0  0x0830c9b8 in HGE::InitScriptSystem() ()\
+      #1  0x0830805b in HGE::AppBoot::Init() ()\
+      #2  0x0830b163 in HGE::CGameApp::Run() ()\
+      #3  0x0819cb44 in HslMain() ()\
+      #4  0x0819718f in main ()\
+\
+Wine notes:  2.07(20170619)_(12873)\
+*   no sound (xact doesn't help, even though it uses x3daudio1_7)\
+*   beep\; probably no movies\
+*   instant death if d3d11 disabled\
+*   black ground/scenery (fixed in staging)\
+*   unplayably slow frame rate (maybe due to system busy\; try again later)\
+note:  I'm pretty sure vran was fine the first time I tried, but not any more;;;;;;;1;;;1;;;;1;;;;;;;;;;;;;;;;;
+warhammer_40000_armageddon;Warhammer 40,000:  Armageddon;Warhammer 40,000 Armageddon;wh40ka;Windows;1370792;1179792984;1.10.12d_(21129);;warhammer_40000_armageddon_angels_of_death\
+warhammer_40000_armageddon_glory_of_macragge\
+warhammer_40000_armageddon_golgotha\
+warhammer_40000_armageddon_ork_hunters\
+warhammer_40000_armageddon_soundtrack\
+warhammer_40000_armageddon_vulkans_wrath\
+same versions as main game\
+;icon, config & save locations, notes\
+;;-e -> Editor\
+;Stable 3.0;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;
+warhammer_40000_armageddon_da_orks;Warhammer 40,000:  Armageddon -- Da Orks;Warhammer 40000 Armageddon - Da Orks;wh40kado;Windows;1166036;982794568;1.00a_(18615);;;icon, config & save locations, notes\
+;;-e -> Editor\
+;Stable 3.0;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;
+warhammer_40000_chaos_gate;Warhammer 40,000:  Chaos Gate;ChaosGate;wh40kcg;Windows;713508;546024040;1.2_hotfix2_(22330);;;icon, config & save locations, notes\
+;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;
+warhammer_40000_rites_of_war;Warhammer 40,000:  Rites of War;WARHAMMER 40K - Rites of War;wh40krow;Windows;587824;306500376;2.0.0.1;;;icon, config & save locations, notes\
+;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;
+warhammer_40000_sanctus_reach;Warhammer 40,000:  Sanctus Reach;Warhammer 40,000 Sanctus Reach;wh40ksr;Windows;3136852;0;1.2.4_(21585);;;Update\
+Process/remove .vir\
+icon, config & save locations, notes\
+;freeze during initial "loading" (no longer present?)\
+painfully slow\
+;;Development 3.15;;;;;1;;;;;;;1;;;1;;;;;;;;;;;;;;
+wasteland_the_classic_original;Wasteland 1:  The Original Classic;Wasteland 1 The Original Classic;wl1;Linux;94484;78119196;2.0.0.3;;;Maybe try Amiga version as well (would require getting manual)\
+;This is not the original, but a version with the manual and a custom dosbox integrated.\
+;Its reputation is greater than the game, by far.\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+wasteland_2_kickstarter;Wasteland 2;;;Linux;0;11012677169;2.9.0.14;OBSOLETE:  Wasteland 2 DIrector's Cut;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+wasteland_2_directors_cut;Wasteland 2:  Director's Cut;Wasteland 2 Directors Cut;wl2;Linux;15136644;9953371965;2.3.0.5;;wasteland_2_digital_classic_edition_upgrade\
+;;*   Requires 8192+ file descriptors to avoid hang on startup\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+way_of_the_samurai_4;Way of the Samurai 4;Way of the Samurai 4;wots4;Windows;7118168;4928131274;1.06.2_(19785);;additional_sets\
+same version as game;Install\
+;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+west_of_loathing;West of Loathing;West of Loathing;wloath;Linux;2177604;207790837;en_1_0_3d_16744;;;icon;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
+wizardry_6;Wizardry 6;Wizardry 6;wiz6;DOS;29292;42323712;2.2.0.18;;;;    [note: ega low-quality gfx and low-quality sound]\
+    [note: Amiga version is same as PC version, but slower/suckier]\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+wizardry_7_gold;Wizardry 7 Gold;Wizardry 7 Gold;wiz7;Windows;533328;228168024;2.2.0.17;;;;*   Window gymnastics required\; needs more thought (maybe virt. desktop)\
+      in fvwm, automap disappears if mouse pressed\
+      in virt. desktop, automap disappears instantly, but returns if\
+        iconify/deiconify and stays until next battle\
+    needs lots of writable files\; best to just use unionfs\
+    older versioon once had other issues, but seems OK now\
+    includes DOS version (2.0.0.11), but not installed, even though forum users claim it's better\
+;;Stable 3.0;game dir: CDDATA.INI PCFILE.GLD;game dir: *.sgm;;;;;;;;;;;;;;;;;;;;;;;;;;;
+wizardry_8;Wizardry 8;Wizardry 8;wiz8;Windows;1857216;0;2.0.0.6;;;Update\
+;    Can manually adjust resolution to any 4:3 in 3DVideo.CFG\
+*   needs mfc42 for 3DSetup.exe\
+*   OpenGL engine has transparency issues\
+      In stable 3.0, I get gridding due to tex borders and black videos\
+      In later versions, X protocol error on/after first video\
+       note that in opengl, must set depth to 32 manually\
+         can also set width & height to 1920x1080\
+*   DirectX7 used to work, but now main menu is black\
+*   Directx6 is same\
+    Glide2x limited to 800x600x16 internally, but it's what works best in stable 3.0, I guess\
+;-c -> 3D Configuration\
+;Stable 3.0;game dir: 3DVideo.CFG Wiz8.CFG;game dir: Saves;;;;;;;;;;;;;;;;;;;;;;;;;;;
+world_of_goo;World of Goo;world of goo;goo;Linux;80592;69912959;2.0.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+x_rebirth;X Rebirth;X Rebirth;xr;Linux;7805468;9227185455;en_4_30_16978;;x_rebirth_home_of_light en_gog_3_16977\
+x_rebirth_teladi_outpost en_gog_3_16977\
+;Check joy config/support\
+;    haven't checked joy config\
+    removed huge "languages" dir\; only English needed\
+*   slow as hell (takes forever to just start game)\; small fonts\
+;;;;;;;;;;;;;;1;;;;;;;;;;;;;;;;;
+xcom_apocalypse;X-COM:  Apocalypse;X-COM Apocalypse;xcoma;DOS;609032;413959760;2.0.0.4;;;icon?\
+\
+;Note:  OpenXCOM does not and may never support this\
+;-s -> Settings\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+xcom_terror_from_the_deep;X-COM:  Terror from the Deep;X-COM Terror from the Deep;openxcom;Linux;79200;50970792;2.0.0.4;;;icon?\
+;*   DOS: not sure if mt32 works\; setup crashes on selection\
+OpenXCOM soft links to DOS installation\
+Using openxcom-1.0.0_p20180317::gentoo\
+;Use xcomtftd to invoke DOS version:\
+    -s -> Settings\
+must set "Mods" main menu to TFTD to play instead of UFO Defense\
+\
+;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;
+xcom_ufo_defense;X-COM:  UFO Defense;X-COM UFO Defense;openxcom;DOS;19348;20019144;2.0.0.4;;;icon?\
+\
+;*   DOS:  not sure if mt32 works\; setup crashes on selection\
+OpenXCOM soft links to DOS installation\
+Using openxcom-1.0.0_p20180317::gentoo\
+\
+;Use xcomud to invoke DOS version:\
+    -s -> Settings\
+must set "Mods" main menu to UFO Defense to play instead of TFTD\
+;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;
+x2_the_threat;X2:  The Threat;X2 - The Threat;x2;Windows;1167084;616521576;2.0.0.2;;;Process/remove .vir\
+Fix voice/media issues\
+Collect config/save locations\
+\
+;*   movies are black/silent w/o native amstream/quartz/devenum\
+*     and nonresponsive if can't play with native aqd\
+*   no voices in-game w/o wmp9 (or at all, any more)\
+*   no music in-game\; basically only a very small number of sound effects\
+*   no video on logo video, but other video appears OK\
+    [appdb also suggests ActiveMoview for IE]\
+note:  used to work fine\
+;;Stable 3.0;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;
+x3_reunion;X3:  Reunion;X3 Reunion;x3;Linux;4308000;6505634499;2.0.0.3;;;Good candidate for offlining\
+;*   screwy joy config (probably no vibration)\
+    removed huge "languages" dir\; only English needed\
+;-r -> Reunion\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+x3_terran_war_pack;X3:  Terran War Pack;X3 Terran War Pack;x3;Linux;8467068;9982150203;2.4.0.7;;;;*   screwy joy config (probably no vibration)\
+;-t[c] -> Terran Conflict\
+-a[p] -> Albion Prelude\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+x_beyond_the_frontier;X:  Beyond the Frontier;X - Beyond the Frontier;xbtf;Windows;386660;343503736;2.0.0.3;;;collect save location\
+;    no saves yet\
+*   options screen does not appear if wm decoration enabled\
+    16:9 not really supported\
+*   needs amstream/devenum/quartz + regsvr32 of amstream for sound\
+;;Stable 3.0;system registry: Software\\EgoSoftware\\X;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+x_tension;X:  Tension;X - Tension;xt;Windows;406084;341534080;2.0.0.3;;;gather save location\
+;    no saves yet\
+*   options screen does not appear if wm decoration enabled\
+*   needs amstream/devenum/quartz + regsvr32 of amstream for sound\
+;;Stable 3.0;system registry: Software\\EgoSoftware\\X-TENSION;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+xanadu_next;Xanadu Next;Xanadu Next;xnext;Windows;1088060;766696264;24.11.2016_(16643);;;Fix, document\
+;;;Stable 4.0;;;;;1;;;;;1;;;;;;;;;;;;;;;;;;;
+xenonauts;Xenonauts;Xenonauts;xenon;Linux;2690064;2444144422;en_1_65_21328;;;icon?\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+zak_mckracken_and_the_alien_mindbenders;Zak McKracken and the Alien Mindbenders;Zak McKracken and the Alien Mindbenders;zakam;ScummVM;59352;136547306;en_gog_2_20099;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+zork_ii_the_wizard_of_frobozz;Zork II:  The Wizard of Frobozz;Zork2;Zork2;Infocom;2528;18861008;2.1.0.17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+zork_iii_the_dungeon_master;Zork III:  The Dungeon Master;Zork3;Zork3;Infocom;2188;18497752;2.1.0.17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+zork_nemesis_the_forbidden_lands;Zork Nemesis:  The Forbidden Lands;Zork Nemesis;znemesis;ScummVM;1697088;1443567224;2.0.0.10;;;Recreate EXE, icon\
+Reinstall and uninstall properly\
+;  requires only linking libertine fonts\
+;;;;;;;;;1;;;;;;;1;;;;;;;;;;;;;;;
+zork_zero_the_revenge_of_megaboz;Zork Zero:  The Revenge of Megaboz;Zork0;Zork0;Infocom;1232;17856984;2.1.0.16;;;;   required blb file from ifarchive.org\
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+zork_grand_inquisitor;Zork:  Grand Inquisitor;Zork Grand Inquisitor;zgi;ScummVM;2493356;2180655912;1.0_dvd_(20293);;;Recheck regarding supposed issues with DVD version\
+;  requires only linking libertine fonts or freefonts (must be ttf, not otf)\
+;;;;;;;;;1;;;;;;;1;;;;;;;;;;;;;;;
+zork_the_great_underground_empire;Zork:  The Great Underground Empire;Zork1;Zork1;Infocom;1484;17799208;2.1.0.17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+7_billion_humans;7 Billion Humans;7 Billion Humans;7bh;Linux;155136;154686841;1_0_32487_23774;;;;;;;;;;;;;1;;;;;;;;;;;;;;;;1;1;;LogicGame\;X-Programming\;;;;
+vaporum;Vaporum;Vaporum;;Linux;3177968;2953285460;patch_12_24158;;;Install\
+;;;;;;;;;;;;;;;;;;;;;;;;1;;1;;;;;;
+a_new_beginning;A New Beginning:  Final Cut;A New Beginning - Final Cut;anb;Windows;4042456;4094432495;2.0.4.0395_(27805);;;;No sound in movies, but movies have speech bubbles and moves can be viewed separately\
+;;Stable 4.0;user dir: Local Settings/Application Data/Daedalic Entertainment/A New Beginning - Final Cut/Config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/A New Beginning - Final Cut/Savegames;;;;;1;;;1;;;;1;;;;;;;;;;;;AdventureGame\;;;;
+the_witcher_3_wild_hunt_game_of_the_year_edition_game;The Witcher 3:  Wild Hunt - Game of the Year Edition;The Witcher 3 Wild Hunt GOTY;witcher3;Windows;37676248;35966059616;1.31_(a)_(9709);;;Install\
+;;;;;;;;;;;;;;1;;;;;;;;;;1;;;;;;;;
+tokyo_xanadu_ex;Tokyo Xanadu eX+;Tokyo Xanadu eX+;txex;Windows;6091008;6305401626;v1.08_(18828);;outfit__accessory_bundle\
+same version as main;Icon\
+Fix\
+;Logo videos are skipped w/o wmp9 & friends\
+Other video is slow esp. if start-skip used (use L1 instead)\
+2nd startup video is all blank/silent, though.\
+;Vibration!;Stable 4.0;;;;;1;;;;;1;;;;;1;;;;;;;;;;1;;;;
+wizards_warriors;Wizards & Warriors;Wizards and Warriors;ww;Windows;1307480;1041147064;1.0b_hotfix2_(23816);;;Finish Install\
+Try to get dxwnd to work (or something similar)\
+;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+aer;AER -- Memories of old;AER Memories of old;aer;Linux;1345980;690928355;en_v1_0_4_1_19457;;;;*Requires setting fullscreen to 0 in .config/unity3d/Daedalic\\ Entertainment\\ GmbH/AERMemoriesofOld/prefs every run\
+  otherwise just black screen w/ cursor and unmoving progress bar\
+Probably also requires manual resolution setting\; it will scale internally to fullscreen, but not externally\
+Joystick support doesn't work and isn't documented.  It scans the joystick, but doesn't support it.\
+  Seems to work with indrv -d\; may work with just removing ds4 extra devices as well with a remap\
+;;;;;;;;;;;;;;;;;;;;;;;;;1;;1;AdventureGame\;X-Action\;;;;
+atom_rpg_postapocalyptic_indie_game;ATOM RPG;ATOM RPG Post apocalyptic indie game;atom;Linux;5618428;3280499825;1_085_28815;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;RolePlaying\;;;;
+xcom_enemy_unknown_complete_pack;XCOM:  Enemy Unkown Complete Pack;X-COM Enemy Unknown;xcomeu;Windows;19462624;0;401776_(19762);;;;;;;;;;;;;;;;;1;;;;;;;;;;1;;;;;;;;
+age_of_civilizations_ii;Age of Civilizations II;Age of Civilizations II;aoc2;Linux;326284;244508048;1.01451_ela_(64bit)_(27377);;;;Can be run directly using java -jar AoC2.jar.\
+The EXE is just a copy of the jar, and can be deleted along with the jre directory.\
+The 64-bit installer is masked\; make sure 32-bit one doesn't disappear one day.\
+settings in game dir:  settings\
+saves in game dir:  saves/games/\
+;;;;;1;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;
+withcer_adventure_game;The Witcher Adventure Game;The Witcher Adventure Game;witcherag;Windows;704324;0;1.2.5a_(12082);;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+vikings_wolves_of_midgard;Vikings - Wolves of Midgard;Vikings - Wolves of Midgard;vikw;;7234732;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+victory_at_sea;Victory At Sea;Victory At Sea;;Linux;1118572;445342337;1_4_23624;;;bin, icon;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+thronebreaker_the_witcher_tales;Thronebreaker:  The Witcher Tales;Thronebreaker;tb;Windows;6775124;0;;;;;;;;;;;;;;;;;;;;;;;;1;;;;1;;;;;;;;
+warlords_battlecry;Warlords Battlecry;Warlords Battlecry;wbc;Windows;804184;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+warlords_battlecry_2;Warlords Battlecry II;Warlords Battlecry 2;wbc2;Windows;917624;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+warlords_battlecry_3;Warlords Battlecry III;Warlords Battlecry 3;wbc3;Windows;947504;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+apocalipsis_wormwood_edition;Apocalipsis - Wormwood Edition;Apocalipsis - Wormwood Edition;apoc;Windows;4011828;1024813936;2.0.0.2;;;Finished\; uninstall;Bad voice stuttering, but with subtitles it's OK\
+;;Stable 4.0;;user dir:  Application Data/Apocalipsis/savegame;;;;;1;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;
+thea_2_the_shattering;Thea 2:  The Shattering;Thea 2 The Shattering;thea2;Windows;5455928;2510570610;;;;;Got this via gift code\; no email receipt\
+      * in save location is a random number assoicated w/ profile\; see registry:\
+        PlayerProfileID_h380795856 - auto-corrected if only 1 in Profiles dir?\
+    includes dlc: thea_story_bundle 1_20_1921\
+;;Stable 4.0;registry: Software\\MuHa Games\\Thea2;game dir: Thea2_Data/Profiles/*/Save;;;;;;;;;;;;;1;;1;;;;;;;;;;;;
+anima_gate_of_memories;Anima:  Gate of Memories;Anima Gate of Memories;anima;Linux;8890512;5485501889;2.0.0.2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+superhero_league_of_hoboken;Superhero League of Hoboken;Superhero League of Hoboken;;DOS;187324;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;

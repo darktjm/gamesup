@@ -1,0 +1,4 @@
+#!/bin/sh
+game="${0##*/}"
+cd /usr/local/games/inf
+exec zoom "$game"

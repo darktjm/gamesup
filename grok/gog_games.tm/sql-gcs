@@ -1,0 +1,45 @@
+-- from gcstar export after I mangled the field names
+DROP TABLE items;
+DROP TABLE fields;
+BEGIN;
+CREATE TABLE fields (name TEXT UNIQUE NOT NULL, display TEXT NOT NULL, type TEXT NOT NULL, params TEXT);
+INSERT INTO  fields (display, type, name, params) VALUES ('Full Name', 'short text', 'full_name', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('GOG name', 'short text', 'gog_name', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('EXE name', 'short text', 'exe_name', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('EXE Type', 'options', 'exe_type', 'Linux,Wine,Dosbox,AGS,ScummVM,Infocom,Amiga');
+INSERT INTO  fields (display, type, name, params) VALUES ('Install Name', 'short text', 'install_name', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Install Size (K)', 'number', 'install_size_k', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Version', 'short text', 'version', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Installer Size', 'number', 'installer_size', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('DLC', 'long text', 'dlc', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Hidden', 'short text', 'hidden', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Short notes', 'single list', 'short_notes', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Installation notes', 'long text', 'installation_notes', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Game Notes', 'long text', 'game_notes', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Todo', 'long text', 'todo', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Wine Version', 'history text', 'wine_version', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Config Location', 'short text', 'config_location', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Save Location', 'short text', 'save_location', NULL);
+INSERT INTO  fields (display, type, name, params) VALUES ('Wine Specials', 'single list', 'wine_specials', NULL);
+COMMIT;
+BEGIN;
+CREATE TABLE items (dlc TEXT, exe_name TEXT, exe_type TEXT, full_name TEXT, game_notes TEXT, gog_name TEXT, hidden TEXT, installation_notes TEXT, installer_size NUMBER, install_name TEXT, install_size_k NUMBER, short_notes TEXT, todo TEXT, version TEXT, config_location TEXT, save_location TEXT, wine_specials TEXT, wine_version TEXT);
+\{SUBST '=''}
+\{FOREACH}
+INSERT INTO items
+ (dlc, exe_name, exe_type, full_name, game_notes, gog_name, hidden,
+  installation_notes, installer_size, install_name, install_size_k,
+  short_notes, todo, version, config_location, save_location, wine_specials,
+  wine_version)
+ VALUES
+ ('\{_dlc}', '\{_cmd}', '\{_cmdtype}', '\{_name}', '\{_game_notes}',
+  '\{_id}', '\{_hidden}', '\{_inst_notes}', '\{_setup_size}', '\{_dir}',
+  '\{_inst_size}',
+  '\{_sn_3plinux ? "3PLinux, " : ""}\{_sn_amiga ? "Amiga, " : ""}\{_sn_broken ? "Broken, " : ""}\{_sn_editor ? "Editor, " : ""}\{_sn_finished ? "Finished, " : ""}\{_sn_linuxbroken ? "LinuxBroken, " : ""}\{_sn_mods ? "Mods, " : ""}\{_sn_nomovies ? "NoMovies, " : ""}\{_sn_slow ? "Slow, " : ""}\{_sn_uninstalled ? "Uninstalled, " : ""}\{_sn_source ? "Source, " : ""}\{_sn_offlinespacehog ? "OfflineSpaceHog, " : ""}\{_sn_editorbroken ? "BadEditor, " : ""}\{_sn_nomusic ? "NoMusic, " : ""}\{_sn_brittle ? "Brittle, " : ""}\{_sn_notyetinstalled ? "NotYetInstalled, " : ""}\{_sn_wineditor ? "WinEditor, " : ""}',
+  '\{_todo}', '\{_ver}', '\{_config_loc}', '\{_save_loc}',
+  '\{_ws_dxvk ? "dxvk, " : ""}\{_ws_dx11_disable ? "dx11-disable, " : ""}\{_ws_64bit ? "64bit, " : ""}',
+  '\{_wine_ver}');
+\{END}
+UPDATE items SET short_notes = REPLACE(short_notes || ',', ', ,', '') WHERE LENGTH(short_notes) > 0;
+UPDATE items SET wine_specials = REPLACE(wine_specials || ',', ', ,', '') WHERE LENGTH(wine_specials) > 0;
+COMMIT;
