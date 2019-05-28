@@ -16,14 +16,14 @@ notify-send from libnotify for that.
 
 nonet
 =====
-First of all, I don't let any games connect to the 'net, or anything
-Windows-related, for that matter.  I used to do this by unconfiguring
+First of all, I don't let any games or anything Windows-related, for
+that matter, connect to the 'net.  I used to do this by unconfiguring
 the network or pulling the plug, but that became a hassle, and caused
 some network connection attempts to just hang.  I now use a Linux
 network namespace I call nonet.  At boot time, I run nonet.start,
 which creates the namespace.  I also have an /etc/nonet directory,
 which the namespace uses the hosts file from if it finds it.  The
-hosts file only lists loopback addresses.
+hosts file there only lists loopback addresses.
 
 I can't use "ip netns exec" to execute stuff in the new namespace,
 because it needs to run as root, and doesn't drop privilege.  It also
@@ -45,6 +45,10 @@ case, iproute2-4.3.0).  Then, make it root-owned and setuid, and install:
     sudo chmod +s nonet
     sudo mv nonet /usr/local/bin
 
+Note that I also looked into firejail, which does way more than I want
+and less conveniently.  Its only advantage (mainly for other people)
+is that it comes with most distros.
+
 gameprep
 ========
 To install gog games, I just run the gog installer using the default
@@ -54,6 +58,12 @@ owned by root:games and no "other" permissions (basically how gentoo
 installs games, sort of).  To do this, after I install one ore more
 games, I run "gameprep *" in ~/GOG Games, and then remove that
 directory.
+
+I realize that gog installers can just be unzipped, but I find some
+comfort in running the graphical installers, for some reason, even
+though mojosetup has some serious deficiencies compared to the Loki
+installer it was meant to replace, and also lacks the ads that are in
+the Windows installers.
 
 dogame
 ======
@@ -157,6 +167,28 @@ launch script looks like this:
 
     #!/bin/sh
     exec dogame -c /usr/local/games/Game\ Name/game/Game\ Executable "$@"
+
+As a side note, if you're using FVWM, like me, a recent trend in Linux
+native games is to not go full-screen correctly any more.  Many games
+continue to display borders, and worse yet, some games not only do
+that, but also iconify themselves when they go full-screen (how does
+that make sense?).  The solution is to add styling for each of these
+pesky games.  I use the following:
+
+    Style FullScreen PositionPlacement, !Title, !Borders
+    Style NoIconify UseStyle FullScreen, !Iconifiable
+
+Then, for each afflicted game, I find out the title, and add styles
+for those games, like so:
+
+    Style "Fell Seal" UseStyle FullScreen
+    Style "7 Billion Humans" UseStyle NoIconify
+
+While I'm installing and trying a game for the first time, I can use
+FvwmCommmand to temporarily issue one of the latter style commands for
+testing.  i added flags in my grok database (see below) to track these
+pesky games as well.  I currently have 14 games that need FullScreen
+and 14 that need NoIconify.
 
 save-slots.sh
 =============
@@ -509,6 +541,21 @@ already 64-bit.
       - -g = allow built-in gecko install/usage (never works)
       - -b = change what's installed based on -n/-g flags
 
+To install a wine game, I just create ~/games/wine/<shortname>, soft
+link the installer files (*.{exe,bin}) from my usual download drive
+into that directory, and run dowine on all the .exe files, optionally
+setting WINEARCH=win64 first (if it was necessary and I forgot, I
+rerun the installation in a fresh directory again with it set).  I
+realize that, like the Linux installers, I can extract the game
+without using wine (using innoextract).  In addition to feeling better
+about using the official installers, there is also something important
+missing from innoextract: all the stuff that isn't actual game files.
+For example, registry entries and additional commands executed by the
+installer.  These are not always necesary, but I'd prefer keeping
+them.  This is one of the reasons I try to find out what registry
+changes are made by each invocation of dowine by saving a .diff file.
+Wine is flaky, though, and it often doesn't work.
+
 A wine game uses an additional wrapper, wine-game.sh.  This uses an
 additional unionfs mount for the game root itself.  The game root is
 moved to /usr/local/games/wine and owned by root:games; it is then
@@ -638,7 +685,8 @@ games that make assumptions about button mappings and the fact that
 Unity3D games don't like the extra devices created by Linux for the
 motion sensors (and maybe touchpad).  For the motion sensors only, I
 run the ds4-nomo command before the game, manually.  I'll probably end
-up adding that to dogame as well.
+up adding that to dogame as well.  It's not like I use the motion
+sensors for anything, anyway.
 
 I also use a script to disconnect the ds4 immediately when I'm done
 with it: ds4-down.  I also wrote a script to use with xfce4's generic
@@ -660,3 +708,12 @@ support, chording support, "autofire" support and macro support
 (recording to a plain-text description for editing and binding, as
 well as of course replaying).  If I ever get the latter working, I'll
 upload it as a separate project here.
+
+Lately my ds4's started to flake out, though.  It won't connect just
+by pressing the button; I have to set it to pairing mode and use a
+manual connect (assuming it's already been paired).  The new and
+improved bluez only logs info if run via systemd now, though (I think;
+I haven't looked at it long enough to tell), so I can't figure out
+what's wrong Pressing the reset button does nothing, at the very
+least.  For now, I use the ds4-connect script while the ds4 is in
+pairing mode to do the connection; it's better than nothing.

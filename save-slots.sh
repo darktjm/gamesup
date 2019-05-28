@@ -48,13 +48,10 @@
 #dir="${dir}++" # profile mode
 
 test -z "$game" -o -z "$dir" && exit 1
-rdir="${dir%++}"
-if [ "$dir" != "$rdir" ]; then  # profiles
-  do_profile=y
-  dir="$rdir"
-else
-  do_profile=
-fi
+do_profile=
+case "$dir" in
+	*++) do_profile=y; dir="${dir%++}" ;;
+esac
 case "$1" in
   -s|-r)
     cd "${dir%/*}"
@@ -95,7 +92,7 @@ case "$1" in
         rmdir sd$$.$$
       fi
     else
-      if [ ! -d "$sdir" ]; then
+      if [ ! -e "$sdir" ]; then
         echo "$sdir does not exist; skipping save"
 	exit 1
       fi

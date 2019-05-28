@@ -1,0 +1,4 @@
+#!/bin/sh
+test 0 = `id -u` || exec sudo "$0" "$@"
+addr=`echo paired-devices | bluetoothctl | fgrep "Wireless Controller" | cut -d\  -f2`
+echo "connect $addr" | bluetoothctl
