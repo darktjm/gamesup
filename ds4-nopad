@@ -3,7 +3,7 @@ test 0 = `id -u` || exec sudo "$0" "$@"
 
 for x in /sys/class/input/event*/device/name; do
   case "`cat $x`" in
-  	*"Wireless Controller Motion Sensors")
+  	*"Wireless Controller Touchpad")
 		ev=${x#*input/}
 		ev=${ev%%/*}
 		echo Removing $ev

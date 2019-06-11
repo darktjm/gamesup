@@ -620,7 +620,7 @@ checking/updating all games' entries).  Note that I have a few changes
 to grok I have yet to check in at the time of this writing (including
 a generic SQL exporter that obsolets the "sql" template), and have
 discovered new bugs that I have yet to even document.  Use at your own
-risk.  Maybe I'll switch to libreoffice-base or krita and abandon my
+risk.  Maybe I'll switch to libreoffice-base or kexi and abandon my
 work on grok some day, but it's all just too much trouble.
 
 A quick note on the templates:  gcs outputs to a native GCStar
@@ -708,6 +708,21 @@ support, chording support, "autofire" support and macro support
 (recording to a plain-text description for editing and binding, as
 well as of course replaying).  If I ever get the latter working, I'll
 upload it as a separate project here.
+
+I'm in the middle of rewriting it, but I decided to go ahead and put
+the old version here as well.  Don't rely on it.  It's probably full
+of bugs.  Compile with "gcc -o indrv{,.c}" or some such.  It has
+issues.  Not only is it way too simplistic, but the vibration doesn't
+seem to work quite right.  Run as root, preferably before inserting
+the controller:
+
+    indrv -d "Wireless Controller" < indrv.map
+
+Syntax for indrv.map is pretty stupid: key <old> key <new> or axis
+<old> axis <new>.  I don't support key->axis/axis->key or axis
+inversion (part of why I'm doing the rewrite).  It relies on
+<linux/input-event-codes.h>, which I've gone ahead and put my current
+copy here as well so you don't have to ask me where it comes from.
 
 Lately my ds4's started to flake out, though.  It won't connect just
 by pressing the button; I have to set it to pairing mode and use a
