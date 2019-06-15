@@ -39,7 +39,7 @@ if [ -n "$doum$dounm" ]; then
   test -n "$dounm" && exit 0
   mkdir -p "$mdir" "$wdir"
   if ! unionfs -o cow,uid=$(id -u) "$wdir=RW:$gtop/game=RO" "$mdir"; then
-    xmessage "$gname not mounted" &
+    notify-send "$gname not mounted" &
     exit 1
   fi
   d="$mdir/${d#*game/}"
@@ -53,7 +53,7 @@ if [ -n "$isdir" ]; then
 fi
 # for Linux games, ensure that the command actually exists
 if ! type "$cmd" >/dev/null 2>&1; then
-  xmessage "$cmd not mounted" &
+  notify-send "$cmd not mounted" &
   exit 1
 fi
 case "$docd" in

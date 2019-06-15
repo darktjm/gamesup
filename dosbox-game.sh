@@ -7,7 +7,7 @@ if [ x-u = "x$1" ]; then
   exit
 fi
 if [ ! -d "$gdir/data" ]; then
-  xmessage "$gdir/data not mounted" &
+  notify-send "$gdir/data not mounted" &
   exit 1
 fi
 

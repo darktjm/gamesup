@@ -12,7 +12,7 @@ long).  In any case, the point of this is that I have a way of dealing
 with the games that is influenced by what software I currently use.
 
 Some of these scripts use X notification to display messages.  I use
-notify-send from libnotify for that.
+`notify-send` from libnotify for that.
 
 nonet
 =====
@@ -20,12 +20,12 @@ First of all, I don't let any games or anything Windows-related, for
 that matter, connect to the 'net.  I used to do this by unconfiguring
 the network or pulling the plug, but that became a hassle, and caused
 some network connection attempts to just hang.  I now use a Linux
-network namespace I call nonet.  At boot time, I run nonet.start,
-which creates the namespace.  I also have an /etc/nonet directory,
-which the namespace uses the hosts file from if it finds it.  The
-hosts file there only lists loopback addresses.
+network namespace I call nonet.  At boot time, I run `nonet.start`,
+which creates the namespace.  I also have an `/etc/nonet` directory,
+containing a hosts file listing only loopback addresses; the nonet
+namespace will use this instead of `/etc/hosts`.
 
-I can't use "ip netns exec" to execute stuff in the new namespace,
+I can't use "`ip netns exec`" to execute stuff in the new namespace,
 because it needs to run as root, and doesn't drop privilege.  It also
 does other things I don't need it to do.  Instead, I use a simplified
 setuid wrapper that just changes the namespace and then executes the
@@ -34,7 +34,7 @@ command-line parameters as the invoking user.
 I still use iproute2's code to do this, so compile (and leave
 compiled) iproute2 at least until it generates namespace.o.  I
 currently use iproute-4.3.0 just because I'm lazy, but I'm sure more
-recent versions will work.  Compile nonet with:
+recent versions will work.  Compile `nonet` with:
 
     gcc -s -O2 -o nonet{,.c} -Wall -iiproute2/include iproute2/lib/namespace.o
 
@@ -45,18 +45,18 @@ case, iproute2-4.3.0).  Then, make it root-owned and setuid, and install:
     sudo chmod +s nonet
     sudo mv nonet /usr/local/bin
 
-Note that I also looked into firejail, which does way more than I want
+Note that I also looked into `firejail`, which does way more than I want
 and less conveniently.  Its only advantage (mainly for other people)
 is that it comes with most distros.
 
 gameprep
 ========
 To install gog games, I just run the gog installer using the default
-installation directory (~/GOG Games).  This sets the top-level
+installation directory (`~/GOG Games`).  This sets the top-level
 directory name for the game.  I then move that to /usr/local/games,
 owned by root:games and no "other" permissions (basically how gentoo
-installs games, sort of).  To do this, after I install one ore more
-games, I run "gameprep *" in ~/GOG Games, and then remove that
+installs games, sort of).  To do this, after I install one or more
+games, I run "`gameprep *`" in `~/GOG Games`, and then remove that
 directory.
 
 I realize that gog installers can just be unzipped, but I find some
@@ -67,7 +67,7 @@ the Windows installers.
 
 dogame
 ======
-dogame grew out of a need, for some games, to turn off edge scrolling
+`dogame` grew out of a need, for some games, to turn off edge scrolling
 in my window manager (FVWM).  The script still does that (although it
 uses a different method), so it's dependent on a window manager
 probably used by .1% of Linux users.  You'll have to figure out for
@@ -78,7 +78,7 @@ things needed.
   - I might move part of the game to an offline drive, so I first check
     if the target directory exists.  If not, notify and exit.
 
-  - If I'm using the touchpad on my laptop, I also use syndaemon to try
+  - If I'm using the touchpad on my laptop, I also use `syndaemon` to try
     and turn it off while typing, normally.  I don't want this for
     games, so I kill it and restart it if it was found running.  I
     really wish somebody made a laptop with the touchpad to the side,
@@ -86,35 +86,35 @@ things needed.
 
   - If the game wants it, I change to its directory
 
-  - If the game needs it, I set up two directories in ~/.local/share:
+  - If the game needs it, I set up two directories in `~/.local/share`:
 
-     - game-saves/<gamename> - where to store writable overlay
-     - game-mnt/<gamename> - where to mount the game + writable overlay
+     - `game-saves/`*gamename* - where to store writable overlay
+     - `game-mnt/`*gamename* - where to mount the game + writable overlay
 
     I then use unionfs to mount the game writable.  Otherwise, the game
     directory will be read-only.  Note that unionfs is a fuse
     filesystem.  This makes it much easier to use than overlayfs.  It
-    also means that a bug in gentoo, where mtab isn't a symbolic like
-    as it should be, must be corrected in order for fusermount -u to
-    work.
+    also means that a bug in gentoo, where `/etc/mtab` isn't a
+    symbolic link as it should be, must be corrected in order for
+    `fusermount -u` to work.
 
   - Since I use FVWM with a large virtual desktop (not multiple
     desktops!), this confuses some games.  It also sometimes causes edge
     scrolling to fail.  For both of these reasons, I send a command
     (which requires that the FvwmCommandS module be running) to fvwm to
-    reduce the virtual window size to 1x1.  I suppress this for things
+    reduce the virtual desktop size to 1x1.  I suppress this for things
     known to work without it.
 
   - I also turn off X's screen saver options.  DPMS seems to have been
     removed from my X server recently, but I still leave that in.  I
-    don't, however kill xscreensaver or whater other tricks your system
+    don't, however kill `xscreensaver` or whater other tricks your system
     may need in addition to turn off screen savers.  Such active
     "screensavers" don't really save LCD screens, and popping
     processes to the front often kills wine full-screen programs.
 
-  - Since setuid programs drop LD_LIBRARY_PATH, among other things, I
-    preserve it if non-empty by prefixing the command with "env
-    LD_LIBRARY_PATH=...".
+  - Since setuid programs (like `nonet`) drop `LD_LIBRARY_PATH`, among
+    other things, I preserve it if non-empty by prefixing the command
+    with "`env LD_LIBRARY_PATH=`...".
 
   - I save the game's main process ID in a known location, so that I
     can kill a game using killgame.  This is bound to a global key in
@@ -126,18 +126,20 @@ things needed.
     can be used to run a script to save the current game.  I use this
     in some games to bypass "ironman mode" or "permadeath".
 
-If dogame manages to survive running the game, it will then try to
-restore things as they were.  If nothing else, I can run "dogame true"
+If `dogame` manages to survive running the game, it will then try to
+restore things as they were.  If nothing else, I can run "`dogame true`"
 to force the cleanup items to happen:
 
   - It dismounts the unionfs mount, if present.  It's kind of stupid
     about detecting that, but it never hurt me.
 
-  - I restore the FVWM 3x2 virtual screen I usually use.  Yeah,
-    hard-coded.
+  - I restore the FVWM 3x2 virtual desktop I usually use.  Yeah,
+    hard-coded.  I'm not even sure I can obtain the current layout
+    easily, so it's too much effort.
 
   - I restore the screen saver parameters I usually use.  Again,
-    hard-coded.
+    hard-coded.  I suppose I could run "xset q" beforehand and restore
+    what was there, but I'm too lazy.
 
   - I restart syndaemon if it was running at the start.
 
@@ -148,22 +150,24 @@ to force the cleanup items to happen:
 
   - It deletes the saved process ID/game name.
 
-The dogame script accepts (and eats) several options before the game
+The `dogame` script accepts (and eats) several options before the game
 name and its arguments:
 
-   - -c -> change to the game's parent directory
-   - -d -> use next parameter as "executable name" for determination of dir
-   - -g -> change to game's root directory (assumed to end in /game/)
-   - -w -> make game's root directory (assumed to end in /game/)
+   - `-c` -> change to the game's parent directory
+   - `-d` -> use next parameter as "executable name" for determination of dir
+   - `-g` -> change to game's root directory (assumed to end in /game/)
+   - `-w` -> make game's root directory (assumed to end in /game/)
      writable using unionfs
-   - -u -> dismount writable unionfs mount if still mounted
+   - `-u` -> dismount writable unionfs mount if still mounted
 
 I generally make short names for all of my games, and create a
-launcher script /usr/local/bin.  During installation, I let it create
-a desktop file, which I modify to point to /usr/local/games instead of
-GOG Games, as well as using my script instead of start.sh.  I move the
-desktop file to /usr/local/share/applications.  A typical Linux game
-launch script looks like this:
+launcher script with that name in `/usr/local/bin`.  During
+installation, I let the installer create a menu entry (.desktop file
+in `~/.local/share/applications`), which I modify to point to
+`/usr/local/games` instead of `~/GOG Games`, as well as using my script
+instead of `start.sh` (without quotes, as quotes confuse some parsers). 
+I move the .desktop file to `/usr/local/share/applications`, owned by
+root:games.  A typical Linux game launch script looks like this:
 
     #!/bin/sh
     exec dogame -c /usr/local/games/Game\ Name/game/Game\ Executable "$@"
@@ -172,8 +176,8 @@ As a side note, if you're using FVWM, like me, a recent trend in Linux
 native games is to not go full-screen correctly any more.  Many games
 continue to display borders, and worse yet, some games not only do
 that, but also iconify themselves when they go full-screen (how does
-that make sense?).  The solution is to add styling for each of these
-pesky games.  I use the following:
+that even make sense?).  The solution is to add styling for each of
+these pesky games.  I use the following:
 
     Style FullScreen PositionPlacement, !Title, !Borders
     Style NoIconify UseStyle FullScreen, !Iconifiable
@@ -185,7 +189,7 @@ for those games, like so:
     Style "7 Billion Humans" UseStyle NoIconify
 
 While I'm installing and trying a game for the first time, I can use
-FvwmCommmand to temporarily issue one of the latter style commands for
+`FvwmCommmand` to temporarily issue one of the latter style commands for
 testing.  i added flags in my grok database (see below) to track these
 pesky games as well.  I currently have 14 games that need FullScreen
 and 14 that need NoIconify.
@@ -194,7 +198,7 @@ save-slots.sh
 =============
 I hate permadeath and "iron man" mode.  I tried to genericize adding
 multiple save slots as much as possible, and the result is
-/usr/local/share/save-slots.sh.  It just tars up a directory into
+`/usr/local/share/save-slots.sh`.  It just tars up a directory into
 another location.  When restoring, the target directory is removed and
 replaced with the tarball contents.
 
@@ -206,28 +210,28 @@ bedlam script:
     game=bedlam; dir="$HOME/games/wine/bedlam/users/`id -un`/Application Data/SkyshinesBedlam"
     . /usr/local/share/save-slots.sh
 
-This will add -r and -s options to the game's command line.  If -r or
--s is given, the game itself won't be run at all.  Instead, it either
-saves or restores game files and then exits.  The flag is followed by
-an arbitrary string to describe the save slot.  The saved games are
-stored in $HOME/games/saves/$game<suffix>-sav.tar.bz2, where suffix is
-blank if no slot argument is given, or "-<slot>" if given.
+This will add `-r` and `-s` options to the game's command line.  If
+`-r` or `-s` is given, the game itself won't be run at all.  Instead,
+it either saves or restores game files and then exits.  The flag is
+followed by an arbitrary string to describe the save slot.  The saved
+games are stored in `$HOME/games/saves/$game`*suffix*`-sav.tar.bz2`, where
+*suffix* is blank if no slot argument is given, or "`-`*slot*" if given.
 
-This will also set the magic save_game environment variable to
-convince dogame to add the game name to the pid file so that a global
+This will also set the magic `save_game` environment variable to
+convince `dogame` to add the game name to the pid file so that a global
 hot key can create saves at any time.  In fact, there are two scripts
-to support this: save_game (saves to slot "auto") and restore_game
+to support this: `save_game` (saves to slot "auto") and `restore_game`
 (restores from slot "auto").  This should probably be changed to use
 more slots, but it's still useful in an emergency, as long as the game
 doesn't override the global hot keys.
 
 Since it's too easy to accidentally overwrite saves due to habit, both
-saving and restoring saves backups in /tmp/save_backups_<username>.
+saving and restoring saves backups in `/tmp/save_backups_`*username*.
 When saving, if the target save already exists, it is first copied to
-that directory.  When restoring, the original save directory's
-contents are tared up for backup before wiping it.  This is only meant
-as an immediate backup; use multiple save slots to provide long-term
-history.
+that directory with a timestamp added to the file name.  When
+restoring, the original save directory's contents are tared up for
+backup before wiping it.  This is only meant as an immediate backup;
+use multiple save slots to provide long-term history.
 
 Some games (e.g. Darkest Dungeon, which I wrote this for, although I
 don't play that game any more) have "multiple save slots" that are
@@ -267,17 +271,17 @@ dosbox
 Many games I own come with DOSBox.  I generally run the GOG.com
 installer, and then I delete the supplied DOSBox and ignore the config
 files in favor of my own configuration.  I have a primitive script,
-dos-gameprep, similar to gameprep above to run after the game's
+`dos-gameprep`, similar to `gameprep` above, to run after the game's
 installer; it works in "GOG Games" or in wine above the installation
 root.  In the case of wine, it also converts the icon and changes the
 directory structure to put the game under data, like the Linux
-installers do.  Unlike gameprep, it can't be run on more than one game
+installers do.  Unlike `gameprep`, it can't be run on more than one game
 at a time.  Maybe I'll fix that one day.
 
 My DOSBox configuration is the default, plus changes present in
-dosbox-tjm.conf.  You don't have to change your global config to use
-my changes; just launch with "dosbox -userconfig -config
-dosbox-tjm.conf -config ...".  In particular, I use ALSA
+`dosbox-tjm.conf`.  You don't have to change your global config to use
+my changes; just launch with "`dosbox -userconfig -config
+dosbox-tjm.conf -config `...".  In particular, I use ALSA
 virtual MIDI with timidity++ attached (on 128:0).  I also use IRQ 7
 for Sound Blaster, and enable GUS emulation on 5.
 
@@ -287,7 +291,7 @@ injection), but I haven't dealt with that in so long I've forgotten.
 In fact, I can't reinstall using the dosbox-9999 ebuld on gentoo any
 more, so I should probably investigate why and fix/update it.
 
-Note that I have the GUS installation in /usr/local/share/dosbox (I've
+Note that I have the GUS installation in `/usr/local/share/dosbox` (I've
 no idea where to get it any more, and I'm sure I am not permitted to
 mirror it here).  Good luck getting this to work.  The only games I
 tried with GUS were worse than just using SB+MIDI.  It's probably best
@@ -298,7 +302,7 @@ gentoo's 2.3.0 ebuilds) and MT32 ROMs (I've no idea where to get those
 any more, and like the GUS stuff, it's probably not freely
 redistributable).  For games that support MT32 sound, I soft link the
 MT3232_CONTROL.ROM and MT32_PCM.ROM into the game's root directory,
-and add the lines from mt32.conf to each per-game launcher config.
+and add the lines from `mt32.conf` to each per-game launcher config.
 
 I use gentoo's openglide 0.09_rc9_p20160913 ebuild
 (http://openglide.sourceforge.net) for glide support.  I have no idea
@@ -315,9 +319,9 @@ config first (usually in the common config, rather than the per-game
 config).
 
 GOG.com uses multiple dosbox configuration files.  One of those
-(usually named dosbox<game>.conf) is common settings, and the rest are
+(usually named dosbox*game*.conf) is common settings, and the rest are
 small ones for each supported separate launcher.  The first thing I do
-is diff the common file (with diff -wub for context and removal of
+is diff the common file (with `diff -wub` for context and removal of
 Windows CRLF) with my config, and look for interesting changes.  The
 most useful ones are memory and CPU cycles, although the latter can
 sometimes be very wrong.  Some experimentation may be necessary.  In
@@ -325,17 +329,17 @@ any case, I copy only the relevant changes (similar to how I presented
 my config changes above) and I copy them to each created launcher
 config.
 
-I copy the launcher configs to <gamename><opt>.conf, where gamename is
-the root directory name chosen by the installer (not the shortened
-name used by GOG.com for their config files), and <opt> is the flag to
-add to the game to run that config (e.g. -s for setup).  I usually use
-GOG.com's config files verbatim, except that I remove useless IPX
-sections, change ".." to "." (and usually have to move the "c:" line
-above the imgmount line if both are present) in Windows installations
-(I launch from the game dir, not a subdir), add the global config
-changes needed, remove CR from CRLF files, and adjust the mount
-command for Windows installations (backslash to slash and case
-conversion).
+I copy the launcher configs to *gamename*[*opt*]`.conf`, where
+*gamename* is the root directory name chosen by the installer (not the
+shortened name used by GOG.com for their config files), and *opt* is
+the flag to add to the game to run that config (e.g. `-s` for setup,
+or nothing for the main game).  I usually use GOG.com's config files
+verbatim, except that I remove useless IPX sections, change "`..`" to
+"`.`" (and usually have to move the "`c:`" line above the `imgmount`
+line if both are present) in Windows installations (I launch from the
+game dir, not a subdir), add the global config changes needed, remove
+CR from CRLF files, and adjust the mount command for Windows
+installations (backslash to slash and case conversion).
 
 In addition, if the game came from a Windows installer, and the game
 has a virtual CD, the CD descriptor file (the one referenced by the
@@ -352,40 +356,45 @@ the sound config program.
 
 There may be other things that need to be done, but only if the game
 is "special".  For example, Little Big Adventure 2 doesn't like being
-run for C:\ in Linux, so I create a soft link from . to LBA2 and
-change paths in the config file to launch from C:\LBA2 instead of C:\.
+run for `C:\` in Linux, so I create a soft link from `.` to `LBA2` and
+change paths in the config file to launch from `C:\LBA2` instead of
+`C:\`.
 
-After that, I launch the game using a wrapper script, dosbox-game.sh. 
-The main purpose of this wrapper is to use unionfs to keep the
-installed game pristine.  This adds a "-u" argument to the game
-launcher script, which unmounts the unionfs if it isn't already, and a
-"-U" argument to just mount the unionfs and exit without launching the
-game.  Similar to the Linux games, I create a script with a short
-name, and use that in the launcher desktop file (which comes from
-enabling a menu entry in Linux installers, or just filled in from
-scratch for Windows installers, using the icon extracted by
-dos-gameprep).  The game script goes in /usr/local/bin and the icon in
-/usr/local/share/applications.  A typical script looks like:
+Similar to Linux native games, I pick a short name, and write a short
+wrapper script with that name to launch the game.  This script always
+sources a helper script, `dosbox-game.sh`.  The main purpose of the
+helper script is to use unionfs to keep the installed game pristine.
+This adds a "`-u`" argument to the game launcher script, which
+unmounts the unionfs if it isn't already, and a "`-U`" argument to
+just mount the unionfs and exit without launching the game.  The game
+script goes in `/usr/local/bin`.  The desktop file is then modified to
+use my wrapper script instead of `start.sh` and get the icon from the
+new location.  For games that only have Windows installers, I just
+fill in a desktop file from scratch, using the icon extracted by
+`dos-gameprep.  The desktop file is then moved to
+`/usr/local/share/applications`, owned by root:games.  A typical
+script looks like:
 
     #!/bin/sh
     game=Game\ Name
     . /usr/local/share/dosbox-game.sh
 
-The game should be installed in /usr/local/games/dosbox/Game\ Name,
-with the actual game in a subdirectory called data.  Running the
-script without arguments uses Game\ Name.conf, and running it with a
-single argument uses Game\ Name<arg>.conf.
+The game should be installed in `/usr/local/games/dosbox/Game\ Name`,
+with the actual game in a subdirectory called `data`.  Running the
+script without arguments uses `Game\ Name.conf`, and running it with a
+single argument uses `Game\ Name`*arg*`.conf`; both of these are in
+the `data` subdirectory with the game.
 
 ags scummvm
 ===========
 For games that use Adventure Game Studio and scummvm, I use the
 gentoo-supplied ebuilds and system binaries and delete the supplied
-interpreters.   For AGS, I also delete the supplied acsetup.cfg, since
+interpreters.   For AGS, I also delete the supplied `acsetup.cfg`, since
 that seems to cure full-screen mode and sound issues.  I stick AGS
-games in /usr/local/games/ags and sscummvm games in
-/usr/local/games/scummvm, all with the same directory structure.  The
+games in `/usr/local/games/ags` and sscummvm games in
+`/usr/local/games/scummvm`, all with the same directory structure.  The
 GOG.com installer's root directory name, with the game itself in a
-subdirectory (game for ags and data for scummvm).  A typical ags
+subdirectory (`game` for ags and `data` for scummvm).  A typical ags
 launcher looks like:
 
     #!/bin/sh
@@ -398,7 +407,7 @@ A typical scummvm launcher looks like:
     cd
     exec dogame scummvm -p /usr/local/games/scummvm/Game\ Name/data engname
 
-In this case, engname is the name of the engine to use to execute the
+In this case, *engname* is the name of the engine to use to execute the
 game.  Finding this out may require looking it up on the 'net, or
 using the scummvm configuration GUI to add the game first, and looking
 at what that picked.  For example, the engine used by King's Quest is
@@ -406,21 +415,22 @@ kq1.
 
 Note that to install, I just use the installer and install it as if it
 were a native game, and then I move things around to have the correct
-directory structure.  I suppose I should have an ags-gameprep and
-scummvm-gameprep, but it's not that much trouble to just move things
+directory structure.  I suppose I should have an `ags-gameprep` and
+`scummvm-gameprep`, but it's not that much trouble to just move things
 around.
 
 infocom
 =======
 GOG.com doesn't sell many Infocom games, but I have enough that I made
-some support for it.  I store the games in /usr/local/games/inf.  All
-related files are renamed to the game name, plus the appropriate
-extension (e.g. Planetfall for the data file, Planetfall.png for the
-icon, Planetfall.pdf for the manual).  The script to run the game is a
-soft link to a common script (inf-game) that just invokes zoom.  The
-soft link is placed in /usr/local/bin, and, as with other such games,
-an appropriate desktop file is placed in
-/usr/local/share/applications.  I use dos-gameprep for the Windows
+some support for it.  I store the games in `/usr/local/games/inf`.
+Unlike the other game types, I do not create subdirectories for each
+game.  All related files are renamed to the game name, plus the
+appropriate extension (e.g. Planetfall for the data file,
+Planetfall.png for the icon, Planetfall.pdf for the manual).  The
+script to run the game is a soft link to a common script (`inf-game`)
+that just invokes zoom.  The soft link is placed in `/usr/local/bin`,
+and, as with other such games, an appropriate desktop file is placed
+in `/usr/local/share/applications`.  I use `dos-gameprep` for the Windows
 installers to extract the icon, and then delete everything but the
 game data (DATA/*.DAT), icon and manuals.  The only game for which I
 retain the DOSBox version is Beyond Zork, since zoom doesn't support
@@ -435,36 +445,36 @@ ags, scummvm or Infocom games as Windows games).  I guess I should
 just be happy wine lets me run most of them.
 
 I store all of my wine games in their own prefixes, under
-~/games/wine/<prefix>.  The prefix name is the short name I give the
-game, and is also the name of the wrapper script that executes the
-game.  Unlike the other types of games, I store the binary in ~/bin
-(which is obviously also in my PATH), and the icons in
-~/.local/share/applications.  This is because they are hard to make
-completely system-stored.  I might work on that again some time in the
-future, but for now only the bulk of the data is stored in
-/usr/local/games.
+`~/games/wine/`*shortname*, using the short name I give to the game
+and its wrapper script.  Unlike the other types of games, I store the
+wrapper in `~/bin` (which is obviously also in my `PATH`), and the
+icons in `~/.local/share/applications`.  This is because they are hard
+to make completely system-stored.  I might work on that again some
+time in the future, but for now only the bulk of the data is stored in
+`/usr/local/games`.
 
-To run an arbitrary Windows executable, I use dowine.  This also
-supports running winetricks and wine-supplied commands like winecfg
-and regedit.  This uses unionfs, but for different reasons than above.
-At some point, wine started placing a bunch of files in the prefix,
-and I ended up having gigabytes of extra crap due to my use of
-separate prefixes.  My first solution was to use symbolic links.
-However, some programs (especially winetricks) require writable files,
-and symbolic links were still read-only.  Also, when I uninstalled
-things, it left dangling links.  I do things differently now.  I
-create a "reference" prefix, which is just an empty, initialized
-prefix for every version of wine I run.  I then unionfs-mount that
-prefix's windows directory using a writable .windows over the game
-prefix's windows directory.  This keeps the file duplication down
-without the read-only headaches of symbolic links.  The management of
-this procedure is one of the tasks of dowine.
+To run an arbitrary Windows executable, I use `dowine`.  This also
+supports running `winetricks` and wine-supplied commands like
+`winecfg` and `regedit`.  This uses unionfs, but for different reasons
+than above. At some point, wine started placing a bunch of files in
+the prefix, and I ended up having gigabytes of extra crap due to my
+use of separate prefixes.  My first solution was to use symbolic
+links. However, some programs (especially `winetricks`) require
+writable files, and symbolic links to root-owned files are obviously
+read-only.  Also, when I uninstalled things, it left dangling links.
+I do things differently now.  I create a "reference" prefix, which is
+just an empty, initialized prefix for every version of wine I run.  I
+then unionfs-mount that prefix's `windows` directory using a writable
+`.windows` over the game's `windows` directory.  This keeps the
+file duplication down without the read-only headaches of symbolic
+links.  The management of this procedure is one of the tasks of
+`dowine`.
 
 Another thing I like to do is set some initial registry entries upon
 prefix initialization.  Some of those I probably ought to remove as
 they no longer do anything useful, but one thing I set is the GOG.com
 installer defaults.  I never create desktop icons and I like to
-install in C:\.  The former option is ignored by older installers, so
+install in `C:\`.  The former option is ignored by older installers, so
 it's always a good idea to press the button to view/verify options
 beore installing.
 
@@ -483,68 +493,98 @@ explicitly disabling winemenubuilder.exe.  I should probably do that
 in the registry, instead, for cleaner operation.
 
 I also don't want to dive into subdirectories to get at the meat of
-the installation:  the game.  As such, I make the prefix's
-dosdevices/c: point to ../.. and make the prefix actually reside in
-<prefix_name>/windows.  This places all wine's config in the windows
-directory, where it belongs, as well.
+the installation: the game.  As such, I make the prefix's
+`dosdevices/c:` point to `../..` and make the `WINEPREFIX` actually
+reside in *shortname*/windows.  This places all wine's config in the
+`windows` directory, where it belongs, as well.
 
 I also may want key rebinding.  If you create a standalone executable
-from AutoHotKey, you can call it wine-keys.exe and dowine will execute
-it before the game, and kill it afterwards.
+from AutoHotKey, you can call it `wine-keys.exe` and `dowine` will
+execute it before the game, and kill it afterwards.  I have included a
+few scripts as examples.  `cosh.ahk` is what I use when playing Cosmic
+Space Heroine (the game I added this feature for), and `bge.ahk` is
+what I use for Beyond Good & Evil (although the latter is mostly
+untested).  Both add joystick support (cosh has built-in joystick
+support, but it uses wine's mostly broken (at least in 4.0 and before)
+SDL joystick support and doesn't support remapping; it's best to just
+disable it by adding "`Enable SDL`"=(`REG_DWORD`)`0` to
+`HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\WineBus`).  The
+samples use several "library" scripts.  `JoystickMouse.ahk` was
+downloaded from autohotkey.com and modified to support other axes and
+to disable the d-pad mouse wheel. `jscursor.ahk` is an adaptation of
+the joystick-to-cursor code on autohotkey.com.  My modifications merge
+the left stick and d-pad code into one, and issue multiple keypresses
+for diagonals.  Finally, `autofire.ahk` provides a function to map a
+single key/button to a single key/button that autofires.  It might be
+better to do that with a chord, but I only need it for one key to skip
+long conversations in cosh.  Compile in the Compiler subdirectory of
+the autohotkey distribution (whose installer doesn't work in wine, but
+you can just extract it with 7z) using e.g. "`dowine Ahk2Exe.exe /in
+cosh.ahk`".  
 
-Since gentoo has slotted wine, I have multiple wine vesions at once.
-The script supports simple options for version selection, but they
-hard-code version numbers.  It should also support an arbitrary wine
-executable/version number, but I don't test it, and it probably
-doesn't work.  As mentioned above, a separate reference prefix is
-created for each version of wine run (32-bit or 64-bit prefix), and
-never deleted (except manually).
+Since gentoo has slotted wine, I have multiple wine vesions installed
+at once. The `dowine` script supports simple options for version
+selection, but they hard-code version numbers.  It should also support
+an arbitrary wine executable/version number, but I don't test it, and
+it probably doesn't work.  As mentioned above, a separate reference
+prefix is created for each version of wine run (32-bit or 64-bit
+prefix), and never deleted (except manually).
 
 For a long time, I couldn't get 64-bit prefixes to work at all.  It
 tunred out to be because I use the multilib-portage overlay, which
-requires an environment override; see wine-env (place this in
-/etc/portage/env/app-emulation/wine if want to use it; also soft link
-it to wine-any, wine-vanilla, and wine-d3d9 if you use those ebuilds).
+requires an environment override; see `wine-env` (rename this to
+`/etc/portage/env/app-emulation/wine` if want to use it; also soft link
+`wine` to `wine-any`, `wine-vanilla`, and `wine-d3d9` if you use those
+ebuilds).
 
-Along the same lines, my use of windows as the prefix name triggered a
+Along the same lines, my use of `windows` as the prefix name triggered a
 bug in wine, which has been fixed in 4.6, I think.  Prior to that, I
-have to apply wine-dir64.patch.  Otherwise, any attempt to run a
-GOG.com installer in a 64-bit prefix will fail.
+have to apply `wine-dir64.patch`.  Otherwise, any attempt to run a
+GOG.com installer in a 64-bit prefix will fail (as will many other
+programs).
 
 As to gecko and mono, I install them in the reference directories, but
 do not normally replicate that bit to the games' prefix.  In fact, I
 have not found one game that benefits from either of these, and all
 mono does is prevent installation of (working) .NET from MS for the
-games that need it.
+games that need it.  I should probably just stop building wine with
+support for them.  In fact, gstreamer seems to cause more problems
+than it fixes, so I should probably drop that as well.  Why can't wine
+play movies correctly?
 
-Usage:  dowine [options] exefile args
+Usage:  `dowine` [*options*] *exefile* *args*
 
-To create/use a 64-bit prefix, always set WINEARCH=win64 in the
+To create/use a 64-bit prefix, always set `WINEARCH=win64` in the
 environment.  I may fix this in the future to set it if the prefix is
 already 64-bit.
 
   - Version selection:
-      - -s = current stable, which is also the default wine
-      - -s3 = 3.0.x (must be manually linked as wine-3)
-      - -s2 = 2.0.x (must be manually linked as wine-2)
-      - -d = wine-d3d9: latest with gallium-d3d9
-      - -a = wine-staging: latest with staging+gallium-d3d9 (was wine-any, thus the a)
-      - -v = wine-vanilla; latest vanilla wine
-      - -V <exe> = use exe as the wine executable; probably doesn't work
-      - -D = use winedbg for debugging; probably doesn't work right
+      - `-s` = current stable, which is also the default wine
+      - `-s3` = 3.0.x (must be manually linked as wine-3)
+      - `-s2` = 2.0.x (must be manually linked as wine-2)
+      - `-d` = wine-d3d9: latest with gallium-d3d9
+      - `-a` = wine-staging: latest with staging+gallium-d3d9 (was wine-any, thus the a)
+      - `-v` = wine-vanilla; latest vanilla wine
+      - `-V` *exe* = use exe as the wine executable; probably doesn't work
+      - `-D` = use winedbg for debugging; probably doesn't work right
    - Other:
-      - -k = kill wine in this prefix
-      - -m = mount the windows overlay
-      - -M = dismount the windows overlay
-      - -w = assume exe will exit before program finishes; use wine-wait
-      - -n = allow built-in mono/.net install/usage (never works)
-      - -g = allow built-in gecko install/usage (never works)
-      - -b = change what's installed based on -n/-g flags
+      - `-k` = kill wine in this prefix
+      - `-m` = mount the windows overlay
+      - `-M` = dismount the windows overlay
+      - `-w` = assume exe will exit before program finishes; use wine-wait
+      - `-n` = allow built-in mono/.net install/usage (never works)
+      - `-g` = allow built-in gecko install/usage (never works)
+      - `-b` = change what's installed based on -n/-g flags
 
-To install a wine game, I just create ~/games/wine/<shortname>, soft
-link the installer files (*.{exe,bin}) from my usual download drive
-into that directory, and run dowine on all the .exe files, optionally
-setting WINEARCH=win64 first (if it was necessary and I forgot, I
+Note that `wine-wait` just waits for wine to finish instead of killing
+wine as soon as the main executable finishes.  It takes an optional
+"`-e `*ext*" argument in case you're running non-default wine and the
+wineserver has an associated extension.
+
+To install a wine game, I just create `~/games/wine/`*shortname*, soft
+link the installer files (`*.{exe,bin}`) from my usual download drive
+into that directory, and run `dowine` on all the .exe files, optionally
+setting `WINEARCH=win64` first (if it was necessary and I forgot, I
 rerun the installation in a fresh directory again with it set).  I
 realize that, like the Linux installers, I can extract the game
 without using wine (using innoextract).  In addition to feeling better
@@ -553,25 +593,25 @@ missing from innoextract: all the stuff that isn't actual game files.
 For example, registry entries and additional commands executed by the
 installer.  These are not always necesary, but I'd prefer keeping
 them.  This is one of the reasons I try to find out what registry
-changes are made by each invocation of dowine by saving a .diff file.
+changes are made by each invocation of `dowine` by saving a .diff file.
 Wine is flaky, though, and it often doesn't work.
 
-A wine game uses an additional wrapper, wine-game.sh.  This uses an
+A wine game uses an additional wrapper, `wine-game.sh`.  This uses an
 additional unionfs mount for the game root itself.  The game root is
-moved to /usr/local/games/wine and owned by root:games; it is then
-union-mounted in the wine prefix on Game\ Name using .Game\ Name as
-the writable overlay.  wine-gameprep moves the root into place, and
-extracts an icon.  This icon is copied into the prefix game root so
-that even when it's not mounted it's in the same place.  Since I have
-a hard time knowing what version of a wine game is installed, I also
-copy the installers into the prefix.  In this caes, the installers are
-always symbolic links into my download directory, so they don't take
-up any space, and I can tell by their listing color whether or not
-they are up-to-date (they are red if not present in my download
-directory, and cyan otherwise).  Like dos-gameprep, it only runs on
-one game at a time (and more than one wouldn't make sense anyway,
-since I store each game in a separate root and the script expects the
-root to be in the current directory).
+moved to `/usr/local/games/wine` and owned by root:games; it is then
+union-mounted in the wine prefix on `Game\ Name` using `.Game\ Name`
+as the writable overlay.  `wine-gameprep` moves the root into place,
+and extracts an icon using ImageMagick's `convert`.  This icon is
+copied into the prefix game root so that even when it's not mounted
+it's in the same place.  Since I have a hard time knowing what version
+of a wine game is installed, I also copy the installers into the
+prefix.  In this caes, the installers are always symbolic links into
+my download directory, so they don't take up any space, and I can tell
+by their listing color whether or not they are up-to-date (they are
+red if not present in my download directory, and cyan otherwise).
+Like `dos-gameprep`, it only runs on one game at a time (and more than
+one wouldn't make sense anyway, since I store each game in a separate
+root and the script expects the root to be in the current directory).
 
 A typical wine game launcher looks like this:
 
@@ -585,11 +625,11 @@ the wine directory I installed it into; wine-game.sh depends on it,
 but you can set groot manually before invoking the script to make it
 something else.  I used to install exactly one pair of games in the
 same directory, with the second one changing groot, but I don't do
-that any more.  Actually, I did this with some other games as well,
+that any more.  Actually, I do this with some other games as well,
 but they all launch from the same script with different command-line
 parameters, which does not necessitate setting groot.
 
-I always give the wine version flag, even though -s is always
+I always give the wine version flag, even though `-s` is always
 optional.  I end up having to retest all my wine games every version
 update, and having the version coded like that can help.
 
@@ -598,22 +638,23 @@ use a shell case statement on "$1" and exec the appropriate command.
 
 The wine-game.sh script adds a few command-line options to all that use it:
 
-   - -u = unmount the game unionfs; it never gets unmounted otherwise
-   - -U = just mount the game unionfs and exit
+   - `-u` = unmount the game unionfs; it never gets unmounted otherwise
+   - `-U` = just mount the game unionfs and exit
 
 Ignore the joystick button functions in there; I'll remove them soon
-and they do no harm.
+and they do no harm.  My DualShock 4 doesn't support `input-kbd`,
+anyway.
 
 grok
 ====
-I used to keep a plain text file, gog-status, with notes about all of
+I used to keep a plain text file, `gog-status`, with notes about all of
 my game installs.  When the number of games became large, and I also
 added more information to the file, I decided a database would be
 better.  To that end, I experimented with some tools and ended up
-making a Qt port of grok, available [here as well](
+making a Qt port of `grok`, available [here as well](
 https://bitbucket.org/darktjm/grok).  I have included my grok
-database devinition and templates under the grok directory; if you
-want to use them or try them out, copy them to ~/.grok first.  I have
+database definition and templates under the `grok` directory; if you
+want to use them or try them out, copy them to `~/.grok` first.  I have
 also included a few sample entries in the database, not chosen for
 their completeness (I am in the process of once again
 checking/updating all games' entries).  Note that I have a few changes
@@ -623,16 +664,16 @@ discovered new bugs that I have yet to even document.  Use at your own
 risk.  Maybe I'll switch to libreoffice-base or kexi and abandon my
 work on grok some day, but it's all just too much trouble.
 
-A quick note on the templates:  gcs outputs to a native GCStar
-database I used before I switched to grok.  sql-gcs exported to the
+A quick note on the templates:  `gcs` outputs to a native GCStar
+database I used before I switched to grok.  `sql-gcs` exported to the
 same format exported by GCStar's SQL exporter, although I'm not sure
-what the point was, since GCStar can't import that format.  The sql
+what the point was, since GCStar can't import that format.  The `sql`
 template gives a more normal SQL export so I can use sqlite3 to query
 the database (which is sometimes easier than grok's own language).
-Finally, summary is an attempt at maintaining gog_status' global
+Finally, `summary` is an attempt at maintaining `gog_status`' global
 information more easily, and has the advantage of having some of its
 info read from the database itself.  This is my current output from
-summary; judge for yourself if I have too many games (I do):
+`summary`; judge for yourself if I have too many games (I do):
 
     188 Linux games (11 nonfunctional; 5 converted to wine; 25 uninstalled)
     
@@ -684,17 +725,18 @@ to press.  The main issue I've found so far with it are the countless
 games that make assumptions about button mappings and the fact that
 Unity3D games don't like the extra devices created by Linux for the
 motion sensors (and maybe touchpad).  For the motion sensors only, I
-run the ds4-nomo command before the game, manually.  I'll probably end
-up adding that to dogame as well.  It's not like I use the motion
-sensors for anything, anyway.
+run the `ds4-nomo` command before the game, manually.  I'll probably end
+up adding that to `dogame` as well.  It's not like I use the motion
+sensors for anything, anyway.  If the pad really causes issues,
+there's also `ds4-nopad`.
 
 I also use a script to disconnect the ds4 immediately when I'm done
-with it: ds4-down.  I also wrote a script to use with xfce4's generic
+with it: `ds4-down`.  I also wrote a script to use with xfce4's generic
 monitor, which just displays text output of a command repeatedly:
-ds4-power.  This displays the current charging status.
+`ds4-power`.  This displays the current charging status.
 
-I also made a user-mode input driver (indrv) to completely override
-all devices with a new mapping, because my old input-kbd based evdev
+I also made a user-mode input driver (`indrv`) to completely override
+all devices with a new mapping, because my old `input-kbd` based evdev
 remappings don't work on the ds4 for some reason (but they did work on
 all my old controllers), and tracking down that reason seemed harder
 than just writing a uinput driver.  This works, but I'm not including
@@ -710,16 +752,16 @@ well as of course replaying).  If I ever get the latter working, I'll
 upload it as a separate project here.
 
 I'm in the middle of rewriting it, but I decided to go ahead and put
-the old version here as well.  Don't rely on it.  It's probably full
-of bugs.  Compile with "gcc -o indrv{,.c}" or some such.  It has
-issues.  Not only is it way too simplistic, but the vibration doesn't
-seem to work quite right.  Run as root, preferably before inserting
-the controller:
+the old version here as well, for now.  Don't rely on it.  It's
+probably full of bugs.  Compile with "gcc -o indrv{,.c}" or some such.
+It has issues.  Not only is it way too simplistic, but the vibration
+doesn't seem to work quite right.  Run as root, preferably before
+inserting the controller:
 
     indrv -d "Wireless Controller" < indrv.map
 
-Syntax for indrv.map is pretty stupid: key <old> key <new> or axis
-<old> axis <new>.  I don't support key->axis/axis->key or axis
+Syntax for indrv.map is pretty stupid: `key` *old* `key` *new* or `axis`
+*old* `axis` *new*.  I don't support key->axis/axis->key or axis
 inversion (part of why I'm doing the rewrite).  It relies on
 <linux/input-event-codes.h>, which I've gone ahead and put my current
 copy here as well so you don't have to ask me where it comes from.
@@ -730,5 +772,5 @@ manual connect (assuming it's already been paired).  The new and
 improved bluez only logs info if run via systemd now, though (I think;
 I haven't looked at it long enough to tell), so I can't figure out
 what's wrong Pressing the reset button does nothing, at the very
-least.  For now, I use the ds4-connect script while the ds4 is in
+least.  For now, I use the `ds4-connect` script while the ds4 is in
 pairing mode to do the connection; it's better than nothing.

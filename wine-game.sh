@@ -63,7 +63,7 @@ fi
 
 #for x in "${groot}/$game"/*.ico; do
 #  test -h "$x" -a -e "$x" && break
-#  xmessage "${groot}/$game not mounted" &
+#  notify-send "${groot}/$game not mounted" &
 #  exit 1
 #done
 
@@ -73,7 +73,7 @@ if [ -z "$game" ]; then
 fi
 
 if [ ! -d /usr/local/games/wine/"$game" ]; then
-  xmessage "$game" not mounted &
+  notify-send "$game" not mounted &
   exit 1
 fi
 
