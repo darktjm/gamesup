@@ -46,10 +46,22 @@
 
 struct map {
     /* FIXME: ax should support +, -, and from "0" */
-    short from_key, from_ax;
-    short to_key, to_ax;
+    short from_key, from_ax, from_jax;
+    short to_key, to_ax, to_jax;
 } *map;
 int num_map = 0;
+
+int sort_by_to_ax(const void *av, const void *bv)
+{
+    const struct map *a = av, *b = bv;
+    return a->to_ax - b->to_ax;
+}
+
+int sort_by_from_ax(const void *av, const void *bv)
+{
+    const struct map *a = av, *b = bv;
+    return a->from_ax - b->from_ax;
+}
 
 int deldev = 0;
 
@@ -157,17 +169,12 @@ int find_joy(int idev)
 		wioctl(jdev, JSIOCGCORR, inc);
 		wioctl(myjs, JSIOCGCORR, outc);
 		for(i = 0; i < num_map; i++)
-		    /* no need to recalibrate hats, I hope */
-		    /* no support for removing gaps in abs map for js */
-		    if(map[i].to_ax >= 0 && map[i].from_ax >= 0 &&
-		       map[i].to_ax < ABS_HAT0X) {
+		    if(map[i].to_ax >= 0 && map[i].from_ax >= 0) {
 			struct input_absinfo iabs;
 			wioctl(dev, EVIOCGABS(map[i].from_ax), &iabs);
 			wioctl(myev, EVIOCSABS(map[i].to_ax), &iabs);
-			/* if this ever protects an assign, it's because
-			 * I don't support gaps, and behavior is wrong */
-			if(map[i].to_ax < noutax && map[i].from_ax < ninax)
-			    outc[map[i].to_ax] = inc[map[i].from_ax];
+			if(map[i].to_jax < noutax && map[i].from_jax < ninax)
+			    outc[map[i].to_jax] = inc[map[i].from_jax];
 		    }
 		wioctl(myjs, JSIOCSCORR, outc);
 		close(myev);
@@ -233,6 +240,15 @@ int main(int argc, const char **argv)
     fclose(inf);
     if(!num_map)
 	exit(1);
+    /* to support gaps in axes, the js axis must be found */
+    qsort(map, num_map, sizeof(*map), sort_by_to_ax);
+    for(int i = 0, j = 0; i < num_map; i++)
+	if(map[i].to_ax >= 0)
+	    map[i].to_jax = j++;
+    qsort(map, num_map, sizeof(*map), sort_by_from_ax);
+    for(int i = 0, j = 0; i < num_map; i++)
+	if(map[i].from_ax >= 0)
+	    map[i].from_jax = j++;
     /* FIXME: scan for joystick device(s) */
     /* FIXME: delete old joystick somehow */
     /* Can't use locks (advisory is useless and mandatory is painful at best) */
@@ -267,9 +283,10 @@ int main(int argc, const char **argv)
 	if(map[i].to_key >= 0) {
 	    wioctl(idev, UI_SET_KEYBIT, map[i].to_key);
 	} else if(map[i].to_ax >= 0) {
-	    /* wioctl(idev, UI_SET_ABSBIT, xbox_axes[i]); */ /* automatic after ABS_SETUP */
+	    /* wioctl(idev, UI_SET_ABSBIT, map[i].to_ax); */ /* automatic after ABS_SETUP */
 	    struct uinput_abs_setup as = {};
 	    as.code = map[i].to_ax;
+	    /* this stuff really doesn't matter since it is overridden on connect */
 	    switch (as.code) {
 	      case ABS_X:
 	      case ABS_Y:

@@ -410,14 +410,17 @@ A typical scummvm launcher looks like:
 In this case, *engname* is the name of the engine to use to execute the
 game.  Finding this out may require looking it up on the 'net, or
 using the scummvm configuration GUI to add the game first, and looking
-at what that picked.  For example, the engine used by King's Quest is
-kq1.
+at what that picked.  The `--detect` option may help as well.  For
+example, the engine used by Toonstruck is `toon`.
 
 Note that to install, I just use the installer and install it as if it
 were a native game, and then I move things around to have the correct
 directory structure.  I suppose I should have an `ags-gameprep` and
 `scummvm-gameprep`, but it's not that much trouble to just move things
 around.
+
+Some games require additional work, such as Return To Zork; see the
+gog forum for details.
 
 infocom
 =======
