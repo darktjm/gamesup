@@ -18,7 +18,7 @@
   gcsfield10="\{_ver}"
   gcsfield11="\{_setup_size}"
   gcsfield6="\{_hidden}"
-\{IF (!(_sn_3plinux||_sn_amiga||_sn_broken||_sn_editor||_sn_finished||_sn_linuxbroken||_sn_mods||_sn_nomovies||_sn_slow||_sn_uninstalled||_sn_source||_sn_offlinespacehog||_sn_editorbroken||_sn_nomusic||_sn_brittle||_sn_notyetinstalled||_sn_wineditor))}
+\{IF (!(_sn_3plinux||_sn_amiga||_sn_broken||_sn_editor||_sn_finished||_sn_linuxbroken||_sn_mods||_sn_nomovies||_sn_slow||_sn_uninstalled||_sn_source||_sn_editorbroken||_sn_nomusic||_sn_brittle||_sn_wineditor))}
   gcsfield21=""
 \{ENDIF}
   gcsfield12="\{_wine_ver}"
@@ -33,7 +33,7 @@
   <gcsfield17>\{_inst_notes}</gcsfield17>
   <gcsfield20>\{_game_notes}</gcsfield20>
   <gcsfield24>\{_todo}</gcsfield24>
-\{IF (_sn_3plinux||_sn_amiga||_sn_broken||_sn_editor||_sn_finished||_sn_linuxbroken||_sn_mods||_sn_nomovies||_sn_slow||_sn_uninstalled||_sn_source||_sn_offlinespacehog||_sn_editorbroken||_sn_nomusic||_sn_brittle||_sn_notyetinstalled||_sn_wineditor)}
+\{IF (_sn_3plinux||_sn_amiga||_sn_broken||_sn_editor||_sn_finished||_sn_linuxbroken||_sn_mods||_sn_nomovies||_sn_slow||_sn_uninstalled||_sn_source||_sn_editorbroken||_sn_nomusic||_sn_brittle||_sn_wineditor)}
   <gcsfield21>
 \{IF (_sn_3plinux)}
    <line>
@@ -90,11 +90,6 @@
     <col>Source</col>
    </line>
 \{ENDIF}
-\{IF (_sn_offlinespacehog)}
-   <line>
-    <col>OfflineSpaceHog</col>
-   </line>
-\{ENDIF}
 \{IF (_sn_editorbroken)}
    <line>
     <col>BadEditor</col>
@@ -108,11 +103,6 @@
 \{IF (_sn_brittle)}
    <line>
     <col>Brittle</col>
-   </line>
-\{ENDIF}
-\{IF (_sn_notyetinstalled)}
-   <line>
-    <col>NotYetInstalled</col>
    </line>
 \{ENDIF}
 \{IF (_sn_wineditor)}

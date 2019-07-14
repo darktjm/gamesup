@@ -1,0 +1,13 @@
+#!/bin/sh
+game="$1"
+shift
+mkdir /tmp/ami-"$game"
+args=
+i=0
+for x; do
+  eval im$i=\"\$x\"
+  args="$args --floppy_drive_$i=\"\$im$i\""
+  i=$((i+1))
+done
+eval "set -- $args"
+fs-uae --sub_title="$game" --hard_drive_0=/tmp/ami-"$game" "$@"

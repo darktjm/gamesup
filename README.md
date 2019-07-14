@@ -14,6 +14,12 @@ with the games that is influenced by what software I currently use.
 Some of these scripts use X notification to display messages.  I use
 `notify-send` from libnotify for that.
 
+Disclaimer: I will make sweeping changes to all of these scripts and
+procedures without notice.  Don't use these for yourself unless you
+are willing to look through the git-log and git-diff output and
+determine for yourself what changed.  I really only expect you to look
+at them for inspiration, not use them directly.
+
 nonet
 =====
 First of all, I don't let any games or anything Windows-related, for
@@ -105,12 +111,11 @@ things needed.
     reduce the virtual desktop size to 1x1.  I suppress this for things
     known to work without it.
 
-  - I also turn off X's screen saver options.  DPMS seems to have been
-    removed from my X server recently, but I still leave that in.  I
-    don't, however kill `xscreensaver` or whater other tricks your system
-    may need in addition to turn off screen savers.  Such active
-    "screensavers" don't really save LCD screens, and popping
-    processes to the front often kills wine full-screen programs.
+  - I also turn off X's screen saver options.  I don't, however kill
+    `xscreensaver` or whater other tricks your system may need in
+    addition to turn off screen savers.  Such active "screensavers"
+    don't really save LCD screens, and popping processes to the front
+    often kills wine full-screen programs.
 
   - Since setuid programs (like `nonet`) drop `LD_LIBRARY_PATH`, among
     other things, I preserve it if non-empty by prefixing the command
@@ -198,24 +203,25 @@ save-slots.sh
 =============
 I hate permadeath and "iron man" mode.  I tried to genericize adding
 multiple save slots as much as possible, and the result is
-`/usr/local/share/save-slots.sh`.  It just tars up a directory into
-another location.  When restoring, the target directory is removed and
-replaced with the tarball contents.
+`/usr/local/share/save-slots.sh`.  It just tars up a directory or file
+into another location.  When restoring, the target directory or file is
+removed and replaced with the tarball contents.
 
-To use, set some variables and source the script.  The variables to
-set are game (the name of the game, used in save game file names) and
-dir (the directory to tar up for the save).  For example, from my
-bedlam script:
+To use, set some variables and source the script.  The main variable
+to set is the directory name, `dir`.  The game script's file name is
+used as the base name for the saves (formerly set manually using
+`game`).  For example, from my bedlam script:
 
-    game=bedlam; dir="$HOME/games/wine/bedlam/users/`id -un`/Application Data/SkyshinesBedlam"
+    dir="$HOME/games/wine/bedlam/users/`id -un`/Application Data/SkyshinesBedlam"
     . /usr/local/share/save-slots.sh
 
 This will add `-r` and `-s` options to the game's command line.  If
 `-r` or `-s` is given, the game itself won't be run at all.  Instead,
 it either saves or restores game files and then exits.  The flag is
-followed by an arbitrary string to describe the save slot.  The saved
-games are stored in `$HOME/games/saves/$game`*suffix*`-sav.tar.bz2`, where
-*suffix* is blank if no slot argument is given, or "`-`*slot*" if given.
+followed by an optional arbitrary string to describe the save slot. 
+The saved games are stored in `$HOME/games/saves/$0`*suffix*`-sav.tar.bz2`,
+where *suffix* is blank if no slot argument is given, or "`-`*slot*"
+if given.
 
 This will also set the magic `save_game` environment variable to
 convince `dogame` to add the game name to the pid file so that a global
@@ -237,34 +243,41 @@ Some games (e.g. Darkest Dungeon, which I wrote this for, although I
 don't play that game any more) have "multiple save slots" that are
 really just multiple single-save-slot playthroughs ("profiles").  I
 spent a lot of time trying to figure out how to support this easily.
-The solution I came up with is still complicated, but better than
-nothing.  To enable profile support, make the dir be the slot to save
-to or restore, and tack on "++".  Then, set a third variable,
-extract_to. If non-blank, the last element of the path is replaced
-with $extract_to when restoring.  For example, here is the code that
-itbr (Into the Breach) uses:
+The solution I came up with works well enough for the games I need it
+for that have sane save slots.  To enable profile support, make the
+dir be the prefix for slot files, add a plus (`+`) to the start of the
+value, and add a `psuffix` variable to complete the slot name.  Slot
+files are then `${dir#+}`*slot*`$psuffix`, where *slot* and `$psuffix`
+can't contain slashes in the current implementation.  This adds an
+optional parameter immediately following -s/-r: `+`*slot*.  If not
+given, the first found directory entry matching any slot is saved, and
+the restoration replaces the slot that was saved (it's not possible to
+find out what slot was saved at present).  If given, the selected slot
+is saved, and the restoration is renamed to the given slot.  For
+example, here is what Battle Chasers: Nightwar uses:
 
-    game=itbr; dir="$HOME/games/wine/itbr/users/`id -un`/My Documents/My Games/Into The Breach/profile_"
-    if [ x-p = "x$1" ]; then
-      dir="$dir$2"; shift 2
-      extract_to="${dir##*/}"
-    else
-      extract_to=
-      for x in "$dir"*; do break; done
-      if [ -d "$x" ]; then
-        dir="$x"
-      else
-        dir="$dir"Alpha
-      fi
-    fi
-    dir="${dir}++" # profile mode
+    # Support saves in profile mode
+    dir="+$HOME/games/wine/bcn/users/`id -un`/AppData/LocalLow/Airship Syndicate/BattleChasersNightwar/user/saves/Save0"
+    psuffix=.sav
 
-Note that it allows the first two arguments to be "-p <profile>".  If
-specified, both saves and restores will go to that profile.
-Otherwise, since extract_to is blank, restores will always go to the
-same profile they were saved from.  Saves will automatically select
-the first (alphabetically) slot, or Alpha if none is found (which
-should never happen unless there's nothing to save).
+A typical slot-specific save or restore would be:
+
+    # Copy slot 1 to 2
+    bcn -s +1 slot1
+    bcn -r +2 slot1
+
+The profile mode is pretty stupid and can't deal with many things.
+Some will never be supported.  For example, Starbound saves stuff all
+over the place, including shared global state among the profiles.  It
+also stores the names of available profiles in another file, rather
+than just reading the directory, so creating/deleting profiles would
+be diffcult.  Furthermore, profile names are hex strings with unknown
+properties, so creating new profiles is impossible.  The last two
+issues affect the Thea games as well.  Vambrace Cold Soul stores all
+of its saves as separate variable assignments in a config file.  It
+doesn't appear to be possible to even copy values from one to another
+to move slots around or create new slots, and editing a file is beyond
+the scope of this utility, anyway.
 
 dosbox
 ======
@@ -481,6 +494,22 @@ install in `C:\`.  The former option is ignored by older installers, so
 it's always a good idea to press the button to view/verify options
 beore installing.
 
+I now also enable gallium-nine-standalone and dxvk by default, by
+setting the appropriate registry entries and soft linking the dlls
+into the prefix.  For the gallium-nine-standalone, I soft link the
+dll.so file directly rather than pointlessly enabling `z:` and linking
+it through there, as the configurator program it comes with does.
+Something is still creating `z:` even though I patch it out, but
+gallium-nine-standalone works fine without it (apparently). For dxvk,
+I store it in `~/games/win/dxvk` (actually a soft link to the latest
+installed version) and make relative soft links to there. Obviously if
+you use this you'll want it to soft link to wherever you installed it.
+Note that the use of standalone gallium-nine eliminates my need (and
+support) for wine-d3d9 and wine-any, which haven't worked and haven't
+been updated in a while, anyway.  For some reason, some 3D games use
+neither of these.  I'm not sure why.  Maybe they're OpenGL games
+(which still haven't been ported to Linux).
+
 Another thing I like to do is not have symbolic links in the user
 directory to my home directory.  Windows programs throw their crap all
 over the place, and I'd rather just keep it under the prefix.  For
@@ -536,8 +565,8 @@ prefix), and never deleted (except manually).
 For a long time, I couldn't get 64-bit prefixes to work at all.  It
 tunred out to be because I use the multilib-portage overlay, which
 requires an environment override; see `wine-env` (rename this to
-`/etc/portage/env/app-emulation/wine` if want to use it; also soft link
-`wine` to `wine-any`, `wine-vanilla`, and `wine-d3d9` if you use those
+`/etc/portage/env/app-emulation/wine` if want to use it; also soft
+link `wine` to `wine-staging` and `wine-vanilla` if you use those
 ebuilds).
 
 Along the same lines, my use of `windows` as the prefix name triggered a
@@ -562,12 +591,11 @@ environment.  I may fix this in the future to set it if the prefix is
 already 64-bit.
 
   - Version selection:
-      - `-s` = current stable, which is also the default wine
+      - `-s` = '-s4' = current stable, which is also the default wine
       - `-s3` = 3.0.x (must be manually linked as wine-3)
       - `-s2` = 2.0.x (must be manually linked as wine-2)
-      - `-d` = wine-d3d9: latest with gallium-d3d9
-      - `-a` = wine-staging: latest with staging+gallium-d3d9 (was wine-any, thus the a)
-      - `-v` = wine-vanilla; latest vanilla wine
+      - `-d` = wine-vanilla:  latest vanilla wine
+      - `-S` = wine-staging: latest with staging
       - `-V` *exe* = use exe as the wine executable; probably doesn't work
       - `-D` = use winedbg for debugging; probably doesn't work right
    - Other:
@@ -713,9 +741,6 @@ info read from the database itself.  This is my current output from
        aoc2 diablo eadorg ehtb expconq fs2 ja2 nwn oriente morrowind u4 exult 
        exult openxcom openxcom 
 
-And no, I will not be adding my methods of Amiga game installation and
-execution at this time.
-
 ds4
 ===
 I use a DualShock 4 controller now.  I used to use various cheap
@@ -776,4 +801,118 @@ improved bluez only logs info if run via systemd now, though (I think;
 I haven't looked at it long enough to tell), so I can't figure out
 what's wrong Pressing the reset button does nothing, at the very
 least.  For now, I use the `ds4-connect` script while the ds4 is in
-pairing mode to do the connection; it's better than nothing.
+pairing mode to do the connection; it's better than nothing.  In the
+mean time, it's started working correctly again.  Why?  Who knows?
+Whom can I even ask about such things?  Most people couldn't even get
+this far.
+
+Emulation
+=========
+
+Emulation is a tricky subject, and one I'd rather avoid.  Recently,
+though, I accidentally deleted all my Amiga-related scripts and
+reference installs (the only stuff on my machine I explicitly never
+backed up, being exlcuded by both my "no games" pattern and my "no
+unfinished games" patterns, but luckily I still had some old versions
+from when I didn't make it part of my whole game archive), so I
+decided to move some of that stuff here. Don't even ask me where to
+get ROMs or disk images or whatever. For DreamCast games I just use
+`reicast`'s built-in GUI.  The same applies to `dolphin` and GameCube
+games.  The only thing I add to either of these is to run them under
+`dogame` (since both do untoward network accesses).  I'm still working
+on making other emulators more convenient for me as well, but I
+haven't touched that stuff in over a decade.
+
+Amiga
+-----
+
+For the Amiga, I use `fs-uae`.  It works well enough without much
+hassle, although the documentation is on-line only and awful.  Much of
+my time getting things set up involved figuring out how to configure
+the damn thing.  At one point Gentoo just decided to drop GUI support
+(and therefore the ability to e.g. change floppies) for e-uae, so I
+switched immediately to fs-uae.  Years later, Gentoo finally switched
+as well.  Note that I'm just describing my standalone games; I also
+use UAE/fs-uae for emulating my old Amiga pretty much as I was using
+it back in the early 90s.
+
+I use the `fs-uae.conf` here as my base config for games.  Note that
+ROMs are someting you'll have to figure out for yourself.  Likewise,
+`min-wb` is not something I'm providing here:  It's a minimal
+Workbench that just boots to CLI and allows me to basic tasks.  It
+also contains UAEQuit in `c`.  This is how I end games.  Where to
+get it is not entirely clear, but it's basically part of UAE, which
+just calls the UAE resident resource to shut down the emulator.  The
+configuration always mounts min-wb as dh1:, bootable at priority 10.
+
+I use `amiga-floppy` to run games on ADF floppy images.  This is
+mainly to test if a game image I have works at all.  I use
+`amiga-load` to boot the min-wb drive as dh1 with floppies pre-loaded.
+This is what I use to install games.  The basic procedure I usually
+use is `copy df0: dh0: all clone quiet` and repeat for each floppy.  Then I
+exit the emulator, and edit `s/startup-sequence` on the new drive to
+add `dh1:c/UAEQuit` at the end and remove any running in background or
+text printed to the initial console.
+
+An Amiga game then uses `amiga-game.sh` to load.  This is almost
+identical to `dos-game.sh`; see above.  I should probably merge the
+two, but I'm too lazy right now.  The main differences are:
+
+  - `$game` defaults to the script name; I will probably remove this soon.
+  - The overlay directories are prefixed with ami-
+  - Launching the game is obviously different.
+
+If there is a file called `fs-uae-extra.conf` in the game's hard drive
+root, it is added to the `fs-uae` command line.  Other than that, it
+just sets dh0: to the game root (located in
+`/usr/local/games/ami/$game`), and makes dh0 bootable at priority 11.
+
+Playstation
+-----------
+
+I use wrappers for Playstation 1 and 2 games that provides per-game
+configuration and per-game memory cards (since the emulators don't,
+really).  They also provide a convenient (for me) way to select a game
+to play.  To list all images, run the script.  To run an image, run
+the script with a (quoted, obviously) shell pattern (with optional ^
+or $ to anchor beginning/end).  If more than one matches, the matches
+will be listed.  To change global configuration, just run the emulator
+itself.  To change per-game configuration, append `-cfg` to the
+command to normally run the game.  You have to be careful not to edit
+the configuration of games while running them, since that may or may
+not actually edit the global config.
+
+The PS1 script is `psx` for which I use `pcsxr` (PCSX Reloaded).  I
+used to use my own custom version with improved JIT and other fixes,
+but I don't care any more now and just run Gentoo's current ebuild
+(1.1.94, I guess).  Among other things, the JIT in that version
+doesn't work at all any more.  Luckily the performance of my own
+machine has improved since the time I card so JIT isn't vital any
+more.  There are still slowdowns in some places, but whatever.
+
+The PS2 script is `ps2` for which I use `PCSX2`.  I have very little
+experience using this, as the emulator only recently has become usable
+for me.  In particular, I'm not sure vibration works at all, and
+controller support is generally flaky at best.  Large parts of the
+script are identical to (copied from) `psx`, which was originally
+copied from `gb` and `ds`, below.  I really should merge that stuff
+into a library of sorts.
+
+Nintendo Handhelds
+------------------
+
+Like the Playstation games above, I use `gb` and `ds` to launch games
+for the Nintendo GBA, GBC, GB, and DS.  The scripts don't support
+per-game configuration or memory cards, but they do support using
+patterns to list and select games.  I use `VBA-M` for non-DS games and
+`desmume` for DS games.  I haven't played any in many years, so the
+scripts are probably broken.  In particular, I used my own wx port of
+`VBA-M` (and have disassociated myself from that project for a number
+of reasons) which doesn't work any more now that I lost most of my
+patches and can't rebuild, and the upstream version doesn't work the
+way I want it to any more, either.  I'll probably just switch to
+`mednafen` or something like that if I ever play a game again.  It's
+not like any of my save states are any good any more, anyway.  I'd
+rather just rewrite my own emulators from scratch (that goes for the
+Playstation emulators as well), but I don't have the motivation for that
+any more.

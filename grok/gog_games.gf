@@ -4,19 +4,19 @@ dbase      gog_games
 comment    My GOG Games
 cdelim     ;
 syncable   0
-size       732 675
+size       732 679
 autoq      0
 help	'Here's some bloody help text.
 help	'Enjoy it.
 query_s    0
 query_n    Visible
-query_q    (len(_hidden)==0)
+query_q    (!#_hidden)
 query_s    0
 query_n    TODO
-query_q    (len(_todo)>0)
+query_q    (#_todo>0)
 query_s    0
 query_n    Installed
-query_q    (len(_hidden)==0 && !_sn_uninstalled && !_sn_offlinespacehog)
+query_q    (!#_hidden && !_sn_uninstalled)
 
 item
 type       Input
@@ -84,8 +84,7 @@ mid        108 8
 column     5
 label      Install Size (K)
 lfont      0
-gray       (_sn_notyetinstalled || _sn_uninstalled)
-maxlen     0
+gray       (_sn_uninstalled)
 ifont      0
 
 item
@@ -232,7 +231,7 @@ nosort     1
 label      Short Notes
 lfont      2
 mcol       1
-nmenu      20
+nmenu      19
 menu       3rd Party Linux
 _m_code    1
 _m_name    sn_3plinux
@@ -282,13 +281,6 @@ _m_name    sn_uninstalled
 _m_column  27
 _m_sumcol  1
 _m_sumwid  1
-menu       Offline Space Hog
-_m_code    1
-_m_codetxt O
-_m_name    sn_offlinespacehog
-_m_column  24
-_m_sumcol  2
-_m_sumwid  1
 menu       Editor Broken
 _m_code    1
 _m_name    sn_editorbroken
@@ -305,10 +297,6 @@ menu       Win Editor
 _m_code    1
 _m_name    sn_wineditor
 _m_column  35
-menu       Not Yet Installed
-_m_code    1
-_m_name    sn_notyetinstalled
-_m_column  34
 menu       Needs FullScreen
 _m_code    1
 _m_name    sn_badfullscreen
@@ -321,7 +309,10 @@ menu       Controller
 _m_code    1
 _m_name    sn_controller
 _m_column  38
-maxlen     40
+menu       Vibration
+_m_code    1
+_m_name    sn_vibration
+_m_column  24
 ifont      0
 
 item
@@ -351,7 +342,6 @@ code       1
 label      DX11/dxvk
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-maxlen     32
 ifont      0
 
 item
@@ -366,7 +356,6 @@ code       1
 label      DX11 Disabled
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-maxlen     32
 ifont      0
 
 item
@@ -381,13 +370,54 @@ code       1
 label      64-Bit
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-maxlen     32
+ifont      0
+
+item
+type       Flag
+name       ws_g9
+pos        328 572
+size       120 28
+mid        108 28
+column     34
+nosort     1
+code       1
+label      Gallium-9
+lfont      0
+invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
+ifont      0
+
+item
+type       Flag
+name       ws_nogallium9
+pos        448 572
+size       136 28
+mid        108 28
+column     40
+nosort     1
+code       1
+label      G9 Disabled
+lfont      0
+invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
+ifont      0
+
+item
+type       Flag
+name       ws_dotnet
+pos        584 572
+size       120 28
+mid        108 28
+column     41
+nosort     1
+code       1
+label      .net/mono
+lfont      0
+invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
 ifont      0
 
 item
 type       Input
 name       config_loc
-pos        72 572
+pos        72 604
 size       632 28
 mid        132 24
 column     14
@@ -402,7 +432,7 @@ ifont      0
 item
 type       Input
 name       save_loc
-pos        72 604
+pos        72 635
 size       632 28
 mid        132 24
 column     15

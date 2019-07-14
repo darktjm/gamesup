@@ -1,0 +1,21 @@
+#!/bin/sh
+args=
+i=0
+while :; do
+  case "$1" in
+    -*) eval arg$i=\"\$1\"
+        shift
+	args="$args \"\$arg$i\""
+	;;
+    *) break ;;
+  esac
+done
+game="${1%.[aA][dD][fF]}"
+i=0
+for x; do
+  eval im$i=\"\$x\"
+  args="$args --floppy_drive_$i=\"\$im$i\" --floppy_image_$i=\"\$im$i\""
+  i=$((i+1))
+done
+eval "set -- $args"
+fs-uae --sub_title="$game" --hard_drive_1_priority=0 "$@"

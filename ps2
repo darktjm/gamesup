@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# Playstation 2 games:  ps2 <gamepat> [-cfg]
+# gamepat may be substring or glob pattern
+# -cfg invokes GUI w/o CD for per-game config; run PCSXR2 itself for default
+
+#gamesdir="$HOME/games/ps2"
+gamesdir=/ovf/ps2
+confdir="$HOME/.config/PCSX2"
+
+game="$1"
+
+# iso ISO
+# bin->cue
+
+if [ -z "$game" ]; then
+	( cd "$gamesdir"; ls -C *.{bin,iso} | sed 's/\.[^.]*$//' )
+	exit 0
+fi
+
+shift
+
+if [ ! -f "$confdir/inis/PCSX2_ui.ini" ]; then
+	echo "Configure PCSX2 once first!"
+	exit 1
+fi
+
+b="${game##*/}"
+b="${b%.*}"
+bb="${b%-[1-9]}"
+if [ -f "$game" ]; then
+   df="$game"
+else
+   # try to find given name directly
+   df="$gamesdir/$b"
+   for x in bin iso; do
+     test -f "$df".$x && break
+   done
+   df="$df".$x
+   if [ ! -f "$df" ]; then
+        # and if that fails, try pattern matching
+	bop=\*; eop=\*
+	case "$game" in
+	  '^'*'$') bop=; eop=; game="${game#^}"; game="${game%\$}" ;;
+	  '^'*) bop=; game="${game#^}" ;;
+	  *'$') eop=; game="${game%\$}" ;;
+	esac
+	g="` cd \"\$gamesdir\"; ls -C *.{bin,iso} | sed 's/\.[^.]*$//' | \
+	       while read g; do
+	          case "\$g" in
+		     $bop$game$eop) echo \"\$g\" ;;
+		   esac
+	       done`"
+        if [ -n "$g" ]; then
+	   nl=$(echo "$g" | wc -l)
+	   if [ $nl -gt 1 ]; then
+	      echo "More than one match:"
+	      echo "$g"
+	      exit 0
+	    fi
+	    df="$gamesdir/$g"
+	    for x in bin iso; do
+	       test -f "$df".$x && break
+	     done
+	     df="$df".$x
+	     b="${df##*/}"
+	     b="${b%.*}"
+	     bb="${b%-[1-9]}"
+	fi
+   fi
+   test -f "$df" || exit 1
+fi
+# Now the game is known; make per-game config
+mkdir -p "$confdir/games/$bb/memcards"
+(
+	cd "$confdir/games/$bb"
+	ln -s ../../inis/* . 2>/dev/null
+	if [ -h PCSX2_ui.ini ]; then
+		rm PCSX2_ui.ini
+		sed -e 's#^\(MemoryCards=\).*#\1'"$confdir/games/$bb/memcards#" ../../inis/PCSX2_ui.ini>PCSX2_ui.ini
+	fi
+	for x in Mcd00{1,2}.ps2; do
+		test -f memcards/$x || cp ../../memcards/blank.ps2 memcards/$x
+	done
+)
+# -cfg option to set per-game config
+if [ "x-cfg" = "x$1" ]; then
+        # convert soft links to files to avoid overwriting global config
+	cd "$confdir/games/$bb"
+	find -name \*.ini -type l | while read x; do
+		rm -f $x
+		cp ../../inis/$x .
+	done
+	# when done, convert files identical to global config back to links
+	trap '
+	find -name \*.ini -type f | while read x; do
+		cmp $x ../../inis/$x >/dev/null 2>&1 && ln -sf ../../inis/$x .
+	done
+	' 0
+	PCSX2 --cfgpath "$confdir"/games/"$bb" --nodisc
+else
+	exec PCSX2 --cfgpath "$confdir"/games/"$bb" --fullscreen "$df" "$@"
+fi

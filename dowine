@@ -14,12 +14,11 @@ Usage:
     -k  Kill wine
     -m  Mount windows overlay
     -M  Dismount windows overlay
-    -s  use wine (default/stable - 4.0.x)
-    -d  use wine-d3d9 (latest) [may be older than -v]
-    -a  use wine-staging (staging+d3d9; same as "any") (latest) [may be older than -v]
-    -v  use wine-vanilla (latest)
+    -d  use wine-vanilla (latest development)
+    -S  use wine-staging (latest staging) [may be older than -d]
     -s2 use wine-2 (previous stable - 2.0.x)
-    -s3 use wine-3 (previous stable - 3.0.x (no d3d9))
+    -s3 use wine-3 (previous stable - 3.0.x)
+    -s4 use wine-4 (current stable - 4.0.x)
     -D  use winedbg/gdb
     -V <exe> use <exe> as wine; may not work right
 EOF
@@ -61,12 +60,11 @@ kill_wine=
 mnt_wine=
 while :; do
   case "$1" in
-     -s) wp=wine ;;
-     -d) wp=wine-d3d9 ;;
-     -a) wp=wine-staging ;;
+     -S) wp=wine-staging ;;
      -v) wp=wine-vanilla ;;
      -s2) wp=wine-2 ;;
      -s3) wp=wine-3 ;;
+     -s|-s4) wp=wine ;;
      -V) wp="$2" ; shift ;;
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;
@@ -110,6 +108,8 @@ prefix_setup() {
   # just verify wine installation in current dir
   # do an init/update
   cd "${WINEPREFIX%/windows}"
+  # I suppose there is a "better" more official way to do this, but I'm
+  # not going to dive into the code and "documentation" to find it.
   $wp regedit /\? >/dev/null 2>&1
   wineserver$wpver -w
   # exit if update rather than init
@@ -117,21 +117,33 @@ prefix_setup() {
   # my prefix has config in windows subdir and drive_c in main dir
   # so move things around after init
   mv windows .windows
-  mv .windows/drive_c/{.[^.],}* .
+  # The use of .[^.]* is supposed to move the drive serial #, but that
+  # doesn't seem to be created any more.  2>/dev/null suppresses the error.
+  mv .windows/drive_c/{.[^.],}* . 2>/dev/null
   rmdir .windows/drive_c
-  mv .windows/{.[^.],}* windows
+  mv .windows/{.[^.],}* windows 2>/dev/null
   rmdir .windows
   rm windows/dosdevices/c:
   ln -s ../.. windows/dosdevices/c:
-  # enable wine-9
+  # don't do the other stuff for reference prefixes
+  # especially replacing the library stubs below
+  test -n "$1" && return
+  # enable wine-9 (will autodetect backend, so no need to set in registry)
+  #  using standalone configurator program creates z: and other crap, so don't
+  # enable dxvk
   # set default GOG installer options
-  # enable opengl 4.5
+  # enable opengl 4.5 (probably not needed any more and maybe counterproductive)
   # attempt to set USERPROFILE dir (doesn't work)
 cat <<"EOF" > $$.reg
 REGEDIT4
 
-[HKEY_CURRENT_USER\Software\Wine\DllRedirects]
-"d3d9"="d3d9-nine.dll"
+[HKEY_CURRENT_USER\Software\Wine\DllOverrides]
+"d3d9"="n"
+"d3d11"="n,b"
+"dxgi"="n,b"
+"d3d10"="n,b"
+"d3d10_1"="n,b"
+"d3d10core"="n,b"
 
 [HKEY_LOCAL_MACHINE\Software\GOG.com]
 "DefaultPackPath"="C:\\"
@@ -151,6 +163,18 @@ REGEDIT4
 EOF
   $wp regedit $$.reg
   rm $$.reg
+  # wine-nine files
+  mkdir -p windows/system32
+  ln -sf /usr/lib32/d3d9-nine.dll.so windows/system32/d3d9.dll
+  test win64 = "$WINEARCH" && mkdir -p windows/syswow64 && ln -sf /usr/lib64/d3d9-nine.dll.so windows/syswow64/d3d9.dll
+  # dxvk files
+  if [ -d ../../win/dxvk ]; then
+     windir="../../../../win"
+  else
+     windir="$HOME/games/win"
+  fi
+  (cd windows/system32 && ln -sf "$windir"/dxvk/x32/* .)
+  test win64 = "$WINEARCH" && (cd windows/syswow64 && ln -sf "$windir"/dxvk/x64/* .)
 )
 }
 
@@ -179,7 +203,7 @@ fi
 # set up reference dir
 refdir="$HOME/.${wp%-[0-9]*}-${winever}"
 test -d "$refdir" || mkdir "$refdir"
-(WINEPREFIX="$refdir/windows" prefix_setup)
+(WINEPREFIX="$refdir/windows" prefix_setup n)
 
 # Prevent Wine from auto-installing gecko & mono
 test -n "$dis_mono" && WINEDLLOVERRIDES="${WINEDLLOVERRIDES};mscoree.dll=n"

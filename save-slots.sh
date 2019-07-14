@@ -1,6 +1,6 @@
 # support -s and -r for side-saving
-# set $game to the name of the game's tar files
 # set $dir to the dir containing the save games
+# the tar files will get $0 as their base name
 
 # some games have multiple save slots, but they represent multiple "runs", so
 # you're still stuck with the one save slot for the whole game
@@ -23,44 +23,59 @@
 #   fn: slot_dir $(slot_Name) -> name of dir to archive
 # then, the parameter after -r/-s is the slot to save/restore, prefixed with -
 
-# Instead, it's super simple:
-#    dir=${dir}++  -> enable profile code; dir is default dir
-#       The ++ is used instead of directly setting a variable so that
-#       non-profile games don't have to do anything
-#    extract_to=... -> If non-blank, replace target dir with ...
-#       This is separate from the target dir because target dir should
-#       be ignored if user didn't explicitly ask for a profile
-# this means that the game script has to handle getting the profile name:
-# example from itbr:
-#game=itbr; dir="$HOME/games/wine/itbr/users/`id -un`/My Documents/My Games/Into The Breach/profile_"
-#if [ x-p = "x$1" ]; then
-#  dir="$dir$2"; shift 2
-#  extract_to="${dir##*/}"
-#else
-#  extract_to=
-#  for x in "$dir"*; do break; done
-#  if [ -d "$x" ]; then
-#    dir="$x"
-#  else
-#    dir="$dir"Alpha
-#  fi
-#fi
-#dir="${dir}++" # profile mode
+# Here's what I have now, which works well enough:
+#    dir=+${dir}  -> enable profile code; dir is default dir or prefix
+#       The + is used instead of directly setting a variable so that
+#       non-profile games don't have to do anything.  I used to use a ++
+#       suffix to make it more obvious, but now I prefer a prefix.
+#    psuffix=.sav -> a suffix to add to prefix if dir is a prefix.  Actual
+#       slot file/dir name is ${dir#+}${slot}${psuffix}
+#    I used to also have extract_to, but now I process the profile arg
+#    internally:  +<slot> after -s/r selects the slot to save/load to.
+# Basically I no longer try to ensure that the user has a consistent
+# experience (i.e., instead of always numbering the slots, I require that
+# the user know what the slot names are and not select invalid names).
+# If the user doesn't specify a slot on save, it saves the first found entry
+# matching ${dir#+}*${psuffix}; the default slot isn't taken into account
+# at all.  For restoring, if a slot is not specified, it restores to the
+# slot that was saved.
+# I also don't support weird slot types; those will have to be implemented
+# manually as the need arises (or this code might be extended to support that)
 
-test -z "$game" -o -z "$dir" && exit 1
+test -z "$dir" && exit 1
+game="${0##*/}"
 do_profile=
 case "$dir" in
-	*++) do_profile=y; dir="${dir%++}" ;;
+	+*)  do_profile=y; dir="${dir#+}" ;;
 esac
 case "$1" in
   -s|-r)
+    save="${1#-r}"
+    if [ -n "$do_profile" ]; then
+        # process cmd-line supplied profile
+	# I used to expect scripts to do this themselves, setting extract_to
+	# if needed, but they all ended up looking the same, anyway
+	extract_to=
+	case "$2" in
+		+*)  dir="$dir${2#+}${psuffix}"; shift
+		     extract_to="${dir##*/}"
+		     ;;
+		*)   for x in "$dir"*"${psuffix}"; do break; done
+		     if [ -e "$x" ]; then
+		     	dir="$x"
+		     else
+		        dir="${dir%/*}/A saved game slot"
+		     fi
+		     ;;
+	esac
+    fi
     cd "${dir%/*}"
     sdir="${dir##*/}"
     sg="$HOME/games/saves/${game}-$2${2:+-}sav.tar.bz2"
     # both saves and restores are backed up to this directory
     # tmpreaper or wipe-on-reboot will hopefully keep them from filling space
     bdir="/tmp/save_backups_$(id -un)"
-    if [ x-r = x$1 ]; then
+    if [ -z "$save" ]; then
       if [ ! -f "$sg" ]; then
         echo "$sg does not exist"
 	echo "Known save games listed below:"

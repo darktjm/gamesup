@@ -1,0 +1,64 @@
+#!/bin/sh
+
+dsdir="$HOME/games/ds"
+
+game="$1"
+
+if [ -z "$game" ]; then
+	( cd "$dsdir"; ls -C *.nds | sed 's/.gz//;s/\.[^.]*$//' ) | sort
+	exit 0
+fi
+
+shift
+
+b="${game##*/}"
+b="${b%.*}"
+if [ -f "$game" ]; then
+   df="$game"
+else
+   # try to find given name directly
+   for df in "$dsdir/""$b"{,.nds}; do
+     test -f "$df" && break
+   done
+   if [ ! -f "$df" ]; then
+        # and if that fails, try pattern matching
+	bop=\*; eop=\*
+	case "$game" in
+	  '^'*'$') bop=; eop=; game="${game#^}"; game="${game%\$}" ;;
+	  '^'*) bop=; game="${game#^}" ;;
+	  *'$') eop=; game="${game%\$}" ;;
+	esac
+	g="`for d in \"\$dsdir\"; do
+	     cd \"\$d\"; ls -C *.nds 2>/dev/null; done | \
+	       sed 's/\.[^.]*$//' | \
+	       while read g; do
+	          case "\$g" in
+		     $bop$game$eop) echo \"\$g\" ;;
+		   esac
+	       done`"
+        if [ -n "$g" ]; then
+	   nl=$(echo "$g" | wc -l)
+	   if [ $nl -gt 1 ]; then
+	      echo "More than one match:"
+	      echo "$g"
+	      exit 0
+	    fi
+	    for df in "$dsdir/$g"; do
+	       for x in nds; do
+	          test -f "$df".$x && break
+	        done
+		df="$df".$x
+		test -f "$df" && break
+	     done
+	fi
+   fi
+   test -f "$df" || exit 1
+fi
+
+# --3d-engine=2 only in gtk (requires work to implement in sdl)
+# --side-by-side is my own option, sdl only (gtk does it using cairo)
+# --opengl-2d is sdl only (gtk uses cairo)
+# ROMs are available here, but I don't think they're necessary
+#desmume --3d-engine=2 --load-type=1 --cpu-mode=1 --num-cores=4 --bios-arm9=$dsdir/bios/biosnds9.rom --bios-arm7=$dsdir/bios/biosnds7.rom --bios-swi=1 "$@" "$df" >/dev/null &
+desmume --3d-engine=2 --load-type=1 --cpu-mode=1 --num-cores=4 "$@" "$df" >/dev/null &
+#desmume-cli --opengl-2d --side-by-side --load-type=1 --cpu-mode=1 --num-cores=4 "$@" "$df" >/dev/null &

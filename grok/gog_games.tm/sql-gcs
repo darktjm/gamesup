@@ -35,7 +35,7 @@ INSERT INTO items
  ('\{_dlc}', '\{_cmd}', '\{_cmdtype}', '\{_name}', '\{_game_notes}',
   '\{_id}', '\{_hidden}', '\{_inst_notes}', '\{_setup_size}', '\{_dir}',
   '\{_inst_size}',
-  '\{_sn_3plinux ? "3PLinux, " : ""}\{_sn_amiga ? "Amiga, " : ""}\{_sn_broken ? "Broken, " : ""}\{_sn_editor ? "Editor, " : ""}\{_sn_finished ? "Finished, " : ""}\{_sn_linuxbroken ? "LinuxBroken, " : ""}\{_sn_mods ? "Mods, " : ""}\{_sn_nomovies ? "NoMovies, " : ""}\{_sn_slow ? "Slow, " : ""}\{_sn_uninstalled ? "Uninstalled, " : ""}\{_sn_source ? "Source, " : ""}\{_sn_offlinespacehog ? "OfflineSpaceHog, " : ""}\{_sn_editorbroken ? "BadEditor, " : ""}\{_sn_nomusic ? "NoMusic, " : ""}\{_sn_brittle ? "Brittle, " : ""}\{_sn_notyetinstalled ? "NotYetInstalled, " : ""}\{_sn_wineditor ? "WinEditor, " : ""}',
+  '\{_sn_3plinux ? "3PLinux, " : ""}\{_sn_amiga ? "Amiga, " : ""}\{_sn_broken ? "Broken, " : ""}\{_sn_editor ? "Editor, " : ""}\{_sn_finished ? "Finished, " : ""}\{_sn_linuxbroken ? "LinuxBroken, " : ""}\{_sn_mods ? "Mods, " : ""}\{_sn_nomovies ? "NoMovies, " : ""}\{_sn_slow ? "Slow, " : ""}\{_sn_uninstalled ? "Uninstalled, " : ""}\{_sn_source ? "Source, " : ""}\{_sn_editorbroken ? "BadEditor, " : ""}\{_sn_nomusic ? "NoMusic, " : ""}\{_sn_brittle ? "Brittle, " : ""}\{_sn_wineditor ? "WinEditor, " : ""}',
   '\{_todo}', '\{_ver}', '\{_config_loc}', '\{_save_loc}',
   '\{_ws_dxvk ? "dxvk, " : ""}\{_ws_dx11_disable ? "dx11-disable, " : ""}\{_ws_64bit ? "64bit, " : ""}',
   '\{_wine_ver}');

@@ -1,0 +1,65 @@
+#!/bin/sh
+
+gbadir="$HOME/games/gba"
+gbdir="$HOME/games/gb"
+
+game="$1"
+
+if [ -z "$game" ]; then
+	for d in "$gbdir" "$gbadir"; do
+		( cd "$d"; ls -C *.gb* | sed 's/.gz//;s/\.[^.]*$//' )
+	done | sort
+	exit 0
+fi
+
+shift
+
+b="${game##*/}"
+b="${b%.*}"
+if [ -f "$game" ]; then
+   df="$game"
+else
+   # try to find given name directly
+   for df in "$gbadir/$b" "$gbdir/$b"; do
+	for x in gb{,c,a}{,.gz}; do
+	     test -f "$df".$x && break
+   	done
+   	df="$df".$x
+	test -f "$df" && break
+   done
+   if [ ! -f "$df" ]; then
+        # and if that fails, try pattern matching
+	bop=\*; eop=\*
+	case "$game" in
+	  '^'*'$') bop=; eop=; game="${game#^}"; game="${game%\$}" ;;
+	  '^'*) bop=; game="${game#^}" ;;
+	  *'$') eop=; game="${game%\$}" ;;
+	esac
+	g="`for d in \"\$gbadir\" \"\$gbdir\"; do
+	     cd \"\$d\"; ls -C *.gb{,c,a}{,.gz} 2>/dev/null; done | \
+	       sed 's/\.gz//;s/\.[^.]*$//' | \
+	       while read g; do
+	          case "\$g" in
+		     $bop$game$eop) echo \"\$g\" ;;
+		   esac
+	       done`"
+        if [ -n "$g" ]; then
+	   nl=$(echo "$g" | wc -l)
+	   if [ $nl -gt 1 ]; then
+	      echo "More than one match:"
+	      echo "$g"
+	      exit 0
+	    fi
+	    for df in "$gbdir/$g" "$gbadir/$g"; do
+	       for x in gb{,c,a}{,.gz}; do
+	          test -f "$df".$x && break
+	        done
+		df="$df".$x
+		test -f "$df" && break
+	     done
+	fi
+   fi
+   test -f "$df" || exit 1
+fi
+vbam -F "$df" "$@"
+#wxvbam -f "$df" "$@"
