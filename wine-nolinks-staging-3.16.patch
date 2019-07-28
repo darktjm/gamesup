@@ -1,3 +1,16 @@
+diff -ruN wine-1.9.4/dlls/ntdll/server.c wine-1.9.4/dlls/ntdll/server.c
+--- wine-1.9.4/dlls/ntdll/server.c	2016-02-19 08:54:19.000000000 -0600
++++ wine-1.9.4/dlls/ntdll/server.c	2016-02-27 20:52:23.248627007 -0600
+@@ -1163,7 +1163,9 @@
+ 
+     mkdir( "drive_c", 0777 );
+     symlink( "../drive_c", "dosdevices/c:" );
++#if 0 /* wine already has a method to access files in /; no need to make it easy */
+     symlink( "/", "dosdevices/z:" );
++#endif
+ 
+ done:
+     if (fd_cwd == -1) fd_cwd = open( "dosdevices/c:", O_RDONLY );
 diff -ruN wine-1.9.4/dlls/shell32/shellpath.c wine-1.9.4/dlls/shell32/shellpath.c
 --- wine-1.9.4/dlls/shell32/shellpath.c	2016-02-19 08:54:19.000000000 -0600
 +++ wine-1.9.4/dlls/shell32/shellpath.c	2016-02-27 20:49:57.342631015 -0600

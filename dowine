@@ -61,7 +61,7 @@ mnt_wine=
 while :; do
   case "$1" in
      -S) wp=wine-staging ;;
-     -v) wp=wine-vanilla ;;
+     -d) wp=wine-vanilla ;;
      -s2) wp=wine-2 ;;
      -s3) wp=wine-3 ;;
      -s|-s4) wp=wine ;;
@@ -164,17 +164,24 @@ EOF
   $wp regedit $$.reg
   rm $$.reg
   # wine-nine files
-  mkdir -p windows/system32
-  ln -sf /usr/lib32/d3d9-nine.dll.so windows/system32/d3d9.dll
-  test win64 = "$WINEARCH" && mkdir -p windows/syswow64 && ln -sf /usr/lib64/d3d9-nine.dll.so windows/syswow64/d3d9.dll
   # dxvk files
   if [ -d ../../win/dxvk ]; then
      windir="../../../../win"
   else
      windir="$HOME/games/win"
   fi
-  (cd windows/system32 && ln -sf "$windir"/dxvk/x32/* .)
-  test win64 = "$WINEARCH" && (cd windows/syswow64 && ln -sf "$windir"/dxvk/x64/* .)
+  mkdir -p windows/system32
+  if [ win64 = "$WINEARCH" ]; then
+    # I guess syswow64 is actually the 32-bit stuff, and system32 is 64-bit
+    ln -sf /usr/lib64/d3d9-nine.dll.so windows/system32/d3d9.dll
+    (cd windows/system32 && ln -sf "$windir"/dxvk/x64/* .)
+    mkdir -p windows/syswow64
+    ln -sf /usr/lib32/d3d9-nine.dll.so windows/syswow64/d3d9.dll
+    (cd windows/syswow64 && ln -sf "$windir"/dxvk/x32/* .)
+  else
+    ln -sf /usr/lib32/d3d9-nine.dll.so windows/system32/d3d9.dll
+    (cd windows/system32 && ln -sf "$windir"/dxvk/x32/* .)
+  fi
 )
 }
 

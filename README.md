@@ -591,7 +591,7 @@ environment.  I may fix this in the future to set it if the prefix is
 already 64-bit.
 
   - Version selection:
-      - `-s` = '-s4' = current stable, which is also the default wine
+      - `-s` = `-s4` = current stable (4.0.x), which is also the default wine
       - `-s3` = 3.0.x (must be manually linked as wine-3)
       - `-s2` = 2.0.x (must be manually linked as wine-2)
       - `-d` = wine-vanilla:  latest vanilla wine
@@ -763,36 +763,37 @@ with it: `ds4-down`.  I also wrote a script to use with xfce4's generic
 monitor, which just displays text output of a command repeatedly:
 `ds4-power`.  This displays the current charging status.
 
-I also made a user-mode input driver (`indrv`) to completely override
-all devices with a new mapping, because my old `input-kbd` based evdev
-remappings don't work on the ds4 for some reason (but they did work on
-all my old controllers), and tracking down that reason seemed harder
-than just writing a uinput driver.  This works, but I'm not including
-the source here because it's not really useful and I don't want to
-answer support questions about it.  Maybe if I ever rewrite the axis
-support to work better, and figure out why it sometimes just craps out
-and stops working (but that may just be the games I used it with,
-which seem flaky sometimes).  I'd also like to convert this into a
-more general remapping tool with multiple profiles, keyboard and mouse
-support, chording support, "autofire" support and macro support
-(recording to a plain-text description for editing and binding, as
-well as of course replaying).  If I ever get the latter working, I'll
-upload it as a separate project here.
+I made my own uinput-based pad remapper for this, because my old
+`input-kbd` based evdev remappings don't work on the ds4 for some
+reason (but they did work on all my old controllers), and tracking
+down that reason seemed harder than just writing a uinput driver.
+However, as I started adding more features, I felt that an
+LD_PRELOAD-based driver would be more appropriate, so I decided to
+abandon it for now.  In fact, I found two alternatives that don't
+require that I actually maintain them myself: `MoltenGamePad` and
+`xboxdrv`.  Maybe some day I'll resume work on an LD_PRELOAD-based
+remapper, but for now, I'm out of energy and either of these will
+probably do.
 
-I'm in the middle of rewriting it, but I decided to go ahead and put
-the old version here as well, for now.  Don't rely on it.  It's
-probably full of bugs.  Compile with "gcc -o indrv{,.c}" or some such.
-It has issues.  Not only is it way too simplistic, but the vibration
-doesn't seem to work quite right.  Run as root, preferably before
-inserting the controller:
+[MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) does
+pretty much everything that my more advanced remapper did.  It also
+adds hierarchical profiles, LED support, and other stuff I never
+intended to add to the remapper.  It also lacks autofire, segmented
+axes, and sequenced events, but I don't really need those.  It also
+hasn't been updated in over a year, and may be abandoned.  It's also a
+pain to initially configure.
 
-    indrv -d "Wireless Controller" < indrv.map
+[xboxdrv](htts://xboxdrv.gitlab.io/xboxdrv.html) does support autofire
+and macros, is packaged by my distro, and may be a better choice
+overall.  Its main deficiencies are lack of support for multiple input
+devices on one virtual controller and rumble support for generic evdev
+devices.  The latter is easy enough to patch in: see
+`xboxdrv_evff.patch`.  It also doesn't do anything to remove existing
+device nodes, so that has to be done manually in a wrapper (which I
+have yet to write).  I have included my ds4 configuration
+(`xboxdrv-ds4.conf`); used as follows:
 
-Syntax for indrv.map is pretty stupid: `key` *old* `key` *new* or `axis`
-*old* `axis` *new*.  I don't support key->axis/axis->key or axis
-inversion (part of why I'm doing the rewrite).  It relies on
-<linux/input-event-codes.h>, which I've gone ahead and put my current
-copy here as well so you don't have to ask me where it comes from.
+    sudo xboxdrv -s --evdev /dev/input/event13 -c /etc/xboxdrv-ds4.conf &
 
 Lately my ds4's started to flake out, though.  It won't connect just
 by pressing the button; I have to set it to pairing mode and use a
@@ -845,14 +846,17 @@ get it is not entirely clear, but it's basically part of UAE, which
 just calls the UAE resident resource to shut down the emulator.  The
 configuration always mounts min-wb as dh1:, bootable at priority 10.
 
-I use `amiga-floppy` to run games on ADF floppy images.  This is
-mainly to test if a game image I have works at all.  I use
-`amiga-load` to boot the min-wb drive as dh1 with floppies pre-loaded.
-This is what I use to install games.  The basic procedure I usually
-use is `copy df0: dh0: all clone quiet` and repeat for each floppy.  Then I
-exit the emulator, and edit `s/startup-sequence` on the new drive to
-add `dh1:c/UAEQuit` at the end and remove any running in background or
-text printed to the initial console.
+I use `amiga-floppy` *images* to run games on ADF floppy images.  This
+is mainly to test if a game image I have works at all.  I use
+`amiga-load` *drive-name* *images* to boot the min-wb drive as dh1:
+with floppies pre-mounted. This is what I use to install games.  The
+basic procedure I usually use is `copy df0: dh0: all clone quiet` and
+repeat for each floppy.  Then I exit the emulator, and edit
+`s/startup-sequence` on the new drive to add `dh1:c/UAEQuit` at the
+end and remove any running in background or text printed to the
+initial console.  I might also have to use `dh1:c/assign` to assign
+the floppy names (gotten from `info` or the prompts asking to insert a
+floppy) to dh0:.
 
 An Amiga game then uses `amiga-game.sh` to load.  This is almost
 identical to `dos-game.sh`; see above.  I should probably merge the
@@ -862,15 +866,28 @@ two, but I'm too lazy right now.  The main differences are:
   - The overlay directories are prefixed with ami-
   - Launching the game is obviously different.
 
-If there is a file called `fs-uae-extra.conf` in the game's hard drive
-root, it is added to the `fs-uae` command line.  Other than that, it
-just sets dh0: to the game root (located in
-`/usr/local/games/ami/$game`), and makes dh0 bootable at priority 11.
+Games are stored in `/usr/local/games/ami/$game`, which is the root of
+a filesystem-style hard drive image.  The script just sets dh0: to the
+game root, bootable at higher priority (11) than dh1: (10), and runs
+the emulator full-screen.  If there is a file in the game root called
+`fs-uae-extra.conf`, its contents are added to the `fs-uae` command
+line, with a few extras.  Blank lines or lines whose inital
+non-whitespace character is `#` are ignored.  If a line is bracketed
+by `<` and `>`, it is replaced by the contents of the file named in
+the brackets.  The file is first looked for relative to the drive
+root, and then to `/usr/local/games/ami` (see `a500.conf`
+`16-bit.conf` and `68010.conf` for examples).  The initial `--` of an
+option may be skipped, and if it is skipped, the equals sign may also
+be separated by whitespace.  Multiple options are permitted on a line,
+but not mixing of skipped `--` and unskipped `--`.  Whitespace on
+lines with multiple words starting with `--` (or with no leading `--`)
+are assumed to separate arguments; use a single argument on a line by
+itself to preserve whitespace in the argument.
 
 Playstation
 -----------
 
-I use wrappers for Playstation 1 and 2 games that provides per-game
+I use wrappers for Playstation 1 and 2 games that provide per-game
 configuration and per-game memory cards (since the emulators don't,
 really).  They also provide a convenient (for me) way to select a game
 to play.  To list all images, run the script.  To run an image, run

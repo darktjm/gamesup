@@ -1,0 +1,59 @@
+diff -ruN xboxdrv.orig/src/evdev_controller.cpp xboxdrv-6e5e8a57628095d8d0c8bbb38187afb0f3a42112/src/evdev_controller.cpp
+--- xboxdrv.orig/src/evdev_controller.cpp	2019-01-18 15:55:01.000000000 -0600
++++ xboxdrv-6e5e8a57628095d8d0c8bbb38187afb0f3a42112/src/evdev_controller.cpp	2019-07-17 14:38:39.359298934 -0500
+@@ -49,12 +49,13 @@
+   m_keymap(keymap),
+   m_absinfo(ABS_MAX),
+   m_event_buffer(),
+-  m_msg()
++  m_msg(),
++  m_ff()
+ {
+   memset(&m_msg, 0, sizeof(m_msg));
+   m_msg.type = XBOX_MSG_XBOX360;
+ 
+-  m_fd = open(filename.c_str(), O_RDONLY | O_NONBLOCK);
++  m_fd = open(filename.c_str(), O_RDWR | O_NONBLOCK);
+ 
+   if (m_fd == -1)
+   {
+@@ -152,7 +153,27 @@
+ void
+ EvdevController::set_rumble_real(uint8_t left, uint8_t right)
+ {
+-  // not implemented
++  // FIXME: no error checking at all.
++  struct input_event play = { .type = EV_FF };
++  if(left != m_ff.u.rumble.strong_magnitude>>8 ||
++     right != m_ff.u.rumble.weak_magnitude>>8) {
++    if(m_ff.u.rumble.strong_magnitude || m_ff.u.rumble.weak_magnitude) {
++      play.code = m_ff.id;
++      write(m_fd, &play, sizeof(play));
++      ioctl(m_fd, EVIOCRMFF, m_ff.id);
++    }
++    m_ff.u.rumble.strong_magnitude = (uint16_t)left<<8;
++    m_ff.u.rumble.weak_magnitude = (uint16_t)right<<8;
++    if(left || right) {
++      m_ff.id = -1;
++      m_ff.type = FF_RUMBLE;
++      m_ff.replay.length = 1000;
++      ioctl(m_fd, EVIOCSFF, &m_ff);
++      play.code = m_ff.id;
++      play.value = 1;
++      write(m_fd, &play, sizeof(play));
++    }
++  }
+ }
+ 
+ void
+diff -ruN xboxdrv.orig/src/evdev_controller.hpp xboxdrv-6e5e8a57628095d8d0c8bbb38187afb0f3a42112/src/evdev_controller.hpp
+--- xboxdrv.orig/src/evdev_controller.hpp	2019-01-18 15:55:01.000000000 -0600
++++ xboxdrv-6e5e8a57628095d8d0c8bbb38187afb0f3a42112/src/evdev_controller.hpp	2019-07-17 13:35:54.448476634 -0500
+@@ -50,6 +50,7 @@
+ 
+   XboxGenericMsg m_msg;
+ 
++  struct ff_effect m_ff;
+ public:
+   EvdevController(const std::string& filename,
+                   const EvdevAbsMap&  absmap,

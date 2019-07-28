@@ -73,7 +73,7 @@ if [ -z "$game" ]; then
 fi
 
 if [ ! -d /usr/local/games/wine/"$game" ]; then
-  notify-send "$game" not mounted &
+  notify-send "$game not mounted" &
   exit 1
 fi
 

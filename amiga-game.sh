@@ -24,8 +24,8 @@ if [ x-u = "x$1" ]; then
   exit
 fi
 # small enough that there's no point in moving to external storage
-#if [ ! -d "$gdir/data" ]; then
-#  xmessage "$gdir/data not mounted" &
+#if [ ! -d "$gdir" ]; then
+#  notify-send "$gdir not mounted" &
 #  exit 1
 #fi
 
@@ -40,12 +40,32 @@ fi
 cd "$groot"
 
 # fs-uae version; fs-uae is "game-focused" and harder to configure than it should be
+function parse_args() {
+  while read -r x; do
+    case "$x" in
+      ""|\#*) ;;
+      --*\ --*) for y in $x; do echo "$y"; done ;;
+      --*) echo "$x" ;;
+      \<*\>)
+	y="${x#\<}"; y="${y%\>}"
+	for f in "$y" "/usr/local/games/ami/$y"; do
+	   test -f "$f" || continue
+	   parse_args "$f"
+	   break
+	 done
+	 ;;
+      *) echo "--$x" | sed -E -e 's/ += +/=/g;s/ +/ --/g;s/ --/\n--/g' ;;
+    esac
+  done < "$1" || exit 1
+}
 if [ -f fs-uae-extra.conf ]; then
-  set -- `cat fs-uae-extra.conf` "$@"
-#else
-#  set --
+  parse_args fs-uae-extra.conf >/tmp/arg.$$
+  args=()
+  while read -r x; do args+=("$x"); done </tmp/arg.$$
+  rm /tmp/arg.$$
+  set -- "${args[@]}" "$@"
 fi
-exec dogame fs-uae --sub_title="$game" "$@" --hard_drive_0="$groot" --hard_drive_0_priority=11
+exec dogame fs-uae --sub_title="$game" --hard_drive_0="$groot" --hard_drive_0_priority=11 --fullscreen "$@"
 
 # old e-uae version; e-uae is unmaintained bitrot
 if [ -f uae.conf ]; then
