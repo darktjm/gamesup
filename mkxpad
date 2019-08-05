@@ -43,7 +43,7 @@ if [ x-r = "x$1" ]; then
   exit 0
 fi
 
-xboxdrv -s --evdev $evdev -c /etc/xboxdrv.conf "${opts[@]}" & pid=$!
+xboxdrv -s --evdev $evdev -c /etc/xboxdrv.conf "$@" & pid=$!
 while :; do
   d=
   for x in js*/device/phys; do
