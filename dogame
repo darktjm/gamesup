@@ -19,7 +19,7 @@ while :; do
     -j) joy=y; shift ;;    # -j - game best with joystick/gamepad
     -x) xpad=(mkxpad); shift
         while [ "$#" -gt 0 -a "x$1" != x-- ]; do
-	   xpad=("${mkxpad[@]}" "$1"); shift
+	   xpad=("${xpad[@]}" "$1"); shift
 	done
 	shift
 	;;
@@ -78,7 +78,7 @@ while [ -n "$joy" -a ! -d /sys/class/input/js0 ]; do
       *)      exit 1 ;;
    esac
 done
-test -d /sys/class/nput/js0 || xpad=
+test -d /sys/class/input/js0 || xpad=
 case "$docd" in
   g) if [ -n "$doum$dounm" ]; then
         cd "$mdir"
