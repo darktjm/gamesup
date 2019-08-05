@@ -1,0 +1,62 @@
+#!/bin/sh
+
+test -f /etc/xboxdrv.conf || exit 1
+type xboxdrv >/dev/null || exit 1
+
+# I could play around to allow non-root to do uinput, but I won't for now.
+test 0 = `id -u` || exec sudo "$0" "$@"
+# I only support one running process; xboxdrv doesn't support evdev in daemon mode, anyway
+killall xboxdrv 2>/dev/null
+
+# for now, I'll just pick up the first gamepad, which must be plugged in
+# I could add a cmd line arg to override this in the future, but I'd have
+# to be more careful about killing xboxdrv.
+# really it would be better to test for a minimum set of features, so as to
+# ignore such things as my old HP's accelerometer device
+jsovr=js0
+cd /sys/class/input
+x=
+for x in event*/device/$jsovr; do break; done
+if [ -z "$x" ]; then
+   echo "No joystick found"
+   exit 1
+fi
+rm -f /dev/input/$jsovr
+evdev=/dev/input/${x%%/*}
+uniq="`cat ${evdev##*/}/device/uniq`"
+# ideally, udevadm trigger should recreate the device nodes
+# that never works for me, though, so I try to query udev and do it by hand
+mkdev() {
+  # not sure what the defaults should be; this is good enough
+  OWNER=0; GROUP=0; MODE=0660; MAJOR=; MINOR=
+  eval $(udevadm test /sys/class/input/$1 2>&1 | sed -n -E 's/^(MODE|GROUP|OWNER|MAJOR|MINOR)[ =]/\1=/;T;s/ .*//;p')
+  mknod -m $MODE /dev/input/$1 c $MAJOR $MINOR && chown $OWNER:$GROUP /dev/input/$1
+}
+# -r isn't a valid xboxdrv option, I hope.  It means "remove" here.
+if [ x-r = "x$1" ]; then
+  mkdev $jsovr
+  for x in event*/device/uniq; do
+     case "`cat $x`" in
+       "$uniq") mkdev ${x%%/*} ;;
+     esac
+  done
+  exit 0
+fi
+
+xboxdrv -s --evdev $evdev -c /etc/xboxdrv.conf "${opts[@]}" & pid=$!
+while :; do
+  d=
+  for x in js*/device/phys; do
+    grep . $x >/dev/null && continue
+    d="$x"; break
+  done
+  test -n "$d" && break
+  sleep 1
+done
+for x in event*/device/uniq; do
+   case "`cat $x`" in
+     "$uniq")   rm /dev/input/${x%%/*} 2>/dev/null ;;
+   esac
+done
+mv /dev/input/"${d%%/*}" /dev/input/$jsovr
+echo "started $pid"

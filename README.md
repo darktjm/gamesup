@@ -131,6 +131,13 @@ things needed.
     can be used to run a script to save the current game.  I use this
     in some games to bypass "ironman mode" or "permadeath".
 
+  - I pop up a notice using `xmessage` if the game wants a joystick, but
+    none is found.
+
+  - I run `xboxdrv` using `mkxpad` (see below) if the game doesn't work
+    right with my controller.  For now, I expect the game script itself
+    to tell me this.
+
 If `dogame` manages to survive running the game, it will then try to
 restore things as they were.  If nothing else, I can run "`dogame true`"
 to force the cleanup items to happen:
@@ -155,6 +162,8 @@ to force the cleanup items to happen:
 
   - It deletes the saved process ID/game name.
 
+  - It kills `xboxdrv` if it started it, using `mkxpad -r`.
+
 The `dogame` script accepts (and eats) several options before the game
 name and its arguments:
 
@@ -164,6 +173,9 @@ name and its arguments:
    - `-w` -> make game's root directory (assumed to end in /game/)
      writable using unionfs
    - `-u` -> dismount writable unionfs mount if still mounted
+   - `-j` -> notify user if /dev/input/js0 not present
+   - `-x` ... `--` -> start up `xboxdrv` supplying extra args up to `--`
+     note that `--` is mandatory, even if no extra args given.
 
 I generally make short names for all of my games, and create a
 launcher script with that name in `/usr/local/bin`.  During
@@ -695,16 +707,18 @@ discovered new bugs that I have yet to even document.  Use at your own
 risk.  Maybe I'll switch to libreoffice-base or kexi and abandon my
 work on grok some day, but it's all just too much trouble.
 
-A quick note on the templates:  `gcs` outputs to a native GCStar
+A quick note on the templates: `gcs` outputs to a native GCStar
 database I used before I switched to grok.  `sql-gcs` exported to the
 same format exported by GCStar's SQL exporter, although I'm not sure
 what the point was, since GCStar can't import that format.  The `sql`
 template gives a more normal SQL export so I can use sqlite3 to query
 the database (which is sometimes easier than grok's own language).
-Finally, `summary` is an attempt at maintaining `gog_status`' global
-information more easily, and has the advantage of having some of its
-info read from the database itself.  This is my current output from
-`summary`; judge for yourself if I have too many games (I do):
+This is obsoleted by grok's generic SQL exporter, though, and is hard
+to maintain in any case.  Finally, `summary` is an attempt at
+maintaining `gog_status`' global information more easily, and has the
+advantage of having some of its info read from the database itself.
+This is my current output from `summary`; judge for yourself if I have
+too many games (I do):
 
     188 Linux games (11 nonfunctional; 5 converted to wine; 25 uninstalled)
     
@@ -789,11 +803,23 @@ overall.  Its main deficiencies are lack of support for multiple input
 devices on one virtual controller and rumble support for generic evdev
 devices.  The latter is easy enough to patch in: see
 `xboxdrv_evff.patch`.  It also doesn't do anything to remove existing
-device nodes, so that has to be done manually in a wrapper (which I
-have yet to write).  I have included my ds4 configuration
-(`xboxdrv-ds4.conf`); used as follows:
+device nodes, so that has to be done manually in a wrapper.  I have
+included my ds4 configuration (`xboxdrv-ds4.conf`); used as follows:
 
     sudo xboxdrv -s --evdev /dev/input/event13 -c /etc/xboxdrv-ds4.conf &
+
+I have also written a small wrapper script, `mkxpad`, which isn't
+nearly as generic as I'd like.  I originally made it as a wrapper that
+started a passed-in command and restored things when done, but I
+decided to instead run the entire script as root and call it once to
+set up and once to restore.  To set up, pass additional `xboxdrv`
+arguments (e.g. `--trigger-as-button`) to `mkxpad`.  To restore, pass
+only `-r`.  The device nodes are physically removed, and restored
+manually.  I'd prefer to use `udevadm trigger` to restore the device
+nodes, but I've never gotten that to work.  Instead, I use `udevadm
+test` to try and fake it.  I originally just changed ownership to
+prevent reading, but AER, the game I originally started this remapping
+mess for, crashes silently if it can't read an event device.
 
 Lately my ds4's started to flake out, though.  It won't connect just
 by pressing the button; I have to set it to pairing mode and use a

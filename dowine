@@ -4,7 +4,8 @@ case "$1" in
   --help|-h*) cat <<EOF
 Usage:
  $0 [<opts>] <exec>
-  exec is either winetricks, some Wine exec (e.g. winecfg), or some .exe
+  <exec> is either winetricks, some Wine exec (e.g. winecfg), or some .exe
+  Forces WINEARCH for the program if detected in registry; otherwise
   respects WINEARCH, if set (i.e., use WINEARCH=win64 for 64-bit)
   opts:
     -w  Use wine-wait instead of wine (for programs that run in background)
@@ -90,18 +91,6 @@ winever="${winever%% *}"
 winever="${winever#wine-}"
 wpver="${wp%-[0-9]*}" # strip off explicit ver from -V
 wpver="${wpver#wine}"
-
-# not sure why I set LIBGL_DRIVERS_PATH explicitly, but I used to do
-# it in a separate wrapper around wine, and now I've moved that here
-if [ win64 = "$WINEARCH" ]; then
-  wp=wine64${wp#wine}
-  export LIBGL_DRIVERS_PATH=/usr/lib64/dri
-else
-  export LIBGL_DRIVERS_PATH=/usr/lib32/dri
-fi
-# some games seem to use both, so I'll override the above
-export LIBGL_DRIVERS_PATH=/usr/lib32/dri:/usr/lib64/dri
-test wine = "$prg" && prg=$wp
 
 prefix_setup() {
 (
@@ -201,6 +190,25 @@ while :; do
   esac
 done
 export WINEPREFIX="$d/windows"
+
+# force WINEARCH based on user.reg, if present
+# even if set in env, it may be wrong, so ignore
+#if [ -z "$WINEARCH" ]; then
+   a=`head -n 5 "${WINEPREFIX%windows}".windows/user.reg 2>/dev/null | grep '^#arch=' | cut -d= -f2`
+   test -n "$a" && export WINEARCH="$a"
+#fi
+
+# not sure why I set LIBGL_DRIVERS_PATH explicitly, but I used to do
+# it in a separate wrapper around wine, and now I've moved that here
+if [ win64 = "$WINEARCH" ]; then
+  wp=wine64${wp#wine}
+  export LIBGL_DRIVERS_PATH=/usr/lib64/dri
+else
+  export LIBGL_DRIVERS_PATH=/usr/lib32/dri
+fi
+# some games seem to use both, so I'll override the above
+export LIBGL_DRIVERS_PATH=/usr/lib32/dri:/usr/lib64/dri
+test wine = "$prg" && prg=$wp
 
 if [ -n "$kill_wine" ]; then
   wineserver$wpver -k
