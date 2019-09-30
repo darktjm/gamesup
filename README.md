@@ -789,13 +789,12 @@ require that I actually maintain them myself: `MoltenGamePad` and
 remapper, but for now, I'm out of energy and either of these will
 probably do.
 
-[MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) does
-pretty much everything that my more advanced remapper did.  It also
-adds hierarchical profiles, LED support, and other stuff I never
-intended to add to the remapper.  It also lacks autofire, segmented
-axes, and sequenced events, but I don't really need those.  It also
-hasn't been updated in over a year, and may be abandoned.  It's also a
-pain to initially configure.
+[MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) seemed
+pretty nice on first look, but its only advantage over `xboxdrv` is
+that it supports hot plugging for event devices.  In exchange, it's
+harder to configure, build and use.  It also hasn't been updated in a
+year, making me wonder if it's abandoned.  I will not be attempting to
+use this any more.
 
 [xboxdrv](htts://xboxdrv.gitlab.io/xboxdrv.html) does support autofire
 and macros, is packaged by my distro, and may be a better choice
@@ -819,7 +818,9 @@ manually.  I'd prefer to use `udevadm trigger` to restore the device
 nodes, but I've never gotten that to work.  Instead, I use `udevadm
 test` to try and fake it.  I originally just changed ownership to
 prevent reading, but AER, the game I originally started this remapping
-mess for, crashes silently if it can't read an event device.
+mess for, crashes silently if it can't read an event device.  As a
+side note, `MoltenGamePad` "auto-removes" devices via permissions
+changes, as well, so it probably isn't compatible with AER, either.
 
 Lately my ds4's started to flake out, though.  It won't connect just
 by pressing the button; I have to set it to pairing mode and use a
@@ -913,17 +914,22 @@ itself to preserve whitespace in the argument.
 Playstation
 -----------
 
-I use wrappers for Playstation 1 and 2 games that provide per-game
+I use wrappers for Playstation 1 and 2 games that provide per-game`
 configuration and per-game memory cards (since the emulators don't,
 really).  They also provide a convenient (for me) way to select a game
-to play.  To list all images, run the script.  To run an image, run
-the script with a (quoted, obviously) shell pattern (with optional ^
-or $ to anchor beginning/end).  If more than one matches, the matches
-will be listed.  To change global configuration, just run the emulator
+to play.  To list all images, run the script.  To select one from a
+GUI (requires `zenity`), run with just `-g` as an argument.  To run an
+image, run the script with a (quoted, obviously) shell pattern (with
+optional `^` or `$` to anchor beginning/end).  If more than one
+matches, the selection GUI (again, using `zenity`) will pop up to
+choose which you meant; use `-l` before the pattern to just get a
+listing instead. To change global configuration, just run the emulator
 itself.  To change per-game configuration, append `-cfg` to the
 command to normally run the game.  You have to be careful not to edit
 the configuration of games while running them, since that may or may
-not actually edit the global config.
+not actually edit the global config.  Since both scripts use the same
+code to do the image file selection, I extracted that bit to
+`/usr/local/share/img-game.sh`.
 
 The PS1 script is `psx` for which I use `pcsxr` (PCSX Reloaded).  I
 used to use my own custom version with improved JIT and other fixes,
@@ -935,11 +941,10 @@ more.  There are still slowdowns in some places, but whatever.
 
 The PS2 script is `ps2` for which I use `PCSX2`.  I have very little
 experience using this, as the emulator only recently has become usable
-for me.  In particular, I'm not sure vibration works at all, and
-controller support is generally flaky at best.  Large parts of the
-script are identical to (copied from) `psx`, which was originally
-copied from `gb` and `ds`, below.  I really should merge that stuff
-into a library of sorts.
+for me.  My main issue with it at the moment is that it crashes
+randomly, especially when it slows down; for now, the only "fix" is to
+press F1 (save state) frequently, and use `ps2-rec` to recover from
+the backup when it crashes while saving the state.
 
 Nintendo Handhelds
 ------------------

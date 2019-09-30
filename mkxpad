@@ -36,7 +36,8 @@ mkdev() {
 if [ x-r = "x$1" ]; then
   mkdev $jsovr
   for x in event*/device/uniq; do
-     case "`cat $x`" in
+   # note: xboxdrv's event may disappear between for and cat
+     case "`cat $x 2>/dev/null`" in
        "$uniq") mkdev ${x%%/*} ;;
      esac
   done

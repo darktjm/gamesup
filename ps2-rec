@@ -1,0 +1,9 @@
+#!/bin/sh
+cd ~/.config/PCSX2/sstates
+rm -f *.tmp
+b="`ls -trc | fgrep .backup | tail -n 1`"
+nb="${b%.backup}"
+test -f "$nb" && echo "Nothing to do?" && exit 0
+echo "Recovering $nb"
+cp -a "$b" "$nb"
+
