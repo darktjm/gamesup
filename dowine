@@ -17,9 +17,11 @@ Usage:
     -M  Dismount windows overlay
     -d  use wine-vanilla (latest development)
     -S  use wine-staging (latest staging) [may be older than -d]
-    -s2 use wine-2 (previous stable - 2.0.x)
-    -s3 use wine-3 (previous stable - 3.0.x)
-    -s4 use wine-4 (current stable - 4.0.x)
+    -s  use wine (current stable) (default)
+    -s2 use wine-2 (stable - 2.0.x)
+    -s3 use wine-3 (stable - 3.0.x)
+    -s4 use wine-4 (stable - 4.0.x)
+    -s5 use wine (stable - 5.0.x)
     -D  use winedbg/gdb
     -V <exe> use <exe> as wine; may not work right
 EOF
@@ -65,7 +67,8 @@ while :; do
      -d) wp=wine-vanilla ;;
      -s2) wp=wine-2 ;;
      -s3) wp=wine-3 ;;
-     -s|-s4) wp=wine ;;
+     -s4) wp=wine-4 ;;
+     -s|-s5) wp=wine ;;
      -V) wp="$2" ; shift ;;
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;

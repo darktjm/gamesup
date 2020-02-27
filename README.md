@@ -659,7 +659,6 @@ root and the script expects the root to be in the current directory).
 A typical wine game launcher looks like this:
 
     #!/bin/sh
-    game=Game\ Name
     . ${0%/*}/wine-game.sh
     exec dogame dowine -s Game\ Exe.exe
 
@@ -672,6 +671,13 @@ that any more.  Actually, I do this with some other games as well,
 but they all launch from the same script with different command-line
 parameters, which does not necessitate setting groot.
 
+I used to require setting the `game` variable to the installation
+directory name, but that is usually no longer necessary, as the script
+will use the only capitalized directory name that doesn't start with
+`Program`.  Of course it's perfectly safe to manually set, and if two
+installation directories exist, the script will ignore both and die,
+so the directory must be set manually.
+
 I always give the wine version flag, even though `-s` is always
 optional.  I end up having to retest all my wine games every version
 update, and having the version coded like that can help.
@@ -683,10 +689,6 @@ The wine-game.sh script adds a few command-line options to all that use it:
 
    - `-u` = unmount the game unionfs; it never gets unmounted otherwise
    - `-U` = just mount the game unionfs and exit
-
-Ignore the joystick button functions in there; I'll remove them soon
-and they do no harm.  My DualShock 4 doesn't support `input-kbd`,
-anyway.
 
 grok
 ====

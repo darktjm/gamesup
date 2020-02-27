@@ -1,33 +1,3 @@
-# here are some js button-swapping support functions
-js_swapbut() {
-  js=`js-ev`
-  test -z "$js" && return
-  test x-J = x"$1" && js-unswapbut && return
-  input-kbd $js | while read x y z a b; do
-    test = = "$y" || continue
-    case $b in
-      BTN_TRIGGER) echo 0x90004 = $z ;;
-      BTN_THUMB)   echo 0x90003 = $z ;;
-      BTN_THUMB2)  echo 0x90002 = $z ;;
-      BTN_TOP)     echo 0x90001 = $z ;;
-    esac
-  done | input-kbd -f - $js
-}
-
-js_unswapbut() {
-  js=`js-ev`
-  test -z "$js" && return
-  input-kbd $js | while read x y z a b; do
-    test = = "$y" || continue
-    case $b in
-      BTN_TRIGGER) echo 0x90001 = $z ;;
-      BTN_THUMB)   echo 0x90002 = $z ;;
-      BTN_THUMB2)  echo 0x90003 = $z ;;
-      BTN_TOP)     echo 0x90004 = $z ;;
-    esac
-  done | input-kbd -f - $js
-}
-
 # piece of shit gentoo claims to only support /proc/mounts link now, but
 # yet somehow it keeps reverting to a file
 # having as a file ignores fusermounts
@@ -38,6 +8,33 @@ test -h /etc/mtab || sudo ln -sf /proc/mounts /etc/mtab
 
 groot=${groot:-$HOME/games/wine/${0##*/}}
 export WINEPREFIX=${groot}/windows
+# if $game is blank or not present in $groot, select one "automatically"
+if [ -z "$game" -o ! -d "$groot/$game" ]; then
+   ngame=
+   # god damn utf8 locale is case-insensitive
+   # this has always bothered me with sorts, but now bash case-folds patterns
+   # and file names (I didn't notice because zsh doesn't do that)
+   # who knows how much other crap is now broken thanks to this "feature"
+   l="$LANG"
+   export LANG=C
+   for x in "$groot"/[A-Z]*; do
+     case "${x##*/}" in
+       Program*) ;;
+       # checking for dir enables leaving LAVFilters & such around
+       *) if [ -d "$x" -a -z "$ngame" ]; then
+            ngame="${x##*/}"
+	  else
+	    ngame=bad
+	  fi ;;
+     esac
+   done
+   LANG="$l"
+   if [ -z "$ngame" -o bad = "$ngame" ]; then
+     notify-send "Game directory for ${0##*/} (${game:-unspecified}) not found" &
+     exit 1
+   fi
+   game="$ngame"
+fi
 # this used to add fixme-all @ end w/ optional , if already set
 # but that's harder to override
 export WINEDEBUG="${WINEDEBUG-fixme-all}"
@@ -66,11 +63,6 @@ fi
 #  notify-send "${groot}/$game not mounted" &
 #  exit 1
 #done
-
-if [ -z "$game" ]; then
-  echo "Invalid startup script"
-  exit 1
-fi
 
 if [ ! -d /usr/local/games/wine/"$game" ]; then
   notify-send "$game not mounted" &

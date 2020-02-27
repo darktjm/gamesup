@@ -7,7 +7,8 @@
 # if more than one match, pops up selection dialog or just lists matches if -l
 # if no gamepat, lists all games or pops up selection dialog if -g
 
-gamesdir=("$HOME/games/psx")
+#gamesdir=("$HOME/games/psx")
+gamesdir=(/usr/local/games/psx)
 # mdf->mds
 # img->ccd +sub
 # bin->cue (requires editing)
