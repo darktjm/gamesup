@@ -1,12 +1,8 @@
 #!/bin/sh
-pid=
-nl=`wc -l /tmp/.last-game 2>/dev/null | cut -d\  -f1`
-if [ ${nl:-0} -eq 2 ]; then
-  pid=`head -n 1 /tmp/.last-game`
-  ps -p $pid >/dev/null || pid=
+sr=Restore
+. /usr/local/games/bin/auto-save-sup.sh
+if [ -n "$auto" ]; then
+  auto=$((auto-1))
+  test $auto -lt 1 && auto=
 fi
-if [ -z "$pid" ]; then
-  notify-send "Restore Game Failed" "No savable game running"
-  exit 1
-fi
-notify-send "Restored Game" "$(`tail -n 1 /tmp/.last-game` -r auto)"
+notify-send "Restored Game" "`\"\$game\" -r auto$auto`"

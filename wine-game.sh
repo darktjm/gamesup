@@ -23,7 +23,7 @@ if [ -z "$game" -o ! -d "$groot/$game" ]; then
        # checking for dir enables leaving LAVFilters & such around
        *) if [ -d "$x" -a -z "$ngame" ]; then
             ngame="${x##*/}"
-	  else
+	  elif [ -d "$x" ]; then
 	    ngame=bad
 	  fi ;;
      esac

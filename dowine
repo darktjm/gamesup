@@ -94,6 +94,7 @@ winever="${winever%% *}"
 winever="${winever#wine-}"
 wpver="${wp%-[0-9]*}" # strip off explicit ver from -V
 wpver="${wpver#wine}"
+test -n "$wpver" || type wineserver"$wpver"-"$winever" >/dev/null 2>&1 || wpver=-vanilla
 
 prefix_setup() {
 (

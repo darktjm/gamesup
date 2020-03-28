@@ -1,12 +1,10 @@
 #!/bin/sh
-pid=
-nl=`wc -l /tmp/.last-game 2>/dev/null | cut -d\  -f1`
-if [ ${nl:-0} -eq 2 ]; then
-  pid=`head -n 1 /tmp/.last-game`
-  ps -p $pid >/dev/null || pid=
+sf=Save
+. /usr/local/games/bin/auto-save-sup.sh
+notify-send "Saved Game" "`\"\$game\" -s auto$auto`"
+if [ -z "$auto" ]; then
+  auto=1
+else
+  auto=$((auto+1))
 fi
-if [ -z "$pid" ]; then
-  notify-send "Save Game Failed" "No savable game running"
-  exit 1
-fi
-notify-send "Saved Game" "$(`tail -n 1 /tmp/.last-game` -s auto)"
+echo $auto >"$af"

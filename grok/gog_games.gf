@@ -4,7 +4,7 @@ dbase      gog_games
 comment    My GOG Games
 cdelim     ;
 syncable   0
-size       732 679
+size       732 677
 autoq      0
 help	'Here's some bloody help text.
 help	'Enjoy it.
@@ -28,7 +28,6 @@ sumwid     55
 sumcol     5
 column     1
 search     1
-defsort    1
 label      Name
 lfont      0
 ifont      0
@@ -56,6 +55,7 @@ size       468 28
 mid        72 28
 column     0
 search     1
+defsort    1
 label      GOG ID
 lfont      0
 skip       (len(_id)>0)
@@ -153,7 +153,7 @@ item
 type       Input
 name       hidden
 pos        244 156
-size       464 28
+size       298 28
 mid        60 8
 sumwid     1
 sumcol     3
@@ -166,6 +166,17 @@ menu       WONTPLAY
 menu       OBSOLETE
 menu       DEMO
 dcombo     2
+ifont      0
+
+item
+type       Time
+name       tested
+pos        545 156
+size       159 28
+mid        50 28
+column     42
+label      Tested
+lfont      0
 ifont      0
 
 item

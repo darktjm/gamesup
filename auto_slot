@@ -1,0 +1,12 @@
+#!/bin/sh
+sr=Slot\ Adjust\ for
+. /usr/local/games/bin/auto-save-sup.sh
+test -z "$auto" && auto=0
+auto="$((auto $1))"
+if [ "$auto" -lt 1 ]; then
+  rm "$af"
+else
+  echo "$auto" > "$af"
+fi
+rauto="$(. /usr/local/games/bin/auto-save-sup.sh; echo ${auto:-1})"
+notify-send "Set auto slot" "s $auto r $((rauto-1))"

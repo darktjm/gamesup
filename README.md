@@ -236,12 +236,19 @@ where *suffix* is blank if no slot argument is given, or "`-`*slot*"
 if given.
 
 This will also set the magic `save_game` environment variable to
-convince `dogame` to add the game name to the pid file so that a global
-hot key can create saves at any time.  In fact, there are two scripts
-to support this: `save_game` (saves to slot "auto") and `restore_game`
-(restores from slot "auto").  This should probably be changed to use
-more slots, but it's still useful in an emergency, as long as the game
-doesn't override the global hot keys.
+convince `dogame` to add the game name to the pid file so that a
+global hot key can create saves at any time.  In fact, there are two
+scripts to support this: `save_game` (saves to slot "auto") and
+`restore_game` (restores from slot "auto").  After saving, it will
+increase an internal slot number by 1.  If the slot number is more
+than 0, it will append it to "auto" (e.g. "auto1" for the second
+hotkey-save).  When saving for the first time, it tries to use the
+most recent save plus one.  In addition, `auto_slot` applies its
+argument to calucalte the next save slot (e.g. +1 or -1).  I have
+provided an excerpt of my actkbd.conf to show how I use it; using
+global window manager bindings or the like will probably be overridden
+by the game.  Note that all three of these auto-scripts rely on
+`auto-save-sup.sh`, and I assume all 4 are in `/usr/local/games/bin`.
 
 Since it's too easy to accidentally overwrite saves due to habit, both
 saving and restoring saves backups in `/tmp/save_backups_`*username*.

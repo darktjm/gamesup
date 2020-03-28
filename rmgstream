@@ -1,0 +1,38 @@
+#!/bin/sh
+test -f .windows/user.reg || exit 1
+a=`head -n 5 .windows/user.reg 2>/dev/null | grep '^#arch=' | cut -d= -f2`
+test -n "$a" && export WINEARCH="$a"
+dowine "$@" regsvr32 /u 'c:\windows\system32\winegstreamer.dll'
+# this never works
+#test win64 = "$WINEARCH" && dowine "$@" regsvr32 /u 'c:\windows\syswow64\winegstreamer.dll'
+trap "rm /tmp/uuids.$$ ngsreg.$$" 0
+cat >ngsreg.$$ <<"EOF"
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\DllOverrides]
+"winegstreamer"=""
+
+EOF
+WINEDLLOVERRIDES=winegstreamer=d dowine "$@" regedit ngsreg.$$
+#exit 0
+# this is taken care of (theoretically) by the regsvr32 /u above
+# but it never is on win64, maybe because the 2nd unreg fails
+fgrep -B 2 winegstreamer .windows/system.reg | while read -r h; do
+  h="${h#*\{}"
+  h="${h%%\}*}"
+  echo $h
+  read; read; read
+done >/tmp/uuids.$$
+while read id; do
+  echo Removing $id
+  sed -n -e '# header
+       p;n;p;n;p;n;p;n;p
+       :r n; h
+       :a /^$/bb
+          /'"$id"'/bc
+	  $bb
+	  n; H; ba
+       :b g; p; br
+       :c n; /^$/!bc; br' -i .windows/system.reg
+done </tmp/uuids.$$
+
