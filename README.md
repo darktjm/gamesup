@@ -245,10 +245,12 @@ than 0, it will append it to "auto" (e.g. "auto1" for the second
 hotkey-save).  When saving for the first time, it tries to use the
 most recent save plus one.  In addition, `auto_slot` applies its
 argument to calucalte the next save slot (e.g. +1 or -1).  I have
-provided an excerpt of my actkbd.conf to show how I use it; using
+provided an excerpt from my actkbd.conf to show how I use it; using
 global window manager bindings or the like will probably be overridden
-by the game.  Note that all three of these auto-scripts rely on
-`auto-save-sup.sh`, and I assume all 4 are in `/usr/local/games/bin`.
+by the game.  Obviously you will need to edit this to suit your key
+preferences, user ID, and login shell.  Note that all three of these
+auto-scripts rely on `auto-save-sup.sh`, and I assume all 4 are in
+`/usr/local/games/bin`.
 
 Since it's too easy to accidentally overwrite saves due to habit, both
 saving and restoring saves backups in `/tmp/save_backups_`*username*.
