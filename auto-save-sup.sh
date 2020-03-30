@@ -9,6 +9,7 @@ if [ -z "$pid" ]; then
   exit 1
 fi
 game="`tail -n 1 /tmp/.last-game`"
+game="${game##*/}"
 af="/tmp/.${game}-auto"
 auto="`cat \"\$af\" 2>/dev/null`"
 if [ -z "$auto" ]; then
