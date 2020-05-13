@@ -1,4 +1,6 @@
 #!/bin/sh
+ldp="$LD_PRELOAD"
+unset LD_PRELOAD
 test 0 = `id -u` && exit 1
 spid=`pidof syndaemon`
 test -n "$spid" && kill $spid
@@ -99,8 +101,8 @@ xset -dpms
 
 test -n "$xpad" && "${xpad[@]}"
 
-if [ -n "$LD_LIBRARY_PATH" ]; then
-  nonet env LD_LIBRARY_PATH="$LD_LIBRARY_PATH" "$cmd" "$@" & pid=$!
+if [ -n "$LD_LIBRARY_PATH$ldp" ]; then
+  nonet env LD_LIBRARY_PATH="$LD_LIBRARY_PATH" LD_PRELOAD="$ldp" "$cmd" "$@" & pid=$!
 else
   nonet "$cmd" "$@" & pid=$!
 fi
