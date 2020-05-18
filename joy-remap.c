@@ -10,7 +10,12 @@
  * sensors into the main controller.  It also doesn't support adding
  * autofire and chording.  Since it happens at the user level, js devices
  * associated with the same gamepad will not be affected; again, use jscal
- * for that (sort of) or one of the uinput-based remappers.
+ * for that (sort of) or one of the uinput-based remappers.  Since a few
+ * games use the device name to decide mapping, this does support that,
+ * and only that, for js devices.  Really, given that js devices have never
+ * supported force feedback, and likely never will, new programs should not
+ * be using them, in the first place.  Of course Linux doesn't exactly make
+ * it easy to figure out which event device(s) to use, either.
  *
  * * one way to support multiple controllers right now would be to compile
  *   two copies of this shim, using different shim names and different
@@ -50,6 +55,14 @@
  *   Replace the advertised name of the device.  There is no way to change
  *   the version number right now, as I don't know of any software that
  *   depends on the version.
+ *
+ * jsrename <pattern>
+ *   This is a match pattern for joystick device names (/dev/input/jsX).
+ *   Joystick devices do not advertise the device ID, so it matches the
+ *   name only.   The first device opened which matches this name will
+ *   be renamed by the name directive above.  Any other changes, such
+ *   as button and axis remapping, should be done using jscal.  This will
+ *   likely always be a dummy pattern, such as . or just blank.
  *
  * id <idcode>
  *   Replace the advertised ID of the device.  The idcode must be of the
@@ -176,6 +189,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <linux/joystick.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
@@ -185,7 +199,7 @@
  * jackass will try and screw this up, so may as well support it */
 #include <pthread.h>
 
-static int joy_fd = -1;
+static int ev_fd = -1, js_fd = -1;
 static int bt_low, nbt = 0, nax = 0;
 /* cant just use nbt/nax because ax map may have buttons & vice-versa */
 static int filter_ax = 0, filter_bt = 0;
@@ -238,8 +252,8 @@ static unsigned long keysout[MINBITS(KEY_MAX)],  /* sent GBITS(EV_KEY) */
                      keystates[MINBITS(KEY_MAX)], /* sent GKEY */
                      keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
 
-static regex_t allow, reject;
-static int has_allow = 0, has_reject = 0, filter_dev = 0;
+static regex_t allow, reject, jsrename;
+static int has_allow = 0, has_reject = 0, has_jsrename = 0, filter_dev = 0;
 
 static char *repl_name = NULL, *repl_id = NULL, *repl_uniq = NULL;
 static struct input_id repl_id_val;
@@ -309,6 +323,7 @@ static const char * const kws[] = {
     "buttons",
     "filter",
     "id",
+    "jsrename",
     "match",
     "name",
     "pass_axes",
@@ -319,8 +334,8 @@ static const char * const kws[] = {
 };
 
 enum kw {
-    KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_MATCH, KW_NAME, KW_PASS_AX,
-    KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_UNIQ
+    KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_JSRENAME, KW_MATCH, KW_NAME,
+    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_UNIQ
 };
 
 static int kwcmp(const void *_a, const void *_b)
@@ -375,6 +390,11 @@ static void init(void)
 	    free(bt_map);
 	return;
     }
+    int lno = 1;
+#define abort_parse(msg) do { \
+    fprintf(stderr, "error parsing map on line %d: " msg "\n", lno); \
+    goto err; \
+} while(0)
 #define map_resize(what, sz) do { \
     if(max_##what < sz) { \
 	int old_max = max_##what; \
@@ -389,13 +409,12 @@ static void init(void)
 	memset(what##_map + old_max, 0, (max_##what - old_max) * sizeof(*what##_map)); \
     } \
 } while(0)
-#define abort_parse(msg) do { \
-    perror("mapping parse error: " msg); \
-    goto err; \
-} while(0)
     while(1) {
-	while(isspace(*ln))
+	while(isspace(*ln)) {
+	    if(*ln == '\n')
+		lno++;
 	    ln++;
+	}
 	if(!*ln)
 	    break;
 	if(*ln == '#') {
@@ -451,6 +470,17 @@ static void init(void)
 	    repl_name = strdup(ln);
 	    if(!repl_name)
 		abort_parse("name");
+	    break;
+	  case KW_JSRENAME:
+	    if(has_jsrename)
+		abort_parse("duplicate jsrename");
+	    if((ret = regcomp(&jsrename, ln, REG_EXTENDED | REG_NOSUB))) {
+		regerror(ret, &jsrename, buf, sizeof(buf));
+		fprintf(stderr, "jsrename pattern error: %.*s\n", (int)sizeof(buf), buf);
+		regfree(&jsrename);
+		goto err;
+	    } else
+		has_jsrename = 1;
 	    break;
 	  case KW_ID:
 	    if(repl_id)
@@ -876,6 +906,7 @@ static void init(void)
     }
     /* even though technically the first device may be a gamepad due to
      * permissions, I'm forcing you to have a pattern */
+    /* if this is just used to rename joysticks, it still needs a dummy pattern */
     if(!has_allow)
 	abort_parse("match pattern required");
     free(cfg);
@@ -905,11 +936,11 @@ static void init_joy(int fd)
 {
     static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_lock(&lock);
-    if(joy_fd >= 0) {
+    if(ev_fd >= 0) {
 	pthread_mutex_unlock(&lock);
 	return;
     }
-    joy_fd = fd;
+    ev_fd = fd;
     /* set up ID from string */
     if(repl_id) {
 	real_ioctl(fd, EVIOCGID, &repl_id_val);
@@ -942,7 +973,7 @@ static void init_joy(int fd)
     if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keystates)), keystates) < 0 ||
        real_ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absin)), absin) < 0) {
 	perror("init_joy");
-	joy_fd = -1;
+	ev_fd = -1;
 	pthread_mutex_unlock(&lock);
 	return;
     }
@@ -998,7 +1029,7 @@ static void init_joy(int fd)
 	    struct input_absinfo ai;
 	    if(real_ioctl(fd, EVIOCGABS(i), &ai) < 0) {
 		perror("init_joy");
-		joy_fd = -1;
+		ev_fd = -1;
 		pthread_mutex_unlock(&lock);
 		return;
 	    }
@@ -1052,16 +1083,16 @@ static int real_ioctl(int fd, unsigned long request, ...)
     return ((int (*)(int, unsigned long, ...))next)(fd, request, argp);
 }
 
+static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER;
 static int is_allowed(const char *pathname, int fd)
 {
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
     /* this is small enough to be local, but we're locking for buf anyway */
     static struct input_id id;
 
     if(!has_allow)
 	return 1;
     /* the lock is for buf & id */
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&buf_lock);
     if(real_ioctl(fd, EVIOCGNAME(sizeof(buf)), buf) < 0)
 	strcpy(buf, "ERROR: Device name unavailable");
     int rej = has_reject && !regexec(&reject, buf, 0, NULL, 0),
@@ -1078,13 +1109,46 @@ static int is_allowed(const char *pathname, int fd)
 	else if(!nmok)
 	    nmok = !regexec(&allow, buf, 0, NULL, 0);
     }
-    pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&buf_lock);
     return nmok;
+}
+
+/* common code for multiple nearly identical open() functions */
+static int ev_open(const char *pathname, int fd)
+{
+    /* FIXME:  catch relative opens from /dev or /dev/input */
+    /* FIXME:  allow/suppress duplicate / */
+    /* FIXME:  support multiple simultaneously open devices */
+    if(fd < 0 || strncmp(pathname, "/dev/input/", 11))
+	return fd;
+    if(js_fd < 0 && has_jsrename && repl_name && !memcmp(pathname + 11, "js", 2)) {
+	pthread_mutex_lock(&buf_lock);
+	if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0 &&
+	   !regexec(&jsrename, buf, 0, NULL, 0)) {
+	    js_fd = fd;
+	    fprintf(stderr, "renaming %s to %s\n", buf, repl_name);
+	}
+	pthread_mutex_unlock(&buf_lock);
+	return fd;
+    }
+    if(memcmp(pathname + 11, "event", 5))
+	return fd;
+    if(!is_allowed(pathname, fd)) {
+/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
+	close(fd);
+	errno = EPERM;
+	return -1;
+    }
+    if(has_allow)
+	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, fd);
+    if(has_allow && ev_fd < 0)
+	init_joy(fd);
+    return fd;
 }
 
 int open(const char *pathname, int flags, ...)
 {
-    static void *next = NULL;
+    static int (*next)(const char *, int, ...) = NULL;
     if(!next) {
 	next = dlsym(RTLD_NEXT, "open");
 	init();
@@ -1096,26 +1160,13 @@ int open(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    int ret = ((int (*)(const char *, int, ...))next)(pathname, flags, mode);
-    if(ret < 0 || strncmp(pathname, "/dev/input/event", 16))
-	return ret;
-    if(!is_allowed(pathname, ret)) {
-/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
-	close(ret);
-	errno = EPERM;
-	return -1;
-    }
-    if(has_allow)
-	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, ret);
-    if(has_allow && joy_fd < 0)
-	init_joy(ret);
-    return ret;
+    return ev_open(pathname, next(pathname, flags, mode));
 }
 
 /* identical to above, for programs that call this alias */
 int open64(const char *pathname, int flags, ...)
 {
-    static void *next = NULL;
+    static int (*next)(const char *, int, ...) = NULL;
     if(!next) {
 	next = dlsym(RTLD_NEXT, "open64");
 	init();
@@ -1127,20 +1178,7 @@ int open64(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    int ret = ((int (*)(const char *, int, ...))next)(pathname, flags, mode);
-    if(ret < 0 || strncmp(pathname, "/dev/input/event", 16))
-	return ret;
-    if(!is_allowed(pathname, ret)) {
-/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
-	close(ret);
-	errno = EPERM;
-	return -1;
-    }
-    if(has_allow)
-	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, ret);
-    if(has_allow && joy_fd < 0)
-	init_joy(ret);
-    return ret;
+    return ev_open(pathname, next(pathname, flags, mode));
 }
 
 int close(int fd)
@@ -1149,10 +1187,12 @@ int close(int fd)
     if(!next)
 	next = dlsym(RTLD_NEXT, "close");
     int ret = ((int (*)(int))next)(fd);
-    if(fd == joy_fd) {
+    if(fd == ev_fd) {
 	fprintf(stderr, "closing %d\n", fd);
-	joy_fd = -1;
+	ev_fd = -1;
     }
+    if(fd == js_fd)
+	js_fd = -1;
     return ret;
 }
 
@@ -1168,7 +1208,7 @@ ssize_t read(int fd, void *buf, size_t count)
     struct input_event ev;
     static char ebuf[sizeof(ev)];
     int ret_adj = 0;
-    if(fd == joy_fd && excess_read) {
+    if(fd == ev_fd && excess_read) {
 	ret_adj = count < excess_read ? count : excess_read;
 	memcpy(buf, ebuf, ret_adj);
 	if(ret_adj < excess_read)
@@ -1180,7 +1220,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	buf += ret_adj;
     }
     ssize_t ret = ((ssize_t (*)(int, void *, size_t))next)(fd, buf, count);
-    if(ret < 0 || fd != joy_fd)
+    if(ret < 0 || fd != ev_fd)
 	return ret;
     int nread = ret;
     while(nread > 0) {
@@ -1301,7 +1341,7 @@ int ioctl(int fd, unsigned long request, ...)
 	argp = va_arg(va, void *);
 	va_end(va);
     }
-    if(fd == joy_fd)
+    if(fd == ev_fd)
 #define cpstr(s) do { \
     if(!s) \
 	return real_ioctl(fd, request, argp); \
@@ -1405,5 +1445,9 @@ int ioctl(int fd, unsigned long request, ...)
 		return -1;
 	    }
 	}
+    else if(fd == js_fd && _IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
+	cpstr(repl_name);
+	return len;
+    }
     return real_ioctl(fd, request, argp);
 }
