@@ -185,8 +185,6 @@
  * jackass will try and screw this up, so may as well support it */
 #include <pthread.h>
 
-FILE *errf = NULL;
-
 static int joy_fd = -1;
 static int bt_low, nbt = 0, nax = 0;
 /* cant just use nbt/nax because ax map may have buttons & vice-versa */
@@ -347,10 +345,6 @@ static void init(void)
 	perror("EV_JOY_REMAP_CONFIG");
 	return;
     }
-    char efname[80];
-    sprintf(efname, "/tmp/elog%d", (int)getpid());
-    errf = fopen(efname, "a");
-    setvbuf(errf, NULL, _IOLBF, BUFSIZ);
     /* config should be short enough to fit in memory */
     /* this eliminates the need for line read gymnastics */
     if(fseek(f, 0, SEEK_END) || (fsize = ftell(f)) < 0 || fseek(f, 0, SEEK_SET) ||
@@ -429,7 +423,7 @@ static void init(void)
 		abort_parse("duplicate match");
 	    if((ret = regcomp(&allow, ln, REG_EXTENDED | REG_NOSUB))) {
 		regerror(ret, &allow, buf, sizeof(buf));
-		fprintf(errf, "match pattern error: %.*s\n", (int)sizeof(buf), buf);
+		fprintf(stderr, "match pattern error: %.*s\n", (int)sizeof(buf), buf);
 		regfree(&allow);
 		goto err;
 	    } else
@@ -440,7 +434,7 @@ static void init(void)
 		abort_parse("duplicate reject");
 	    if((ret = regcomp(&allow, ln, REG_EXTENDED | REG_NOSUB))) {
 		regerror(ret, &allow, buf, sizeof(buf));
-		fprintf(errf, "reject pattern error: %.*s\n", (int)sizeof(buf), buf);
+		fprintf(stderr, "reject pattern error: %.*s\n", (int)sizeof(buf), buf);
 		regfree(&allow);
 		goto err;
 	    } else
@@ -850,9 +844,10 @@ static void init(void)
     } \
 } while(0)
 #define dis_bt(btno) do { \
-    if(btno >= 0) { \
-	expand_bt(btno); \
-	int bno = btno - bt_low; \
+    int bno = btno; \
+    if(bno >= 0) { \
+	expand_bt(bno); \
+	bno -= bt_low; \
 	if(!(bt_map[bno].flags & BTFL_MAP)) { \
 	    bt_map[bno].flags = BTFL_MAP; \
 	    bt_map[bno].target = -1; \
@@ -861,9 +856,12 @@ static void init(void)
 } while(0)
     int i;
     for(i = 0; i < nbt; i++) {
-	if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP)
+	if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP) {
+	    int ol = bt_low;
 	    dis_bt(bt_map[i].target);
-	else if(bt_map[i].flags & BTFL_MAP) {
+	    if(ol != bt_low)
+		i += ol - bt_low;
+	} else if(bt_map[i].flags & BTFL_MAP) {
 	    dis_ax(bt_map[i].onax);
 	    dis_ax(bt_map[i].offax);
 	}
@@ -881,7 +879,7 @@ static void init(void)
     if(!has_allow)
 	abort_parse("match pattern required");
     free(cfg);
-    fputs("Installed event device remapper\n", errf);
+    fputs("Installed event device remapper\n", stderr);
     return;
 err:
     free(ax_map);
@@ -930,7 +928,7 @@ static void init_joy(int fd)
 	    }
 	}
 	if(*s) {
-	    fprintf(errf, "joy-remap:  invalid id @ %s\n", s);
+	    fprintf(stderr, "joy-remap:  invalid id @ %s\n", s);
 	    free(repl_id);
 	    repl_id = NULL;
 	}
@@ -1099,17 +1097,16 @@ int open(const char *pathname, int flags, ...)
 	va_end(va);
     }
     int ret = ((int (*)(const char *, int, ...))next)(pathname, flags, mode);
-    fprintf(errf, "open64 %s %d\n", pathname, ret);
     if(ret < 0 || strncmp(pathname, "/dev/input/event", 16))
 	return ret;
     if(!is_allowed(pathname, ret)) {
-/*    fprintf(errf, "Rejecting open of %s\n", pathname); */
+/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
 	close(ret);
 	errno = EPERM;
 	return -1;
     }
     if(has_allow)
-	fprintf(errf, "Attempting to capture %s (%d)\n", pathname, ret);
+	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, ret);
     if(has_allow && joy_fd < 0)
 	init_joy(ret);
     return ret;
@@ -1131,17 +1128,16 @@ int open64(const char *pathname, int flags, ...)
 	va_end(va);
     }
     int ret = ((int (*)(const char *, int, ...))next)(pathname, flags, mode);
-    fprintf(errf, "open %s %d\n", pathname, ret);
     if(ret < 0 || strncmp(pathname, "/dev/input/event", 16))
 	return ret;
     if(!is_allowed(pathname, ret)) {
-/*    fprintf(errf, "Rejecting open of %s\n", pathname); */
+/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
 	close(ret);
 	errno = EPERM;
 	return -1;
     }
     if(has_allow)
-	fprintf(errf, "Attempting to capture %s (%d)\n", pathname, ret);
+	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, ret);
     if(has_allow && joy_fd < 0)
 	init_joy(ret);
     return ret;
@@ -1154,7 +1150,7 @@ int close(int fd)
 	next = dlsym(RTLD_NEXT, "close");
     int ret = ((int (*)(int))next)(fd);
     if(fd == joy_fd) {
-	fprintf(errf, "closing %d\n", fd);
+	fprintf(stderr, "closing %d\n", fd);
 	joy_fd = -1;
     }
     return ret;
@@ -1186,7 +1182,6 @@ ssize_t read(int fd, void *buf, size_t count)
     ssize_t ret = ((ssize_t (*)(int, void *, size_t))next)(fd, buf, count);
     if(ret < 0 || fd != joy_fd)
 	return ret;
-    fprintf(errf, "read %d from %d\n", (int)ret, fd);
     int nread = ret;
     while(nread > 0) {
 	if(nread < sizeof(ev)) {
@@ -1326,21 +1321,17 @@ int ioctl(int fd, unsigned long request, ...)
 } while(0)
 	switch(_IOC_NR(request)) {
 	  case _IOC_NR(EVIOCGNAME(0)):
-	    fprintf(errf, "reading name\n");
 	    cpstr(repl_name);
 	    return len;
 	  case _IOC_NR(EVIOCGID):
-	    fprintf(errf, "reading id\n");
 	    if(!repl_id)
 		break;
 	    memcpy(argp, &repl_id_val, sizeof(repl_id_val));
 	    return 0;
 	  case _IOC_NR(EVIOCGUNIQ(0)):
-	    fprintf(errf, "reading uniq\n");
 	    cpstr(repl_uniq);
 	    return len;
 	  case _IOC_NR(EVIOCGKEY(0)):
-	    fprintf(errf, "reading keystates\n");
 	    memset(&keystates, 0, sizeof(keystates));
 	    ret = real_ioctl(fd, EVIOCGKEY(sizeof(keystates_in)), keystates_in);
 	    if(ret < 0)
@@ -1371,24 +1362,15 @@ int ioctl(int fd, unsigned long request, ...)
 	    cpmem(keystates);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_ABS, 0)):
-	    fprintf(errf, "reading absout %d %d\n", (int)_IOC_SIZE(request), (int)sizeof(absout));
-	    for(i = 0; i < ABS_MAX; i++)
-		if(ULISSET(absout, i))
-		    fprintf(errf, " - %d\n", i);
 	    cpmem(absout);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_KEY, 0)):
-	    fprintf(errf, "reading keysout %d %d\n", (int)_IOC_SIZE(request), (int)sizeof(keysout));
-	    for(i = 0; i < KEY_MAX; i++)
-		if(ULISSET(keysout, i))
-		    fprintf(errf, " - %d\n", i);
 	    cpmem(keysout);
 	    return len;
 	  default:
 	    if(_IOC_NR(request) >= _IOC_NR(EVIOCGABS(0)) &&
 	       _IOC_NR(request) < _IOC_NR(EVIOCGABS(ABS_MAX))) {
 		int ax = _IOC_NR(request) - _IOC_NR(EVIOCGABS(0));
-		fprintf(errf, "reading axinfo %d\n", ax);
 		for(i = 0; i < nax; i++)
 		    if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP &&
 		       ax_map[i].target == ax) {
@@ -1422,7 +1404,6 @@ int ioctl(int fd, unsigned long request, ...)
 		errno = EINVAL;
 		return -1;
 	    }
-	    fprintf(errf, "uncaptured ioctl %08lx %x\n", request, (unsigned)_IOC_NR(request));
 	}
     return real_ioctl(fd, request, argp);
 }
