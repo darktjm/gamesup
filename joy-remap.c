@@ -187,6 +187,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/joystick.h>
@@ -198,6 +199,14 @@
 /* why would you be scanning for devices in parallel?  Oh well, some
  * jackass will try and screw this up, so may as well support it */
 #include <pthread.h>
+
+/* These numbers are not exported, and may change in the future */
+/* see linux/drivers/input/evdev.c and linux/drivers/input/joydev.c */
+#define INPUT_MAJOR 13
+#define EVDEV_MINOR0 64
+#define EVDEV_NMINOR 32
+#define JSDEV_MINOR0 0
+#define JSDEV_NMINOR 16
 
 static int ev_fd = -1, js_fd = -1;
 static int bt_low, nbt = 0, nax = 0;
@@ -1116,12 +1125,12 @@ static int is_allowed(const char *pathname, int fd)
 /* common code for multiple nearly identical open() functions */
 static int ev_open(const char *pathname, int fd)
 {
-    /* FIXME:  catch relative opens from /dev or /dev/input */
-    /* FIXME:  allow/suppress duplicate / */
+    struct stat st;
     /* FIXME:  support multiple simultaneously open devices */
-    if(fd < 0 || strncmp(pathname, "/dev/input/", 11))
+    if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR)
 	return fd;
-    if(js_fd < 0 && has_jsrename && repl_name && !memcmp(pathname + 11, "js", 2)) {
+    if(js_fd < 0 && has_jsrename && repl_name && minor(st.st_rdev) >= JSDEV_MINOR0 &&
+      minor(st.st_rdev) < JSDEV_MINOR0 + JSDEV_NMINOR) {
 	pthread_mutex_lock(&buf_lock);
 	if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0 &&
 	   !regexec(&jsrename, buf, 0, NULL, 0)) {
@@ -1131,7 +1140,7 @@ static int ev_open(const char *pathname, int fd)
 	pthread_mutex_unlock(&buf_lock);
 	return fd;
     }
-    if(memcmp(pathname + 11, "event", 5))
+    if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR)
 	return fd;
     if(!is_allowed(pathname, fd)) {
 /*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
