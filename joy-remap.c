@@ -23,9 +23,13 @@
  *
  * This uses a configuration file, with one directive per line.  Blank
  * lines and lines beginning with # are ignored, as is initial and trailing
- * whitespace.  The directives are case-sensitive keywords, followed by
+ * whitespace.  The directives are case-insensitive keywords, followed by
  * (skipped) whitespace, followed by a parameter, where needed.  The file
- * name is specified by the mandatory environment variable EV_JOY_REMAP_CONFIG.
+ * name is specified by the environment variable EV_JOY_REMAP_CONFIG.  If
+ * that environment variable is missing or blank, it uses ev_joy_remap.config
+ * in the current directory, ~/.config, or /etc, whichever is found first.
+ * Failure to find any file, or failure to parse the file it found will
+ * result in an error message and no attempt at device interception.
  * Keywords are:
  *
  * match <pattern>
@@ -141,15 +145,21 @@
  *   button map per axis is allowed.  Finally, a button ID preceeded by an
  *   exclamation point (!) will explicitly unmap the given input.  Here is
  *   the list of standard gamepad buttons:
- *     A = SOUTH = 286, B = EAST = 287, C = 288,
- *     X = NORTH = 289, Y = WEST = 290, Z = 291,
- *     TL = 292, TR = 293, TL2 = 294, TR2 = 295,
- *     SELECT = 296, START = 297, MODE = 298, THUMBL = 299, THUMBR = 300
- *   Note that most controllers do not have C or Z buttons.  Also, some
- *   controllers only use axes for TL2 and TR2.  My other remappers support
- *   hex and symbolic names (using the C preprocessor with input-event-codes.h),
- *   but not this time.  As a compromise, the above-listed names are supported,
- *   case-insensitive (without the BTN_ prefix, as shown).
+ *     A = SOUTH = 304, B = EAST = 305, C = 306,
+ *     X = NORTH = 306, Y = WEST = 308, Z = 309,
+ *     TL = 310, TR = 311, TL2 = 312, TR2 = 313,
+ *     SELECT = 314, START = 315, MODE = 316, THUMBL = 317, THUMBR = 318
+ *   And here are the standard joystick buttons:
+ *     TRIGGER = 288, THUMB = 289, THUMB2 = 290, TOP = 291, TOP2 = 292,
+ *     PINKIE = 293, BASE = 294, BASE2 = 295, BASE3 = 296, BASE4 = 297,
+ *     BASE5 = 298, BASE6 = 299, DEAD = 303
+ *   Note that most controllers do not have C or Z buttons.  Older versions
+ *   of the hid_sony driver issued joystick events instead of A/B/X/Y.
+ *   Also, some controllers only use axes for TL2 and TR2.  My other
+ *   remappers support hex and symbolic names (using the C preprocessor with
+ *   input-event-codes.h), but not this time.  As a compromise, the
+ *   above-listed names are supported, case-insensitive (without the BTN_
+ *   prefix, as shown).
  *
  * pass_buttons
  *   Normally, if there are any buttons keywords at all, any inputs not
@@ -208,17 +218,15 @@
 #define JSDEV_MINOR0 0
 #define JSDEV_NMINOR 16
 
-static int ev_fd = -1, js_fd = -1;
-static int bt_low, nbt = 0, nax = 0;
-/* cant just use nbt/nax because ax map may have buttons & vice-versa */
-static int filter_ax = 0, filter_bt = 0;
+static int ev_fd = -1, js_fd = -1; /* captured event/js device */
+static int bt_low, nbt = 0, nax = 0;  /* mapping array sizes */
+static int filter_ax = 0, filter_bt = 0; /* pass-through unmapped? */
 static struct axmap {
     struct input_absinfo ai; /* for rescaling */
     int flags;
     int target;
-    int onthresh, offthresh;
-    /* for 2nd key event */
-    int ntarget, nonthresh, noffthresh;
+    int onthresh, offthresh; /* axis->button */
+    int ntarget, nonthresh, noffthresh;  /* axis->button, 2nd key */
 } *ax_map;
 #define AXFL_MAP      (1<<0)  /* does this need processing? */
 #define AXFL_BUTTON   (1<<1)  /* is this a button map? else ax map */
@@ -250,7 +258,7 @@ static int axval[ABS_MAX]; /* value for key-generated axes */
 static struct butmap {
     int flags;
     int target;
-#define onax target
+#define onax target /* this and next are for button->axis */
     int offax, onval, offval; /* val is -1 0 1 on init */
 } *bt_map;
 #define BTFL_MAP      (1<<0)  /* does this need processing? */
@@ -261,13 +269,14 @@ static unsigned long keysout[MINBITS(KEY_MAX)],  /* sent GBITS(EV_KEY) */
                      keystates[MINBITS(KEY_MAX)], /* sent GKEY */
                      keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
 
-static regex_t allow, reject, jsrename;
+static regex_t allow, reject, jsrename; /* compiled matching regexes */
 static int has_allow = 0, has_reject = 0, has_jsrename = 0, filter_dev = 0;
 
 static char *repl_name = NULL, *repl_id = NULL, *repl_uniq = NULL;
 static struct input_id repl_id_val;
 
-static char buf[1024];
+static char buf[1024]; /* generic large buffer to reduce stack usage */
+static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER; /* in case of threads */
 
 /* array must be alphabetized */
 static const struct bname {
@@ -276,29 +285,44 @@ static const struct bname {
 } bname[] = {
     { "a",	BTN_A },
     { "b",	BTN_B },
+    { "base",	BTN_BASE },
+    { "base2",	BTN_BASE2 },
+    { "base3",	BTN_BASE3 },
+    { "base4",	BTN_BASE4 },
+    { "base5",	BTN_BASE5 },
+    { "base6",	BTN_BASE6 },
     { "c",	BTN_C },
+    { "dead",	BTN_DEAD },
     { "east",	BTN_EAST },
     { "mode",	BTN_MODE },
     { "north",	BTN_NORTH },
+    { "pinkie",	BTN_PINKIE },
     { "select",	BTN_SELECT },
     { "south",	BTN_SOUTH },
     { "start",	BTN_START },
+    { "thumb",	BTN_THUMB },
+    { "thumb2",	BTN_THUMB2 },
     { "thumbl",	BTN_THUMBL },
     { "thumbr",	BTN_THUMBR },
     { "tl",	BTN_TL },
     { "tl2",	BTN_TL2 },
+    { "top",	BTN_TOP },
+    { "top2",	BTN_TOP2 },
     { "tr",	BTN_TR },
     { "tr2",	BTN_TR2 },
+    { "trigger", BTN_TRIGGER },
     { "west",	BTN_WEST },
     { "x",	BTN_X },
     { "y",	BTN_Y },
-    { "z",	BTN_Z },
+    { "z",	BTN_Z }
 };
 
+/* a is always target; b is always bname[] entry */
 static int bncmp(const void *_a, const void *_b)
 {
     const struct bname *a = (const struct bname *)_a;
     const struct bname *b = _b;
+    /* code in a is actually a->nm's length */
     int ret = strncasecmp(a->nm, b->nm, a->code);
     if(ret)
 	return ret;
@@ -307,7 +331,7 @@ static int bncmp(const void *_a, const void *_b)
     return 0;
 }
 
-/* technically s could be const char **, but then compiler omplains too often */
+/* technically s could be const char **, but then compiler complains too often */
 static int bnum(char **s)
 {
     if(!**s)
@@ -316,11 +340,11 @@ static int bnum(char **s)
 	return strtol(*s, (char **)s, 10);
     const char *e;
     for(e = *s; isalnum(*e); e++);
-    struct bname str = { *s, e - *s};
+    struct bname str = { *s, e - *s}; /* code is length */
     struct bname *m = bsearch(&str, bname, sizeof(bname)/sizeof(bname[0]),
 			      sizeof(bname[0]), bncmp);
     if(m) {
-	*s += strlen(m->nm);
+	*s += str.code;
 	return m->code;
     }
     return -1;
@@ -353,20 +377,29 @@ static int kwcmp(const void *_a, const void *_b)
     return strcasecmp(a, *b);
 }
 
+/* parse config file */
+/* is this too early for file I/O?  apparently not */
+/* dlopen() docs say this must be exported, but again, apparently not */
+__attribute__((constructor))
 static void init(void)
 {
-    /* not thread safe, but shouldn't need to be in early ibit */
-    static int did_init = 0;
-    if(did_init)
-	return;
-    did_init = 1;
     const char *fname = getenv("EV_JOY_REMAP_CONFIG");
     FILE *f;
     long fsize;
     char *cfg;
 
-    if(!fname || !(f = fopen(fname, "r"))) {
-	perror("EV_JOY_REMAP_CONFIG");
+    if(fname && *fname)
+	f = fopen(fname, "r");
+    else if(!(f = fopen((fname = "ev_joy_remap.config"), "r"))) {
+	if((fname = getenv("HOME")) && *fname) {
+	    sprintf(buf, "%.200s/.config/ev_joy_remap.config", fname);
+	    f = fopen((fname = buf), "r");
+	}
+	if(!f)
+	    f = fopen("/etc/ev_joy_remap.config", "r");
+    }
+    if(!f) {
+	perror(fname);
 	return;
     }
     /* config should be short enough to fit in memory */
@@ -593,7 +626,7 @@ static void init(void)
 			    ax_map[a].target = t < 0 ? auto_ax : t;
 			}
 		    }
-		} else if(*ln == 'b') {
+		} else if(tolower(*ln) == 'b') {
 		    ln++;
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
 			t = auto_ax;
@@ -791,7 +824,8 @@ static void init(void)
 		    ln++;
 		    if(!isalnum(*ln) ||
 		       ((a = bnum(&ln)) < 0 &&
-			   (*ln != 'a' || ln[1] != 'x' || !isdigit(ln[2]))))
+			   (tolower(*ln) != 'a' || tolower(ln[1]) != 'x' ||
+			       !isdigit(ln[2]))))
 			abort_parse("unexpected -");
 		    invert = BTFL_INVERT;
 		} else if(isalnum(*ln))
@@ -819,7 +853,7 @@ static void init(void)
 			    bt_map[a - bt_low].target = t < 0 ? auto_bt : t;
 			}
 		    }
-		} else if(*ln == 'a' && ln[1] == 'x' && isdigit(ln[2])) {
+		} else if(tolower(*ln) == 'a' && tolower(ln[1]) == 'x' && isdigit(ln[2])) {
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
 			t = auto_bt;
 		    a = strtol(ln + 2, (char **)&ln, 10);
@@ -939,8 +973,23 @@ err:
     free(cfg);
 }
 
-static int real_ioctl(int fd, unsigned long request, ...);
+/* I use ioctl() a bit here, so bypass intercept */
+static int real_ioctl(int fd, unsigned long request, ...)
+{
+    static int (*next)(int, unsigned long, ...) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "ioctl");
+    void *argp = NULL;
+    if(_IOC_SIZE(request)) {
+	va_list va;
+	va_start(va, request);
+	argp = va_arg(va, void *);
+	va_end(va);
+    }
+    return next(fd, request, argp);
+}
 
+/* capture event device and prepare ioctl returns */
 static void init_joy(int fd)
 {
     static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -1074,26 +1123,10 @@ static void init_joy(int fd)
 	for(i = 0; i < MINBITS(ABS_MAX); i++)
 	    absout[i] |= absin[i];
     pthread_mutex_unlock(&lock);
-    return;
 }
 
-static int real_ioctl(int fd, unsigned long request, ...)
-{
-    static void *next = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "ioctl");
-    void *argp = NULL;
-    if(_IOC_SIZE(request)) {
-	va_list va;
-	va_start(va, request);
-	argp = va_arg(va, void *);
-	va_end(va);
-    }
-    return ((int (*)(int, unsigned long, ...))next)(fd, request, argp);
-}
-
-static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER;
-static int is_allowed(const char *pathname, int fd)
+/* return true if match/reject regexes allow fd */
+static int is_allowed(int fd, int evno)
 {
     /* this is small enough to be local, but we're locking for buf anyway */
     static struct input_id id;
@@ -1109,9 +1142,8 @@ static int is_allowed(const char *pathname, int fd)
     if(!rej) {
 	if(real_ioctl(fd, EVIOCGID, &id) < 0)
 	    memset(&id, 0, sizeof(id));
-	sprintf(buf, "%04X-%04X-%04X-%04X-%.4s", (int)id.bustype,
-		(int)id.vendor, (int)id.product, (int)id.version,
-		pathname + 16);
+	sprintf(buf, "%04X-%04X-%04X-%04X-%d", (int)id.bustype,
+		(int)id.vendor, (int)id.product, (int)id.version, evno);
 	rej = has_reject && !regexec(&reject, buf, 0, NULL, 0);
 	if(rej)
 	    nmok = 0;
@@ -1135,33 +1167,31 @@ static int ev_open(const char *pathname, int fd)
 	if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0 &&
 	   !regexec(&jsrename, buf, 0, NULL, 0)) {
 	    js_fd = fd;
-	    fprintf(stderr, "renaming %s to %s\n", buf, repl_name);
+	    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, repl_name);
 	}
 	pthread_mutex_unlock(&buf_lock);
 	return fd;
     }
     if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR)
 	return fd;
-    if(!is_allowed(pathname, fd)) {
+    if(!is_allowed(fd, minor(st.st_rdev) - EVDEV_MINOR0)) {
 /*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
 	close(fd);
 	errno = EPERM;
 	return -1;
     }
-    if(has_allow)
-	fprintf(stderr, "Attempting to capture %s (%d)\n", pathname, fd);
-    if(has_allow && ev_fd < 0)
+    if(has_allow && ev_fd < 0) {
+	fprintf(stderr, "Intercept %s (%d)\n", pathname, fd);
 	init_joy(fd);
+    }
     return fd;
 }
 
 int open(const char *pathname, int flags, ...)
 {
     static int (*next)(const char *, int, ...) = NULL;
-    if(!next) {
+    if(!next)
 	next = dlsym(RTLD_NEXT, "open");
-	init();
-    }
     mode_t mode = 0;
     if(flags & O_CREAT) {
 	va_list va;
@@ -1176,10 +1206,8 @@ int open(const char *pathname, int flags, ...)
 int open64(const char *pathname, int flags, ...)
 {
     static int (*next)(const char *, int, ...) = NULL;
-    if(!next) {
+    if(!next)
 	next = dlsym(RTLD_NEXT, "open64");
-	init();
-    }
     mode_t mode = 0;
     if(flags & O_CREAT) {
 	va_list va;
@@ -1192,27 +1220,29 @@ int open64(const char *pathname, int flags, ...)
 
 int close(int fd)
 {
-    static void *next = NULL;
+    static int (*next)(int) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "close");
-    int ret = ((int (*)(int))next)(fd);
-    if(fd == ev_fd) {
+    int ret = next(fd);
+    if(fd == ev_fd || fd == js_fd)
 	fprintf(stderr, "closing %d\n", fd);
+    if(fd == ev_fd)
 	ev_fd = -1;
-    }
     if(fd == js_fd)
 	js_fd = -1;
     return ret;
 }
 
+/* this is where most of the translation takes place:  modify read events */
 ssize_t read(int fd, void *buf, size_t count)
 {
-    static void *next = NULL;
+    static ssize_t (*next)(int, void *, size_t) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "read");
     /* this is complicated if the caller read less than even multiple of
      * sizeof(ev).  Need to force a read of even multiple from device and
      * keep the excess read for future returns */
+    /* very unlikely to ever happen */
     static int excess_read = 0;
     struct input_event ev;
     static char ebuf[sizeof(ev)];
@@ -1228,7 +1258,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	    return ret_adj;
 	buf += ret_adj;
     }
-    ssize_t ret = ((ssize_t (*)(int, void *, size_t))next)(fd, buf, count);
+    ssize_t ret = next(fd, buf, count);
     if(ret < 0 || fd != ev_fd)
 	return ret;
     int nread = ret;
@@ -1236,7 +1266,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	if(nread < sizeof(ev)) {
 	    int todo = excess_read = sizeof(ev) - nread;
 	    while(todo > 0) {
-		int r = ((ssize_t (*)(int, void *, size_t))next)(fd, ebuf + excess_read - todo, todo);
+		int r = next(fd, ebuf + excess_read - todo, todo);
 		if(r < 0 && errno != EINTR && errno != EAGAIN) {
 		    excess_read = 0;
 		    return r;
@@ -1248,7 +1278,8 @@ ssize_t read(int fd, void *buf, size_t count)
 	    memcpy(((char *)&ev) + nread, ebuf, excess_read);
 	} else
 	    memcpy(&ev, buf, sizeof(ev));
-	int drop = 0, mod = 0;
+	/* now ev has an event. */
+	int drop = 0, mod = 0; /* drop it?  copy it back? */
 	if(ev.type == EV_KEY) {
 	    drop = filter_bt;
 	    const struct butmap *m = &bt_map[ev.code - bt_low];
@@ -1295,7 +1326,7 @@ ssize_t read(int fd, void *buf, size_t count)
 
 		    int pressed = !!(m->flags & AXFL_PRESSED);
 		    int npressed = !(m->flags & AXFL_NPRESSED);
-		    int tog, ntog;
+		    int tog, ntog; /* did the target/ntarget state change? */
 		    if(ev.value >= m->onthresh)
 			tog = !pressed;
 		    else if(ev.value < m->offthresh)
@@ -1310,6 +1341,11 @@ ssize_t read(int fd, void *buf, size_t count)
 			ntog = 0;
 		    /* can't send multiple events right now, so if tog and
 		     * ntog, only tog is honored */
+		    /* sending multiple events will require intercepting
+		     * poll(2), select(2), and probably others in the
+		     * same family (ppoll, pselect, epoll?, aliases) */
+		    /* most devices send lots of axis events, so probably
+		     * ntog will eventually be honored */
 		    if(tog) {
 			ev.code = m->target;
 			ev.value = !pressed;
@@ -1323,8 +1359,13 @@ ssize_t read(int fd, void *buf, size_t count)
 		}
 	    }
 	}
+	/* the best way to drop the event would be to remove it entirely.
+	 * Is this safe?  Maybe.  If the program expects data, and insists
+	 * on it, it may crash.  Instead, for now, I convert to SYN_DROPPED.
+	 * Is this safe?  not if SYN is dropped via EVIOCSMASK, or if the
+	 * program has special behavior on seeing SYN_DROPPED events. */
 	if(drop) {
-	    ev.code = SYN_DROPPED; /* safe?  probably not if SYN filtered out */
+	    ev.code = SYN_DROPPED;
 	    ev.type = EV_SYN;
 	    ev.value = 0;
 	    mod = 1;
@@ -1340,6 +1381,7 @@ ssize_t read(int fd, void *buf, size_t count)
     return ret + ret_adj;
 }
 
+/* The rest of the translation takes place here: modifying ioctl returns */
 int ioctl(int fd, unsigned long request, ...)
 {
     int ret, i, len;
@@ -1375,12 +1417,15 @@ int ioctl(int fd, unsigned long request, ...)
 	  case _IOC_NR(EVIOCGID):
 	    if(!repl_id)
 		break;
+	    /* repl_id_val was filled in by init_joy() */
 	    memcpy(argp, &repl_id_val, sizeof(repl_id_val));
 	    return 0;
 	  case _IOC_NR(EVIOCGUNIQ(0)):
 	    cpstr(repl_uniq);
 	    return len;
 	  case _IOC_NR(EVIOCGKEY(0)):
+	    /* this code mostly matches init_joy()'s GKEY mask initializer */
+	    /* except that it has to handle INVERT as needed */
 	    memset(&keystates, 0, sizeof(keystates));
 	    ret = real_ioctl(fd, EVIOCGKEY(sizeof(keystates_in)), keystates_in);
 	    if(ret < 0)
@@ -1388,8 +1433,11 @@ int ioctl(int fd, unsigned long request, ...)
 	    for(i = 0; i < nbt; i++) {
 		if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) != BTFL_MAP)
 		    continue;
-		if(!ULISSET(keystates_in, bt_low + i))
+		if(!ULISSET(keystates_in, bt_low + i) == !(bt_map[i].flags & BTFL_INVERT)) {
+		    if(bt_map[i].flags & BTFL_INVERT)
+			ULCLR(keystates_in, bt_low + i);
 		    continue;
+		}
 		if(bt_map[i].target >= 0)
 		    ULSET(keystates, bt_map[i].target);
 		ULCLR(keystates_in, bt_low + i);
@@ -1411,14 +1459,18 @@ int ioctl(int fd, unsigned long request, ...)
 	    cpmem(keystates);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_ABS, 0)):
+	    /* filled in by init_joy() */
 	    cpmem(absout);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_KEY, 0)):
+	    /* filled in by init_joy() */
 	    cpmem(keysout);
 	    return len;
 	  default:
 	    if(_IOC_NR(request) >= _IOC_NR(EVIOCGABS(0)) &&
 	       _IOC_NR(request) < _IOC_NR(EVIOCGABS(ABS_MAX))) {
+		/* return absinfo for *target*, unlike read which uses index */
+		/* also rescale and invert as needed */
 		int ax = _IOC_NR(request) - _IOC_NR(EVIOCGABS(0));
 		for(i = 0; i < nax; i++)
 		    if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP &&
@@ -1441,6 +1493,7 @@ int ioctl(int fd, unsigned long request, ...)
 		for(i = 0; i < nbt; i++)
 		    if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == (BTFL_MAP | BTFL_AXIS) &&
 		       (bt_map[i].onax == ax || bt_map[i].offax == ax)) {
+			/* FIXME:  support rescaling? */
 			struct input_absinfo ai = {
 			    .minimum = -1, .maximum = 1, .value = axval[i]
 			    /* resolution? */
@@ -1448,7 +1501,7 @@ int ioctl(int fd, unsigned long request, ...)
 			cpmem(ai);
 			return 0;
 		    }
-		if(!filter_ax)
+		if(!filter_ax && (ax >= nax || !(ax_map[ax].flags & AXFL_MAP)))
 		    return real_ioctl(fd, request, argp);
 		errno = EINVAL;
 		return -1;
