@@ -493,10 +493,10 @@ static void init(void)
 	  case KW_REJECT:
 	    if(has_reject)
 		abort_parse("duplicate reject");
-	    if((ret = regcomp(&allow, ln, REG_EXTENDED | REG_NOSUB))) {
-		regerror(ret, &allow, buf, sizeof(buf));
+	    if((ret = regcomp(&reject, ln, REG_EXTENDED | REG_NOSUB))) {
+		regerror(ret, &reject, buf, sizeof(buf));
 		fprintf(stderr, "reject pattern error: %.*s\n", (int)sizeof(buf), buf);
-		regfree(&allow);
+		regfree(&reject);
 		goto err;
 	    } else
 		has_reject = 1;

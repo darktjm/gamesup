@@ -174,6 +174,8 @@ name and its arguments:
      writable using unionfs
    - `-u` -> dismount writable unionfs mount if still mounted
    - `-j` -> notify user if /dev/input/js0 not present
+   - `-J` -> use ~/lib/joy-remap.so LD_PRELOAD
+   - `-J32` -> use ~/lib/joy-remap-32.so LD_PRELOAD
    - `-x` ... `--` -> start up `xboxdrv` supplying extra args up to `--`
      note that `--` is mandatory, even if no extra args given.
 
@@ -799,6 +801,13 @@ require that I actually maintain them myself: `MoltenGamePad` and
 `xboxdrv`.  Maybe some day I'll resume work on an LD_PRELOAD-based
 remapper, but for now, I'm out of energy and either of these will
 probably do.
+
+Note that I have recently restarted an LD_PRELOAD-based remapper
+(although not exactly what I envisiaged when I wrote the line above).
+It's in this project as joy-remap.c, and the top documentation block
+describes its usage.  That's all I'll say about it for now, because it
+currently offers little to no advantage over the methods described
+below, and is largely untested.
 
 [MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) seemed
 pretty nice on first look, but its only advantage over `xboxdrv` is
