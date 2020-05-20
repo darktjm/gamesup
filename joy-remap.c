@@ -1430,7 +1430,7 @@ int ioctl(int fd, unsigned long request, ...)
     if(++len < _IOC_SIZE(request)) \
 	memcpy(argp, s, len); \
     else \
-	memcpy(argp, repl_name, (len = _IOC_SIZE(request))); \
+	memcpy(argp, s, (len = _IOC_SIZE(request))); \
 } while(0)
 #define cpmem(m) do { \
     len = _IOC_SIZE(request); \
