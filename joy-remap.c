@@ -26,7 +26,7 @@
  * whitespace.  The directives are case-insensitive keywords, followed by
  * (skipped) whitespace, followed by a parameter, where needed.  The file
  * name is specified by the environment variable EV_JOY_REMAP_CONFIG.  If
- * that environment variable is missing or blank, it uses ev_joy_remap.config
+ * that environment variable is missing or blank, it uses ev_joy_remap.conf
  * in the current directory, ~/.config, or /etc, whichever is found first.
  * Failure to find any file, or failure to parse the file it found will
  * result in an error message and no attempt at device interception.
@@ -390,13 +390,13 @@ static void init(void)
 
     if(fname && *fname)
 	f = fopen(fname, "r");
-    else if(!(f = fopen((fname = "ev_joy_remap.config"), "r"))) {
+    else if(!(f = fopen((fname = "ev_joy_remap.conf"), "r"))) {
 	if((fname = getenv("HOME")) && *fname) {
-	    sprintf(buf, "%.200s/.config/ev_joy_remap.config", fname);
+	    sprintf(buf, "%.200s/.config/ev_joy_remap.conf", fname);
 	    f = fopen((fname = buf), "r");
 	}
 	if(!f)
-	    f = fopen("/etc/ev_joy_remap.config", "r");
+	    f = fopen("/etc/ev_joy_remap.conf", "r");
     }
     if(!f) {
 	perror(fname);

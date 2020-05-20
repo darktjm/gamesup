@@ -19,6 +19,12 @@ while :; do
     -w) doum=y; shift ;;   # -w - writeable game root
     -u) dounm=y; shift ;;  # -u - unmount writable game root if mounted
     -j) joy=y; shift ;;    # -j - game best with joystick/gamepad
+                           #      should use if using -J or -x below
+			   # -J - use ~/lib/joy-remap.so
+    -J)  ldp="${ldp}${ldp+:}$HOME/lib/joy-remap.so"; shift ;;
+			   # -J - use ~/lib/joy-remap-32.so
+    -J32)ldp="${ldp}${ldp+:}$HOME/lib/joy-remap-32.so"; shift ;;
+                           # -x [<mkxpad options>] -- - remap gamepad if present
     -x) xpad=(mkxpad); shift
         while [ "$#" -gt 0 -a "x$1" != x-- ]; do
 	   xpad=("${xpad[@]}" "$1"); shift
