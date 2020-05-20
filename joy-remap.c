@@ -30,8 +30,27 @@
  * in the current directory, ~/.config, or /etc, whichever is found first.
  * Failure to find any file, or failure to parse the file it found will
  * result in an error message and no attempt at device interception.
+ * If the configuration contains multiple sections, the regular expression
+ * in EV_JOY_REMAP_ENABLE enables a subset of sections (all are enabled
+ * if not present or blank).  The last section which matches a device
+ * applies for capture, and disabled devices are the intersection of all
+ * enabled sections' disabled devices (i.e., if any section enables it,
+ * it is enabled).
  *
  * Keywords are:
+ *
+ * section <name>
+ *   If present, all configuration prior to this line, if any, belongs to
+ *   the previous section (unnamed if no section keyword given), and any
+ *   subsequent configuration, up to the next section keyword, belongs to
+ *   the section with the given name (which must be non-blank).  If this
+ *   name is repeated, the subsequent configuration will override
+ *   previous configuration for the same-named section.
+ *
+ * use [<name>]
+ *   Copy config from given (un)named section.  Note that future changes
+ *   to the given section are not followed.  This must be the first keyword
+ *   in a section, and may only be used once in a section.
  *
  * match <pattern>
  *   This mandatory keyword is a pattern to match the device name to
@@ -215,6 +234,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <regex.h>
 /* why would you be scanning for devices in parallel?  Oh well, some
  * jackass will try and screw this up, so may as well support it */
@@ -227,26 +247,6 @@
 #define EVDEV_NMINOR 32
 #define JSDEV_MINOR0 0
 #define JSDEV_NMINOR 16
-
-static int ev_fd = -1, js_fd = -1; /* captured event/js device */
-static int bt_low, nbt = 0, nax = 0;  /* mapping array sizes */
-static int filter_ax = 0, filter_bt = 0; /* pass-through unmapped? */
-static struct axmap {
-    struct input_absinfo ai; /* for rescaling */
-    int flags;
-    int target;
-    int onthresh, offthresh; /* axis->button */
-    int ntarget, nonthresh, noffthresh;  /* axis->button, 2nd key */
-} *ax_map;
-#define AXFL_MAP      (1<<0)  /* does this need processing? */
-#define AXFL_BUTTON   (1<<1)  /* is this a button map? else ax map */
-#define AXFL_INVERT   (1<<2)  /* invert before sending on? */
-                              /* onthresh is min+max if AXFL_INVERT */
-#define AXFL_RESCALE  (1<<3)  /* rescale using ai? */
-#define AXFL_NINVERT  (1<<4)  /* invert ntarget before sending out */
-#define AXFL_PRESSED  (1<<5)  /* is the button currently pressed? */
-                              /* defaults to no, even if axis says otherwise */
-#define AXFL_NPRESSED (1<<6)  /* is the neg button pressed? */
 
 /* macros for accessing bits in arrays of unsigned longs */
 /* stupid kernel doesn't export its bitops, so everybody has to reimplement */
@@ -263,30 +263,74 @@ static struct axmap {
 } while(0)
 #define ULISSET(bits, bit) ((bits)[(bit)/ULBITS] & (1UL << (bit) % ULBITS))
 
-static unsigned long absout[MINBITS(ABS_MAX)]; /* sent GBITS(EV_ABS) */
-static int axval[ABS_MAX]; /* value for key-generated axes */
+/* info for mapping an input axis to an axis or key target */
+struct axmap {
+    struct input_absinfo ai; /* for rescaling */
+    int flags;
+    int target;
+    int onthresh, offthresh; /* axis->button */
+    int ntarget, nonthresh, noffthresh;  /* axis->button, 2nd key */
+};
+#define AXFL_MAP      (1<<0)  /* does this need processing? */
+#define AXFL_BUTTON   (1<<1)  /* is this a button map? else ax map */
+#define AXFL_INVERT   (1<<2)  /* invert before sending on? */
+                              /* onthresh is min+max if AXFL_INVERT */
+#define AXFL_RESCALE  (1<<3)  /* rescale using ai? */
+#define AXFL_NINVERT  (1<<4)  /* invert ntarget before sending out */
+#define AXFL_PRESSED  (1<<5)  /* is the button currently pressed? */
+                              /* defaults to no, even if axis says otherwise */
+#define AXFL_NPRESSED (1<<6)  /* is the neg button pressed? */
 
-/* FIXME:  do I need to support EVIOC[GS]KEYCODE*? */
-static struct butmap {
+/* info for mapping an input key to a key or axis target */
+struct butmap {
     int flags;
     int target;
 #define onax target /* this and next are for button->axis */
     int offax, onval, offval; /* val is -1 0 1 on init */
-} *bt_map;
+};
 #define BTFL_MAP      (1<<0)  /* does this need processing? */
 #define BTFL_AXIS     (1<<1)  /* is this an axis map?  else bt map */
 #define BTFL_INVERT   (1<<2)  /* invert before sending on? */
 
-static unsigned long keysout[MINBITS(KEY_MAX)],  /* sent GBITS(EV_KEY) */
-                     keystates[MINBITS(KEY_MAX)], /* sent GKEY */
-                     keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
+/* all config combined into one structure for multiple sections */
+static struct evjrconf {
+    char *name;
+    struct axmap *ax_map;
+    struct butmap *bt_map;
+    char *repl_name, *repl_id, *repl_uniq;
+    /* since there is no regcopy() or equiv., need strings for KW_USE */
+    char *match_str, *reject_str, *jsrename_str;
+    regex_t match, reject, jsrename; /* compiled matching regexes */
+    /* stuff below this is safe to copy on USE */
+    int bt_low, nbt, nax; /* mapping array valid bounds */
+    int max_ax, max_bt; /* mapping array sizes */
+    int auto_ax, auto_bt; /* during parse: current auto-assigned inputs */
+    int filter_ax, filter_bt; /* flag:  pass-through unmapped? */
+    int filter_dev; /* flag:  filter non-matching devs completely? */
+    int syn_drop; /* use SYN_DROP instead of deleting drops? */
+} *conf;
+static int nconf = 0;
 
-static regex_t match, reject, jsrename; /* compiled matching regexes */
-static int has_match = 0, has_reject = 0, has_jsrename = 0, filter_dev = 0;
-
-static char *repl_name = NULL, *repl_id = NULL, *repl_uniq = NULL;
-static struct input_id repl_id_val;
-static int syn_drop = 0;
+/* captured fds and the config that captured them */
+/* also other per-device info */
+static struct evjrfd {
+    const struct evjrconf *conf;
+    unsigned long absout[MINBITS(ABS_MAX)]; /* sent GBITS(EV_ABS) */
+    int axval[ABS_MAX]; /* value for key-generated axes */
+    /* FIXME:  do I need to support EVIOC[GS]KEYCODE*? */
+    unsigned long keysout[MINBITS(KEY_MAX)],  /* sent GBITS(EV_KEY) */
+	          keystates[MINBITS(KEY_MAX)], /* sent GKEY */
+	          keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
+    struct input_id repl_id_val;
+    int excess_read;
+    char ebuf[sizeof(struct input_event)];
+    int fd;
+} *ev_fd;
+static struct jrfd {
+    const struct evjrconf *conf;
+    int fd;
+} *js_fd;
+static int nevfd = 0, njsfd = 0, maxevfd = 0, maxjsfd = 0;
 
 static char buf[1024]; /* generic large buffer to reduce stack usage */
 static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER; /* in case of threads */
@@ -378,13 +422,16 @@ static const char * const kws[] = {
     "pass_buttons",
     "reject",
     "rescale",
+    "section",
     "syn_drop",
-    "uniq"
+    "uniq",
+    "use"
 };
 
 enum kw {
     KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_JSRENAME, KW_MATCH, KW_NAME,
-    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_SYN_DROP, KW_UNIQ
+    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_SECTION, KW_SYN_DROP,
+    KW_UNIQ, KW_USE
 };
 
 static int kwcmp(const void *_a, const void *_b)
@@ -392,6 +439,8 @@ static int kwcmp(const void *_a, const void *_b)
     const char *a = _a, * const *b = _b;
     return strcasecmp(a, *b);
 }
+
+static void free_conf(struct evjrconf *sec);
 
 /* parse config file */
 /* is this too early for file I/O?  apparently not */
@@ -404,6 +453,7 @@ static void init(void)
     FILE *f;
     long fsize;
     char *cfg;
+    struct evjrconf *sec;
 
     if(fname && *fname)
 	f = fopen(fname, "r");
@@ -434,40 +484,49 @@ static void init(void)
 	return;
     }
     fclose(f);
-    cfg[fsize] = 0;
-    char *ln = cfg, *e, c;
-    int max_ax = 18, max_bt = 15;
-    int auto_ax = -1, auto_bt = BTN_A - 1;
-    ax_map = calloc(max_ax, sizeof(*ax_map));
-    bt_map = calloc(max_bt, sizeof(*bt_map));
-    if(!ax_map || !bt_map) {
-	perror("mapping");
+    sec = conf = calloc(sizeof(*conf), (nconf = 1));
+    if(!conf) {
+	perror("conf");
 	free(cfg);
-	if(ax_map)
-	    free(ax_map);
-	if(bt_map)
-	    free(bt_map);
+	nconf = 0;
 	return;
     }
+    cfg[fsize] = 0;
+    char *ln = cfg, *e, c;
+    sec->ax_map = calloc((sec->max_ax = 18), sizeof(*sec->ax_map));
+    sec->bt_map = calloc((sec->max_bt = 15), sizeof(*sec->bt_map));
+    if(!sec->ax_map || !sec->bt_map) {
+	perror("mapping");
+	free(cfg);
+	if(sec->ax_map)
+	    free(sec->ax_map);
+	if(sec->bt_map)
+	    free(sec->bt_map);
+	return;
+    }
+    sec->auto_ax = -1;
+    sec->auto_bt = BTN_A - 1;
     int lno = 1;
 #define abort_parse(msg) do { \
     fprintf(stderr, "error parsing map on line %d: " msg "\n", lno); \
     goto err; \
 } while(0)
 #define map_resize(what, sz) do { \
-    if(max_##what < sz) { \
-	int old_max = max_##what; \
-	void *old_map = what##_map; \
-	while(max_##what < sz) \
-	    max_##what *= 2; \
-	what##_map = realloc(what##_map, max_##what * sizeof(*what##_map)); \
-	if(!what##_map) { \
-	    what##_map = old_map; \
+    if(sec->max_##what < sz) { \
+	int old_max = sec->max_##what; \
+	void *old_map = sec->what##_map; \
+	while(sec->max_##what < sz) \
+	    sec->max_##what *= 2; \
+	sec->what##_map = realloc(sec->what##_map, sec->max_##what * sizeof(*sec->what##_map)); \
+	if(!sec->what##_map) { \
+	    sec->what##_map = old_map; \
 	    abort_parse(#what " map too large"); \
 	} \
-	memset(what##_map + old_max, 0, (max_##what - old_max) * sizeof(*what##_map)); \
+	memset(sec->what##_map + old_max, 0, (sec->max_##what - old_max) * sizeof(*sec->what##_map)); \
     } \
 } while(0)
+    int i, ret;
+    int has_conf = 0;
     while(1) {
 	while(isspace(*ln)) {
 	    if(*ln == '\n')
@@ -488,25 +547,111 @@ static void init(void)
 	*e = c;
 	if(!kw)
 	    abort_parse("unknown keyword");
+	has_conf++;
 	for(ln = e; isspace(*ln) && *ln != '\n'; ln++);
 	for(e = ln; *e && *e != '\n'; e++);
 	while(e > ln && isspace(e[-1]))
 	    e--;
 	c = *e;
 	*e = 0;
-	int ret;
 	switch(kw - kws) {
+	  case KW_SECTION:
+	    for(i = 0; i < nconf; i++)
+		if((!*ln && !conf[i].name) ||
+		   (conf[i].name && !strcmp(ln, conf[i].name)))
+		    break;
+	    if(i < nconf) {
+		sec = &conf[i];
+		has_conf = 2; /* don't allow USE */
+	    } else if(i == 1 && !sec->name && has_conf == 1) {
+		if(*ln) {
+		    sec->name = strdup(ln);
+		    if(!sec->name) {
+			perror("sec name");
+			goto err;
+		    }
+		}
+	    } else {
+		/* yeah, one at a time, rather than in blocks.  too lazy */
+		sec = conf;
+		conf = realloc(conf, ++nconf * sizeof(*conf));
+		if(!conf) {
+		    conf = sec;
+		    perror("expand conf");
+		    goto err;
+		}
+		sec = &conf[nconf - 1];
+		memset(sec, 0, sizeof(*sec));
+		if(*ln) {
+		    sec->name = strdup(ln);
+		    if(!sec->name) {
+			perror("sec name");
+			goto err;
+		    }
+		}
+	    }
+	    break;
+	  case KW_USE:
+	    for(i = 0; i < nconf; i++)
+		if((!*ln && !conf[i].name) ||
+		   (conf[i].name && !strcmp(ln, conf[i].name)))
+		    break;
+	    if(i == nconf)
+		abort_parse("unknown section");
+	    if(i == sec - conf)
+		abort_parse("can't include self");
+	    if(has_conf != 2)
+		abort_parse("use must be first in a section");
+	    free(sec->ax_map);
+	    free(sec->bt_map);
+	    memcpy((char *)sec + offsetof(struct evjrconf, bt_low),
+		   (char *)&conf[i] + offsetof(struct evjrconf, bt_low),
+		   sizeof(*sec) - offsetof(struct evjrconf, bt_low));
+	    sec->ax_map = malloc(sec->max_ax * sizeof(*sec->ax_map));
+	    sec->bt_map = malloc(sec->max_bt * sizeof(*sec->bt_map));
+	    if(!sec->ax_map || !sec->bt_map)
+		abort_parse("no mem");
+	    memcpy(sec->ax_map, conf[i].ax_map, sec->nax * sizeof(*sec->ax_map));
+	    memcpy(sec->bt_map, conf[i].bt_map, sec->nbt * sizeof(*sec->bt_map));
+#define dupstr(s) do { \
+    if(conf[i].s) { \
+	sec->s = strdup(conf[i].s); \
+	if(!sec->s) \
+	    abort_parse("no mem"); \
+    } \
+} while(0)
+	    dupstr(repl_name);
+	    dupstr(repl_id);
+	    dupstr(repl_uniq);
+#define comp_regex(s, type) do { \
+    if((ret = regcomp(&sec->type, s, REG_EXTENDED | REG_NOSUB))) { \
+	regerror(ret, &sec->type, buf, sizeof(buf)); \
+	fprintf(stderr, #type " pattern error: %.*s\n", (int)sizeof(buf), buf); \
+	regfree(&sec->type); \
+	goto err; \
+    } \
+    sec->type##_str = strdup(ln); \
+    if(!sec->type##_str) { \
+	perror(ln); \
+	regfree(&sec->type); \
+	goto err; \
+    } \
+} while(0)
+#define dupre(r) do { \
+    comp_regex(conf[i].r##_str, r); \
+} while(0)
+	    dupre(match);
+	    dupre(reject);
+	    dupre(jsrename);
+	    break;
 	  case KW_MATCH:
 #define parse_regex(type) do { \
-    if(has_##type) \
-	abort_parse("duplicate " #type); \
-    if((ret = regcomp(&type, ln, REG_EXTENDED | REG_NOSUB))) { \
-	regerror(ret, &type, buf, sizeof(buf)); \
-	fprintf(stderr, #type " pattern error: %.*s\n", (int)sizeof(buf), buf); \
-	regfree(&type); \
-	goto err; \
-    } else \
-	has_##type = 1; \
+    if(sec->type##_str) { \
+	free(sec->type##_str); \
+	sec->type##_str = NULL; \
+	regfree(&sec->type); \
+    } \
+    comp_regex(ln, type); \
 } while(0)
 	    parse_regex(match);
 	    break;
@@ -516,30 +661,24 @@ static void init(void)
 	  case KW_FILTER:
 	    if(*ln)
 		abort_parse("filter takes no parameter");
-	    filter_dev = 1;
+	    sec->filter_dev = 1;
 	    break;
 	  case KW_NAME:
-	    if(repl_name)
-		abort_parse("duplicate name");
-	    repl_name = strdup(ln);
-	    if(!repl_name)
+	    sec->repl_name = strdup(ln);
+	    if(!sec->repl_name)
 		abort_parse("name");
 	    break;
 	  case KW_JSRENAME:
 	    parse_regex(jsrename);
 	    break;
 	  case KW_ID:
-	    if(repl_id)
-		abort_parse("duplicate id");
-	    repl_id = strdup(ln);
-	    if(!repl_id)
+	    sec->repl_id = strdup(ln);
+	    if(!sec->repl_id)
 		abort_parse("id");
 	    break;
 	  case KW_UNIQ:
-	    if(repl_uniq)
-		abort_parse("duplicate uniq");
-	    repl_uniq = strdup(ln);
-	    if(!repl_uniq)
+	    sec->repl_uniq = strdup(ln);
+	    if(!sec->repl_uniq)
 		abort_parse("uniq");
 	    break;
 	  case KW_AXES:
@@ -548,17 +687,17 @@ static void init(void)
 	    if(!*ln) {
 		int t;
 #define next_auto_axis do { \
-    auto_ax++; \
-    for(t = 0; t < nax; t++) \
-	if((ax_map[t].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP && \
-	   ax_map[t].target == auto_ax) { \
-	    auto_ax++; \
+    sec->auto_ax++; \
+    for(t = 0; t < sec->nax; t++) \
+	if((sec->ax_map[t].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP && \
+	   sec->ax_map[t].target == sec->auto_ax) { \
+	    sec->auto_ax++; \
 	    t = -1; \
 	} \
-    for(t = 0; t < nbt; t++) \
-	if((bt_map[t].flags & (BTFL_MAP | BTFL_AXIS)) == (BTFL_MAP | BTFL_AXIS) && \
-	   (bt_map[t].onax == auto_ax || bt_map[t].offax == auto_ax)) { \
-	    auto_ax++; \
+    for(t = 0; t < sec->nbt; t++) \
+	if((sec->bt_map[t].flags & (BTFL_MAP | BTFL_AXIS)) == (BTFL_MAP | BTFL_AXIS) && \
+	   (sec->bt_map[t].onax == sec->auto_ax || sec->bt_map[t].offax == sec->auto_ax)) { \
+	    sec->auto_ax++; \
 	    t = -1; \
 	} \
     t = -1; \
@@ -566,18 +705,18 @@ static void init(void)
 		next_auto_axis;
 		break;
 	    }
-	    filter_ax |= 1;
+	    sec->filter_ax |= 1;
 	    while(*ln) {
 		int a = -1, t = -1;
 		if(*ln == '!' && isdigit(ln[1])) {
 		    a = strtol(ln + 1, &ln, 0);
 		    if(*ln && *ln != ',')
 			abort_parse("invalid !");
-		    if(nax <= a)
-			nax = a + 1;
-		    map_resize(ax, nax);
-		    ax_map[a].flags = AXFL_MAP;
-		    ax_map[a].target = -1;
+		    if(sec->nax <= a)
+			sec->nax = a + 1;
+		    map_resize(ax, sec->nax);
+		    sec->ax_map[a].flags = AXFL_MAP;
+		    sec->ax_map[a].target = -1;
 		    if(*ln == ',')
 			ln++;
 		    continue;
@@ -607,33 +746,33 @@ static void init(void)
 		if(isdigit(*ln))
 		    a = strtol(ln, (char **)&ln, 0);
 		if(a >= 0) {
-		    if(nax <= a)
-			nax = a + 1;
-		    map_resize(ax, nax);
-		    memset(ax_map + a, 0, sizeof(*ax_map));
-		    ax_map[a].flags = AXFL_MAP | invert;
-		    ax_map[a].target = t < 0 ? auto_ax : t;
+		    if(sec->nax <= a)
+			sec->nax = a + 1;
+		    map_resize(ax, sec->nax);
+		    memset(sec->ax_map + a, 0, sizeof(*sec->ax_map));
+		    sec->ax_map[a].flags = AXFL_MAP | invert;
+		    sec->ax_map[a].target = t < 0 ? sec->auto_ax : t;
 		    if(*ln == '-' && isdigit(ln[1])) {
 			int b = strtol(ln + 1, (char **)&ln, 0);
 			if(b < a)
 			    abort_parse("invalid range");
-			if(nax <= b)
-			    nax = b + 1;
-			map_resize(ax, nax);
+			if(sec->nax <= b)
+			    sec->nax = b + 1;
+			map_resize(ax, sec->nax);
 			for(;++a <= b;) {
 			    if(t < 0)
 				next_auto_axis;
 			    else
 				t++;
-			    memset(&ax_map[a], 0, sizeof(*ax_map));
-			    ax_map[a].flags = AXFL_MAP | invert;
-			    ax_map[a].target = t < 0 ? auto_ax : t;
+			    memset(&sec->ax_map[a], 0, sizeof(*sec->ax_map));
+			    sec->ax_map[a].flags = AXFL_MAP | invert;
+			    sec->ax_map[a].target = t < 0 ? sec->auto_ax : t;
 			}
 		    }
 		} else if(tolower(*ln) == 'b') {
 		    ln++;
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
-			t = auto_ax;
+			t = sec->auto_ax;
 		    int l, m, h, li, mi, hi;
 		    if((li = *ln == '-'))
 			ln++;
@@ -651,35 +790,35 @@ static void init(void)
 		    if(l < 0 && m < 0 && h < 0)
 			abort_parse("invalid axis button");
 #define expand_bt(n) do { \
-    if(!nbt) { \
-	if(n < BTN_A || n >= BTN_A + max_bt) \
-	    bt_low = n; \
+    if(!sec->nbt) { \
+	if(n < BTN_A || n >= BTN_A + sec->max_bt) \
+	    sec->bt_low = n; \
 	else \
-	    bt_low = BTN_A; \
+	    sec->bt_low = BTN_A; \
     } \
-    if(n < bt_low) { \
-	map_resize(bt, nbt + bt_low - n); \
-	memmove(bt_map + bt_low - n, bt_map, nbt * sizeof(*bt_map)); \
-	memset(bt_map, 0, (bt_low - n) * sizeof(*bt_map)); \
-	nbt += bt_low - n; \
-	bt_low = n; \
+    if(n < sec->bt_low) { \
+	map_resize(bt, sec->nbt + sec->bt_low - n); \
+	memmove(sec->bt_map + sec->bt_low - n, sec->bt_map, sec->nbt * sizeof(*sec->bt_map)); \
+	memset(sec->bt_map, 0, (sec->bt_low - n) * sizeof(*sec->bt_map)); \
+	sec->nbt += sec->bt_low - n; \
+	sec->bt_low = n; \
     } \
-    if(nbt <= n - bt_low) { \
-	nbt = n - bt_low + 1; \
-	map_resize(bt, nbt); \
+    if(sec->nbt <= n - sec->bt_low) { \
+	sec->nbt = n - sec->bt_low + 1; \
+	map_resize(bt, sec->nbt); \
     } \
 } while(0)
 		    if(l >= 0) {
 			expand_bt(l);
-			bt_map[l - bt_low].offax = bt_map[l - bt_low].onax = -1;
+			sec->bt_map[l - sec->bt_low].offax = sec->bt_map[l - sec->bt_low].onax = -1;
 		    }
 		    if(m >= 0) {
 			expand_bt(m);
-			bt_map[m - bt_low].offax = bt_map[m - bt_low].onax = -1;
+			sec->bt_map[m - sec->bt_low].offax = sec->bt_map[m - sec->bt_low].onax = -1;
 		    }
 		    if(h >= 0) {
 			expand_bt(h);
-			bt_map[h - bt_low].offax = bt_map[h - bt_low].onax = -1;
+			sec->bt_map[h - sec->bt_low].offax = sec->bt_map[h - sec->bt_low].onax = -1;
 		    }
 		    if((l >= 0 && ((l == h && l == m) || (l == h && li == hi) ||
 				   (l == m && li == mi))) ||
@@ -696,14 +835,14 @@ static void init(void)
 
 #define doaxbt(w, v) do { \
     if(w >= 0) { \
-	int wa = w - bt_low; \
-	bt_map[wa].flags = BTFL_MAP | BTFL_AXIS; \
+	int wa = w - sec->bt_low; \
+	sec->bt_map[wa].flags = BTFL_MAP | BTFL_AXIS; \
 	if(w##i) { \
-	    bt_map[wa].offax = t; \
-	    bt_map[wa].offval = v; \
+	    sec->bt_map[wa].offax = t; \
+	    sec->bt_map[wa].offval = v; \
 	} else { \
-	    bt_map[wa].onax = t; \
-	    bt_map[wa].onval = v; \
+	    sec->bt_map[wa].onax = t; \
+	    sec->bt_map[wa].onval = v; \
 	} \
     } \
 } while(0)
@@ -733,59 +872,59 @@ static void init(void)
 		int t = strtol(ln, &ln, 0), a;
 		if(*ln++ != '=')
 		    abort_parse("rescale w/o =");
-		for(a = 0; a < nax; a++)
-		    if(ax_map[a].target == t)
+		for(a = 0; a < sec->nax; a++)
+		    if(sec->ax_map[a].target == t)
 			break;
-		if(a == nax) {
+		if(a == sec->nax) {
 		    a = t;
-		    if(a >= nax) {
-			nax = a + 1;
-			map_resize(ax, nax);
+		    if(a >= sec->nax) {
+			sec->nax = a + 1;
+			map_resize(ax, sec->nax);
 		    }
-		    if(ax_map[a].flags & AXFL_MAP)
+		    if(sec->ax_map[a].flags & AXFL_MAP)
 			abort_parse("rescale target unavailable");
-		    ax_map[a].flags = AXFL_MAP;
-		    ax_map[a].target = a;
+		    sec->ax_map[a].flags = AXFL_MAP;
+		    sec->ax_map[a].target = a;
 		}
-		ax_map[a].flags |= AXFL_RESCALE;
-		memset(&ax_map[a].ai, 0, sizeof(ax_map[a].ai));
-		ax_map[a].ai.minimum = strtol(ln, &ln, 0);
+		sec->ax_map[a].flags |= AXFL_RESCALE;
+		memset(&sec->ax_map[a].ai, 0, sizeof(sec->ax_map[a].ai));
+		sec->ax_map[a].ai.minimum = strtol(ln, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.maximum = strtol(ln + 1, &ln, 0);
+		    sec->ax_map[a].ai.maximum = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.fuzz = strtol(ln + 1, &ln, 0);
+		    sec->ax_map[a].ai.fuzz = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.flat = strtol(ln + 1, &ln, 0);
+		    sec->ax_map[a].ai.flat = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.resolution = strtol(ln + 1, &ln, 0);
+		    sec->ax_map[a].ai.resolution = strtol(ln + 1, &ln, 0);
 		if(*ln && *ln != ',')
 		    abort_parse("invalid rescale entry");
-		if(ax_map[a].ai.maximum <= ax_map[a].ai.minimum)
+		if(sec->ax_map[a].ai.maximum <= sec->ax_map[a].ai.minimum)
 		    abort_parse("invalid rescale range");
 		/* since I don't entirely understand fuzz & flat, I won't check */
 	    }
 	    break;
 	  case KW_PASS_AX:
-	    filter_ax = -1;
+	    sec->filter_ax = -1;
 	    break;
 	  case KW_BUTTONS:
 	    /* I guess duplicates are OK here */
-	    filter_bt |= 1;
+	    sec->filter_bt |= 1;
 	    /* blank list just skips an auto */
 	    if(!*ln) {
 		int t;
 #define next_auto_bt do { \
-    auto_bt++; \
-    for(t = 0; t < nbt; t++) \
-	if((bt_map[t].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP && \
-	   bt_map[t].target == auto_bt) { \
-	    auto_bt++; \
+    sec->auto_bt++; \
+    for(t = 0; t < sec->nbt; t++) \
+	if((sec->bt_map[t].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP && \
+	   sec->bt_map[t].target == sec->auto_bt) { \
+	    sec->auto_bt++; \
 	    t = -1; \
 	} \
-    for(t = 0; t < nbt; t++) \
-	if((ax_map[t].flags & (AXFL_MAP | AXFL_BUTTON)) == (AXFL_MAP | AXFL_BUTTON) && \
-	   (ax_map[t].target == auto_bt || ax_map[t].ntarget == auto_bt)) { \
-	    auto_bt++; \
+    for(t = 0; t < sec->nbt; t++) \
+	if((sec->ax_map[t].flags & (AXFL_MAP | AXFL_BUTTON)) == (AXFL_MAP | AXFL_BUTTON) && \
+	   (sec->ax_map[t].target == sec->auto_bt || sec->ax_map[t].ntarget == sec->auto_bt)) { \
+	    sec->auto_bt++; \
 	    t = -1; \
 	} \
     t = -1; \
@@ -801,9 +940,9 @@ static void init(void)
 		    if(*ln && *ln != ',')
 			abort_parse("invalid !");
 		    expand_bt(a);
-		    a -= bt_low;
-		    bt_map[a].flags = BTFL_MAP;
-		    bt_map[a].target = -1;
+		    a -= sec->bt_low;
+		    sec->bt_map[a].flags = BTFL_MAP;
+		    sec->bt_map[a].target = -1;
 		    if(*ln == ',')
 			ln++;
 		    continue;
@@ -836,13 +975,13 @@ static void init(void)
 			a = bnum(&ln);
 		if(a >= 0) {
 		    expand_bt(a);
-		    a -= bt_low;
-		    memset(bt_map + a, 0, sizeof(*bt_map));
-		    bt_map[a].flags = BTFL_MAP | invert;
-		    bt_map[a].target = t < 0 ? auto_bt : t;
+		    a -= sec->bt_low;
+		    memset(sec->bt_map + a, 0, sizeof(*sec->bt_map));
+		    sec->bt_map[a].flags = BTFL_MAP | invert;
+		    sec->bt_map[a].target = t < 0 ? sec->auto_bt : t;
 		    if(*ln == '-' && isalnum(ln[1])) {
 			++ln;
-			a += bt_low;
+			a += sec->bt_low;
 			int b = bnum(&ln);
 			if(b < a)
 			    abort_parse("invalid range");
@@ -852,14 +991,14 @@ static void init(void)
 				next_auto_bt;
 			    else
 				t++;
-			    memset(&bt_map[a - bt_low], 0, sizeof(*bt_map));
-			    bt_map[a - bt_low].flags = BTFL_MAP | invert;
-			    bt_map[a - bt_low].target = t < 0 ? auto_bt : t;
+			    memset(&sec->bt_map[a - sec->bt_low], 0, sizeof(*sec->bt_map));
+			    sec->bt_map[a - sec->bt_low].flags = BTFL_MAP | invert;
+			    sec->bt_map[a - sec->bt_low].target = t < 0 ? sec->auto_bt : t;
 			}
 		    }
 		} else if(tolower(*ln) == 'a' && tolower(ln[1]) == 'x' && isdigit(ln[2])) {
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
-			t = auto_bt;
+			t = sec->auto_bt;
 		    a = strtol(ln + 2, (char **)&ln, 0);
 		    int l, h;
 		    if(*ln != '>' || !isdigit(ln[1]))
@@ -870,24 +1009,24 @@ static void init(void)
 		    h = strtol(ln + 1, (char **)&ln, 0);
 		    if(l == h)
 			abort_parse("invalid axis-to-button thresholds");
-		    if(a >= nax)
-			nax = a + 1;
-		    map_resize(ax, nax);
-		    if(!(ax_map[a].flags & AXFL_BUTTON)) {
-			memset(ax_map + a, 0, sizeof(*ax_map));
-			ax_map[a].target = ax_map[a].ntarget = -1;
-			ax_map[a].flags = AXFL_MAP | AXFL_BUTTON;
+		    if(a >= sec->nax)
+			sec->nax = a + 1;
+		    map_resize(ax, sec->nax);
+		    if(!(sec->ax_map[a].flags & AXFL_BUTTON)) {
+			memset(sec->ax_map + a, 0, sizeof(*sec->ax_map));
+			sec->ax_map[a].target = sec->ax_map[a].ntarget = -1;
+			sec->ax_map[a].flags = AXFL_MAP | AXFL_BUTTON;
 		    }
 		    if(l < h) {
-			ax_map[a].target = t;
-			ax_map[a].onthresh = l;
-			ax_map[a].offthresh = h;
-			ax_map[a].flags |= invert;
+			sec->ax_map[a].target = t;
+			sec->ax_map[a].onthresh = l;
+			sec->ax_map[a].offthresh = h;
+			sec->ax_map[a].flags |= invert;
 		    } else {
-			ax_map[a].ntarget = t;
-			ax_map[a].nonthresh = l;
-			ax_map[a].noffthresh = h;
-			ax_map[a].flags |= invert ? AXFL_NINVERT : 0;
+			sec->ax_map[a].ntarget = t;
+			sec->ax_map[a].nonthresh = l;
+			sec->ax_map[a].noffthresh = h;
+			sec->ax_map[a].flags |= invert ? AXFL_NINVERT : 0;
 		    }
 		} else
 		    abort_parse("invalid mapping entry");
@@ -898,28 +1037,29 @@ static void init(void)
 	    }
 	    break;
 	  case KW_PASS_BT:
-	    filter_bt = -1;
+	    sec->filter_bt = -1;
 	    break;
 	  case KW_SYN_DROP:
-	    syn_drop = 1;
+	    sec->syn_drop = 1;
 	    break;
 	}
 	*e = c;
 	ln = e;
     }
-    if(filter_ax < 0)
-	filter_ax = 0;
-    if(filter_bt < 0)
-	filter_bt = 0;
-    /* disable individual passthrough for mapped outputs */
+    for(sec = conf; sec < conf + nconf; sec++) {
+	if(sec->filter_ax < 0)
+	    sec->filter_ax = 0;
+	if(sec->filter_bt < 0)
+	    sec->filter_bt = 0;
+	/* disable individual passthrough for mapped outputs */
 #define dis_ax(axno) do { \
     if(axno >= 0) { \
-	if(nax <= axno) \
-	    nax = axno + 1; \
-	map_resize(ax, nax); \
-	if(!(ax_map[axno].flags & AXFL_MAP)) { \
-	    ax_map[axno].flags = AXFL_MAP; \
-	    ax_map[axno].target = -1; \
+	if(sec->nax <= axno) \
+	    sec->nax = axno + 1; \
+	map_resize(ax, sec->nax); \
+	if(!(sec->ax_map[axno].flags & AXFL_MAP)) { \
+	    sec->ax_map[axno].flags = AXFL_MAP; \
+	    sec->ax_map[axno].target = -1; \
 	} \
     } \
 } while(0)
@@ -927,57 +1067,91 @@ static void init(void)
     int bno = btno; \
     if(bno >= 0) { \
 	expand_bt(bno); \
-	bno -= bt_low; \
-	if(!(bt_map[bno].flags & BTFL_MAP)) { \
-	    bt_map[bno].flags = BTFL_MAP; \
-	    bt_map[bno].target = -1; \
+	bno -= sec->bt_low; \
+	if(!(sec->bt_map[bno].flags & BTFL_MAP)) { \
+	    sec->bt_map[bno].flags = BTFL_MAP; \
+	    sec->bt_map[bno].target = -1; \
 	} \
     } \
 } while(0)
-    int i;
-    for(i = 0; i < nbt; i++) {
-	if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP) {
-	    int ol = bt_low;
-	    dis_bt(bt_map[i].target);
-	    if(ol != bt_low)
-		i += ol - bt_low;
-	} else if(bt_map[i].flags & BTFL_MAP) {
-	    dis_ax(bt_map[i].onax);
-	    dis_ax(bt_map[i].offax);
+	for(i = 0; i < sec->nbt; i++) {
+	    if((sec->bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == BTFL_MAP) {
+		int ol = sec->bt_low;
+		dis_bt(sec->bt_map[i].target);
+		if(ol != sec->bt_low)
+		    i += ol - sec->bt_low;
+	    } else if(sec->bt_map[i].flags & BTFL_MAP) {
+		dis_ax(sec->bt_map[i].onax);
+		dis_ax(sec->bt_map[i].offax);
+	    }
 	}
-    }
-    for(i = 0; i < nax; i++) {
-	if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP)
-	    dis_ax(ax_map[i].target);
-	else if(ax_map[i].flags & AXFL_MAP) {
-	    dis_bt(ax_map[i].target);
-	    dis_bt(ax_map[i].ntarget);
+	for(i = 0; i < sec->nax; i++) {
+	    if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP)
+		dis_ax(sec->ax_map[i].target);
+	    else if(sec->ax_map[i].flags & AXFL_MAP) {
+		dis_bt(sec->ax_map[i].target);
+		dis_bt(sec->ax_map[i].ntarget);
+	    }
 	}
+	/* even though technically the first device may be a gamepad due to
+	 * permissions, I'm forcing you to have a pattern */
+	/* if this is just used to rename joysticks, it still needs a dummy pattern */
+	if(!sec->match_str)
+	    abort_parse("match pattern required");
     }
-    /* even though technically the first device may be a gamepad due to
-     * permissions, I'm forcing you to have a pattern */
-    /* if this is just used to rename joysticks, it still needs a dummy pattern */
-    if(!has_match)
-	abort_parse("match pattern required");
     free(cfg);
+    const char *ensec_s = getenv("EV_JOY_REMAP_ENABLE");
+    if(ensec_s && *ensec_s) {
+	regex_t re;
+	if((ret = regcomp(&re, ln, REG_EXTENDED | REG_NOSUB))) {
+	    regerror(ret, &re, buf, sizeof(buf));
+	    fprintf(stderr, "EV_JOY_REMAP_ENABLE pattern error: %.*s\n", (int)sizeof(buf), buf);
+	    regfree(&re);
+	    goto err;
+	}
+	for(i = 0; i < nconf; i++)
+	    if(regexec(&re, conf[i].name ? conf[i].name : "", 0, NULL, 0)) {
+		free_conf(&conf[i]);
+		memmove(conf + i, conf + i + 1, (nconf - i - 1) * sizeof(*conf));
+		--i;
+	    }
+	regfree(&re);
+	if(!nconf) {
+	    fputs("No sections enabled for remapper; disabled", stderr);
+	    return;
+	}
+    }
     fputs("Installed event device remapper\n", stderr);
     return;
 err:
-    free(ax_map);
-    free(bt_map);
-    if(has_match)
-	regfree(&match);
-    has_match = 0;
-    if(has_reject)
-	regfree(&reject);
-    if(repl_uniq)
-	free(repl_uniq);
-    if(repl_id)
-	free(repl_id);
-    if(repl_name)
-	free(repl_name);
-    nbt = nax = 0;
+    for(sec = conf; nconf; nconf--, sec++) {
+	free_conf(sec);
+    }
+    free(conf);
     free(cfg);
+}
+
+static void free_conf(struct evjrconf *sec)
+{
+    if(sec->ax_map)
+	free(sec->ax_map);
+    if(sec->bt_map)
+	free(sec->bt_map);
+#define free_re(r) do { \
+    if(sec->r##_str) { \
+	regfree(&sec->r); \
+	free(sec->r##_str); \
+    } \
+} while(0)
+    free_re(match);
+    free_re(reject);
+    free_re(jsrename);
+    if(sec->repl_uniq)
+	free(sec->repl_uniq);
+    if(sec->repl_id)
+	free(sec->repl_id);
+    if(sec->repl_name)
+	free(sec->repl_name);
 }
 
 /* I use ioctl() a bit here, so bypass intercept */
@@ -997,168 +1171,200 @@ static int real_ioctl(int fd, unsigned long request, ...)
 }
 
 /* capture event device and prepare ioctl returns */
-static void init_joy(int fd)
+static void init_joy(int fd, const struct evjrconf *sec)
 {
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&lock);
-    if(ev_fd >= 0) {
-	pthread_mutex_unlock(&lock);
-	return;
-    }
-    ev_fd = fd;
+    /* could use local lock, but it needs to be shared with close() */
+    pthread_mutex_lock(&buf_lock);
+#define alloc_fd(t) do { \
+    if(max##t##fd == n##t##fd) { \
+	if(!max##t##fd) { \
+	    t##_fd = malloc(sizeof(*t##_fd)); \
+	    if(!t##_fd) { \
+		perror("fd tracker"); \
+		nconf = 0; \
+	    } \
+	    max##t##fd = 1; \
+	} else { \
+	    void *o = t##_fd; \
+	    max##t##fd *= 2; \
+	    t##_fd = realloc(t##_fd, max##t##fd * sizeof(*t##_fd)); \
+	    if(!t##_fd) { \
+		t##_fd = o; \
+		perror("fd tracker"); \
+		nconf = 0; \
+	    } \
+	} \
+    } \
+} while(0)
+    alloc_fd(ev);
+    struct evjrfd *cap = ev_fd + nevfd;
+    memset(cap, 0, sizeof(*cap));
+    cap->fd = fd;
+    cap->conf = sec;
     /* set up ID from string */
-    if(repl_id) {
-	real_ioctl(fd, EVIOCGID, &repl_id_val);
-	char *s = repl_id;
+    if(sec->repl_id) {
+	real_ioctl(fd, EVIOCGID, &cap->repl_id_val);
+	char *s = sec->repl_id;
 	if(*s && *s != ':')
-	    repl_id_val.bustype = strtol(s, &s, 16);
+	    cap->repl_id_val.bustype = strtol(s, &s, 16);
 	/* I guess it's OK if fields are missing */
 	if(*s == ':') {
 	    if(*++s && *s != ':')
-		repl_id_val.vendor = strtol(s, &s, 16);
+		cap->repl_id_val.vendor = strtol(s, &s, 16);
 	    if(*s == ':') {
 		if(*++s && *s != ':')
-		    repl_id_val.product = strtol(s, &s, 16);
+		    cap->repl_id_val.product = strtol(s, &s, 16);
 		if(*s == ':' && *++s && *s != ':')
-		    repl_id_val.version = strtol(s, &s, 16);
+		    cap->repl_id_val.version = strtol(s, &s, 16);
 	    }
 	}
 	if(*s) {
 	    fprintf(stderr, "joy-remap:  invalid id @ %s\n", s);
-	    free(repl_id);
-	    repl_id = NULL;
+	    /* really, this should set ncconf to 0 and abort all remapping */
+	    /* just like all other parse errors */
+	    /* maybe I should parse it more in init() */
+#if 0
+	    free(sec->repl_id);
+	    sec->repl_id = NULL;
+#endif
 	}
     }
     /* adjust button/axis mappings */
     static unsigned long absin[MINBITS(ABS_MAX)];
     memset(absin, 0, sizeof(absin));
-    memset(keysout, 0, sizeof(keysout));
-    /* use keystates as temp buffer for keysin */
-    memset(keystates, 0, sizeof(keystates));
-    if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keystates)), keystates) < 0 ||
+    memset(cap->keysout, 0, sizeof(cap->keysout));
+    /* use cap->keystates as temp buffer for keysin */
+    memset(cap->keystates, 0, sizeof(cap->keystates));
+    if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(cap->keystates)), cap->keystates) < 0 ||
        real_ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absin)), absin) < 0) {
 	perror("init_joy");
-	ev_fd = -1;
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_unlock(&buf_lock);
 	return;
     }
     int i;
     /* add keys that are mapped if src is present */
-    for(i = 0; i < nbt; i++) {
-	if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) != BTFL_MAP)
+    for(i = 0; i < sec->nbt; i++) {
+	if((sec->bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) != BTFL_MAP)
 	    continue;
-	if(bt_map[i].target < 0) { /* passthrough disable */
-	    ULCLR(keystates, bt_low + i);
+	if(sec->bt_map[i].target < 0) { /* passthrough disable */
+	    ULCLR(cap->keystates, sec->bt_low + i);
 	    continue;
 	}
-	if(!ULISSET(keystates, bt_low + i)) {
+	if(!ULISSET(cap->keystates, sec->bt_low + i)) {
 	    fprintf(stderr, "warning: disabling button %d due to missing %d\n",
-		    bt_map[i].target, bt_low + i);
+		    sec->bt_map[i].target, sec->bt_low + i);
 	    continue;
 	}
-	ULSET(keysout, bt_map[i].target);
-	ULCLR(keystates, bt_low + i);
+	ULSET(cap->keysout, sec->bt_map[i].target);
+	ULCLR(cap->keystates, sec->bt_low + i);
     }
-    for(i = 0; i < nax; i++) {
-	if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
+    for(i = 0; i < sec->nax; i++) {
+	if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
 	    continue;
 	if(!ULISSET(absin, i)) {
 	    fprintf(stderr, "warning: disabling button %d/%d due to missing axis %d\n",
-		    ax_map[i].target, ax_map[i].ntarget, i);
+		    sec->ax_map[i].target, sec->ax_map[i].ntarget, i);
 	    continue;
 	}
-	if(ax_map[i].target >= 0)
-	    ULSET(keysout, ax_map[i].target);
-	if(ax_map[i].ntarget >= 0)
-	    ULSET(keysout, ax_map[i].ntarget);
+	if(sec->ax_map[i].target >= 0)
+	    ULSET(cap->keysout, sec->ax_map[i].target);
+	if(sec->ax_map[i].ntarget >= 0)
+	    ULSET(cap->keysout, sec->ax_map[i].ntarget);
 	ULCLR(absin, i);
     }
     /* add axes that are mapped if src is present */
-    for(i = 0; i < nax; i++) {
-	if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != BTFL_MAP)
+    for(i = 0; i < sec->nax; i++) {
+	if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != BTFL_MAP)
 	    continue;
-	if(ax_map[i].target < 0) { /* passthrough disable */
+	if(sec->ax_map[i].target < 0) { /* passthrough disable */
 	    ULCLR(absin, i);
 	    continue;
 	}
 	if(!ULISSET(absin, i)) {
 	    fprintf(stderr, "warning: disabling axis %d due to missing %d\n",
-		    ax_map[i].target, i);
+		    sec->ax_map[i].target, i);
 	    continue;
 	}
-	ULSET(absout, ax_map[i].target);
+	ULSET(cap->absout, sec->ax_map[i].target);
 	ULCLR(absin, i);
 	/* we only need absinfo for INVERT and RESCALE */
 	/* and axis->key if I ever support % */
-	if(ax_map[i].flags & (AXFL_INVERT | AXFL_RESCALE)) {
+	if(sec->ax_map[i].flags & (AXFL_INVERT | AXFL_RESCALE)) {
 	    struct input_absinfo ai;
 	    if(real_ioctl(fd, EVIOCGABS(i), &ai) < 0) {
 		perror("init_joy");
-		ev_fd = -1;
-		pthread_mutex_unlock(&lock);
+		pthread_mutex_unlock(&buf_lock);
 		return;
 	    }
-	    ax_map[i].offthresh = ai.minimum;
-	    ax_map[i].onthresh = ai.minimum + ai.maximum;
+	    sec->ax_map[i].offthresh = ai.minimum;
+	    sec->ax_map[i].onthresh = ai.minimum + ai.maximum;
 	}
     }
-    for(i = 0; i < nbt; i++) {
-	if((bt_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
+    for(i = 0; i < sec->nbt; i++) {
+	if((sec->bt_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
 	    continue;
-	if(!ULISSET(keystates, bt_low + i)) {
+	if(!ULISSET(cap->keystates, sec->bt_low + i)) {
 	    fprintf(stderr, "warning: disabling axis %d/%d due to missing button %d\n",
-		    bt_map[i].onax, bt_map[i].offax, i);
+		    sec->bt_map[i].onax, sec->bt_map[i].offax, i);
 	    continue;
 	}
-	if(bt_map[i].onax >= 0) {
-	    ULSET(absout, bt_map[i].onax);
-	    axval[bt_map[i].onax] = 0;
+	if(sec->bt_map[i].onax >= 0) {
+	    ULSET(cap->absout, sec->bt_map[i].onax);
+	    cap->axval[sec->bt_map[i].onax] = 0;
 	}
-	if(bt_map[i].offax >= 0) {
-	    ULSET(absout, bt_map[i].offax);
-	    axval[bt_map[i].offax] = 0;
+	if(sec->bt_map[i].offax >= 0) {
+	    ULSET(cap->absout, sec->bt_map[i].offax);
+	    cap->axval[sec->bt_map[i].offax] = 0;
 	}
-	ULCLR(keystates, bt_low + i);
+	ULCLR(cap->keystates, sec->bt_low + i);
     }
     /* add all remaining keys & axes if no mapping given */
     /* note that if already set above, the raw input will still be dropped
      * if it's not used by a mapping */
-    if(!filter_bt)
+    if(!sec->filter_bt)
 	for(i = 0; i < MINBITS(KEY_MAX); i++)
-	    keysout[i] |= keystates[i];
-    if(!filter_ax)
+	    cap->keysout[i] |= cap->keystates[i];
+    if(!sec->filter_ax)
 	for(i = 0; i < MINBITS(ABS_MAX); i++)
-	    absout[i] |= absin[i];
-    pthread_mutex_unlock(&lock);
+	    cap->absout[i] |= absin[i];
+    nevfd++;
+    pthread_mutex_unlock(&buf_lock);
 }
 
-/* return true if match/reject regexes allow fd */
-static int is_allowed(int fd, int evno)
+/* return NULL if nothing allows fd */
+/* otherwise, return last section which matches */
+static struct evjrconf *allowed_sec(int fd, int evno)
 {
     /* this is small enough to be local, but we're locking for buf anyway */
     static struct input_id id;
+    static char ibuf[25];
+    struct evjrconf *sec;
 
-    if(!has_match)
-	return 1;
     /* the lock is for buf & id */
     pthread_mutex_lock(&buf_lock);
     if(real_ioctl(fd, EVIOCGNAME(sizeof(buf)), buf) < 0)
 	strcpy(buf, "ERROR: Device name unavailable");
-    int rej = has_reject && !regexec(&reject, buf, 0, NULL, 0),
-	nmok = !rej && !regexec(&match, buf, 0, NULL, 0);
-    if(!rej) {
-	if(real_ioctl(fd, EVIOCGID, &id) < 0)
-	    memset(&id, 0, sizeof(id));
-	sprintf(buf, "%04X-%04X-%04X-%04X-%d", (int)id.bustype,
-		(int)id.vendor, (int)id.product, (int)id.version, evno);
-	rej = has_reject && !regexec(&reject, buf, 0, NULL, 0);
-	if(rej)
-	    nmok = 0;
-	else if(!nmok)
-	    nmok = !regexec(&match, buf, 0, NULL, 0);
+    if(real_ioctl(fd, EVIOCGID, &id) < 0)
+	memset(&id, 0, sizeof(id));
+    sprintf(ibuf, "%04X-%04X-%04X-%04X-%d", (int)id.bustype,
+	    (int)id.vendor, (int)id.product, (int)id.version, evno);
+    for(sec = conf + nconf - 1; sec >= conf; sec--) {
+	int rej = sec->reject_str && !regexec(&sec->reject, buf, 0, NULL, 0),
+	    nmok = !rej && !regexec(&sec->match, buf, 0, NULL, 0);
+	if(!rej) {
+	    rej = sec->reject_str && !regexec(&sec->reject, ibuf, 0, NULL, 0);
+	    if(rej)
+		nmok = 0;
+	    else if(!nmok)
+		nmok = !regexec(&sec->match, ibuf, 0, NULL, 0);
+	}
+	if(nmok) {
+	    pthread_mutex_unlock(&buf_lock);
+	    return sec;
+	}
     }
     pthread_mutex_unlock(&buf_lock);
-    return nmok;
+    return NULL;
 }
 
 /* common code for multiple nearly identical open() functions */
@@ -1168,28 +1374,40 @@ static int ev_open(const char *pathname, int fd)
     /* FIXME:  support multiple simultaneously open devices */
     if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR)
 	return fd;
-    if(js_fd < 0 && has_jsrename && repl_name && minor(st.st_rdev) >= JSDEV_MINOR0 &&
-      minor(st.st_rdev) < JSDEV_MINOR0 + JSDEV_NMINOR) {
-	pthread_mutex_lock(&buf_lock);
-	if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0 &&
-	   !regexec(&jsrename, buf, 0, NULL, 0)) {
-	    js_fd = fd;
-	    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, repl_name);
+    const struct evjrconf *sec;
+    if(minor(st.st_rdev) >= JSDEV_MINOR0 &&
+       minor(st.st_rdev) < JSDEV_MINOR0 + JSDEV_NMINOR) {
+	for(sec = conf + nconf - 1; sec >= conf; sec--)
+	    if(sec->jsrename_str && sec->repl_name)
+		break;
+	if(sec >= conf) {
+	    pthread_mutex_lock(&buf_lock);
+	    if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0)
+		for(; sec >= conf; sec--)
+		    if(sec->jsrename_str && sec->repl_name &&
+		       !regexec(&sec->jsrename, buf, 0, NULL, 0)) {
+			alloc_fd(js);
+			js_fd[njsfd].fd = fd;
+			js_fd[njsfd].conf = sec;
+			njsfd++;
+		    }
+	    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, sec->repl_name);
 	}
 	pthread_mutex_unlock(&buf_lock);
 	return fd;
     }
     if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR)
 	return fd;
-    if(!is_allowed(fd, minor(st.st_rdev) - EVDEV_MINOR0)) {
+    sec = NULL;
+    if(nconf && !(sec = allowed_sec(fd, minor(st.st_rdev) - EVDEV_MINOR0))) {
 /*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
 	close(fd);
 	errno = EPERM;
 	return -1;
     }
-    if(has_match && ev_fd < 0) {
+    if(sec) {
 	fprintf(stderr, "Intercept %s (%d)\n", pathname, fd);
-	init_joy(fd);
+	init_joy(fd, sec);
     }
     return fd;
 }
@@ -1231,13 +1449,36 @@ int close(int fd)
     if(!next)
 	next = dlsym(RTLD_NEXT, "close");
     int ret = next(fd);
-    if(fd == ev_fd || fd == js_fd)
-	fprintf(stderr, "closing %d\n", fd);
-    if(fd == ev_fd)
-	ev_fd = -1;
-    if(fd == js_fd)
-	js_fd = -1;
+    int i;
+
+    pthread_mutex_lock(&buf_lock);
+#define close_fd(t) do { \
+    for(i = 0; i < n##t##fd; i++) \
+	if(t##_fd[i].fd == fd) { \
+	    memmove(t##_fd + i, t##_fd + i + 1, \
+		    (n##t##fd - i - 1) * sizeof(*t##_fd)); \
+	    n##t##fd--; \
+	    fprintf(stderr, "closing %d\n", fd); \
+	    pthread_mutex_unlock(&buf_lock); \
+	    return ret; \
+	} \
+} while(0)
+    close_fd(ev);
+    close_fd(js);
+    pthread_mutex_unlock(&buf_lock);
     return ret;
+}
+
+/* FIXME:  probably ought to lock any access due to possible movement */
+static struct evjrfd *cap_of(int fd)
+{
+    struct evjrfd *cap;
+    for(cap = ev_fd; cap < ev_fd + nevfd; cap++)
+	if(cap->fd == fd)
+	    break;
+    if(cap >= ev_fd + nevfd)
+	return NULL;
+    return cap;
 }
 
 /* this is where most of the translation takes place:  modify read events */
@@ -1250,47 +1491,47 @@ ssize_t read(int fd, void *buf, size_t count)
      * sizeof(ev).  Need to force a read of even multiple from device and
      * keep the excess read for future returns */
     /* very unlikely to ever happen */
-    static int excess_read = 0;
     struct input_event ev;
-    static char ebuf[sizeof(ev)];
     int ret_adj = 0;
-    if(fd == ev_fd && excess_read) {
-	ret_adj = count < excess_read ? count : excess_read;
-	memcpy(buf, ebuf, ret_adj);
-	if(ret_adj < excess_read)
-	    memmove(ebuf, ebuf + ret_adj, excess_read - ret_adj);
-	excess_read -= ret_adj;
+    struct evjrfd *cap = cap_of(fd);
+    if(cap && cap->excess_read) {
+	ret_adj = count < cap->excess_read ? count : cap->excess_read;
+	memcpy(buf, cap->ebuf, ret_adj);
+	if(ret_adj < cap->excess_read)
+	    memmove(cap->ebuf, cap->ebuf + ret_adj, cap->excess_read - ret_adj);
+	cap->excess_read -= ret_adj;
 	count -= ret_adj;
 	if(!count)
 	    return ret_adj;
 	buf += ret_adj;
     }
     ssize_t ret = next(fd, buf, count);
-    if(ret < 0 || fd != ev_fd)
+    if(ret < 0 || !cap)
 	return ret;
+    const struct evjrconf *sec = cap->conf;
     int nread = ret;
     while(nread > 0) {
 	if(nread < sizeof(ev)) {
-	    int todo = excess_read = sizeof(ev) - nread;
+	    int todo = cap->excess_read = sizeof(ev) - nread;
 	    while(todo > 0) {
-		int r = next(fd, ebuf + excess_read - todo, todo);
+		int r = next(fd, cap->ebuf + cap->excess_read - todo, todo);
 		if(r < 0 && errno != EINTR && errno != EAGAIN) {
-		    excess_read = 0;
+		    cap->excess_read = 0;
 		    return r;
 		}
 		if(r > 0)
 		    todo -= r;
 	    }
 	    memcpy(&ev, buf, nread);
-	    memcpy(((char *)&ev) + nread, ebuf, excess_read);
+	    memcpy(((char *)&ev) + nread, cap->ebuf, cap->excess_read);
 	} else
 	    memcpy(&ev, buf, sizeof(ev));
 	/* now ev has an event. */
 	int drop = 0, mod = 0; /* drop it?  copy it back? */
 	if(ev.type == EV_KEY) {
-	    drop = filter_bt;
-	    const struct butmap *m = &bt_map[ev.code - bt_low];
-	    if(ev.code >= bt_low && ev.code < bt_low + nbt &&
+	    drop = sec->filter_bt;
+	    const struct butmap *m = &sec->bt_map[ev.code - sec->bt_low];
+	    if(ev.code >= sec->bt_low && ev.code < sec->bt_low + sec->nbt &&
 	       (m->flags & BTFL_MAP)) {
 		if((drop = m->target == -1))
 		    ;
@@ -1307,15 +1548,15 @@ ssize_t read(int fd, void *buf, size_t count)
 		    else {
 			ev.type = EV_ABS;
 			ev.code = ax;
-			axval[ax] = ev.value = pressed ? m->onval : m->offval;
+			cap->axval[ax] = ev.value = pressed ? m->onval : m->offval;
 			mod = 1;
 		    }
 		}
 	    }
 	} else if(ev.type == EV_ABS) {
-	    drop = filter_ax;
-	    struct axmap *m = &ax_map[ev.code];
-	    if(ev.code >= 0 && ev.code < nax && (m->flags & AXFL_MAP)) {
+	    drop = sec->filter_ax;
+	    struct axmap *m = &sec->ax_map[ev.code];
+	    if(ev.code >= 0 && ev.code < sec->nax && (m->flags & AXFL_MAP)) {
 		if((drop = m->target == -1))
 		    ;
 		else if(!(m->flags & AXFL_BUTTON)) {
@@ -1382,7 +1623,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	/* Now I allow a choice */
 	/* FIXME:  add option to drop SYN_REPORT if all prior events dropped */
 	if(drop) {
-	    if(syn_drop) {
+	    if(sec->syn_drop) {
 		ev.code = SYN_DROPPED;
 		ev.type = EV_SYN;
 		ev.value = 0;
@@ -1395,15 +1636,15 @@ ssize_t read(int fd, void *buf, size_t count)
 		    buf -= sizeof(ev);
 		}
 		if(ret <= 0) {
-		    excess_read = 0;
+		    cap->excess_read = 0;
 		    return read(fd, buf, count);
 		}
 	    }
 	}
 	if(mod) {
-	    memcpy(buf, &ev, excess_read ? nread : sizeof(ev));
-	    if(excess_read)
-		memcpy(ebuf, (char *)&ev + nread, excess_read);
+	    memcpy(buf, &ev, cap->excess_read ? nread : sizeof(ev));
+	    if(cap->excess_read)
+		memcpy(cap->ebuf, (char *)&ev + nread, cap->excess_read);
 	}
 	nread -= sizeof(ev);
 	buf += sizeof(ev);
@@ -1422,7 +1663,10 @@ int ioctl(int fd, unsigned long request, ...)
 	argp = va_arg(va, void *);
 	va_end(va);
     }
-    if(fd == ev_fd)
+    
+    struct evjrfd *cap = cap_of(fd);
+    if(cap) {
+	const struct evjrconf *sec = cap->conf;
 #define cpstr(s) do { \
     if(!s) \
 	return real_ioctl(fd, request, argp); \
@@ -1442,59 +1686,59 @@ int ioctl(int fd, unsigned long request, ...)
 } while(0)
 	switch(_IOC_NR(request)) {
 	  case _IOC_NR(EVIOCGNAME(0)):
-	    cpstr(repl_name);
+	    cpstr(sec->repl_name);
 	    return len;
 	  case _IOC_NR(EVIOCGID):
-	    if(!repl_id)
+	    if(!sec->repl_id)
 		break;
-	    /* repl_id_val was filled in by init_joy() */
-	    memcpy(argp, &repl_id_val, sizeof(repl_id_val));
+	    /* cap->repl_id_val was filled in by init_joy() */
+	    memcpy(argp, &cap->repl_id_val, sizeof(cap->repl_id_val));
 	    return 0;
 	  case _IOC_NR(EVIOCGUNIQ(0)):
-	    cpstr(repl_uniq);
+	    cpstr(sec->repl_uniq);
 	    return len;
 	  case _IOC_NR(EVIOCGKEY(0)):
 	    /* this code mostly matches init_joy()'s GKEY mask initializer */
 	    /* except that it has to handle INVERT as needed */
-	    memset(&keystates, 0, sizeof(keystates));
-	    ret = real_ioctl(fd, EVIOCGKEY(sizeof(keystates_in)), keystates_in);
+	    memset(&cap->keystates, 0, sizeof(cap->keystates));
+	    ret = real_ioctl(fd, EVIOCGKEY(sizeof(cap->keystates_in)), cap->keystates_in);
 	    if(ret < 0)
 		return ret;
-	    for(i = 0; i < nbt; i++) {
-		if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) != BTFL_MAP)
+	    for(i = 0; i < sec->nbt; i++) {
+		if((sec->bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) != BTFL_MAP)
 		    continue;
-		if(!ULISSET(keystates_in, bt_low + i) == !(bt_map[i].flags & BTFL_INVERT)) {
-		    if(bt_map[i].flags & BTFL_INVERT)
-			ULCLR(keystates_in, bt_low + i);
+		if(!ULISSET(cap->keystates_in, sec->bt_low + i) == !(sec->bt_map[i].flags & BTFL_INVERT)) {
+		    if(sec->bt_map[i].flags & BTFL_INVERT)
+			ULCLR(cap->keystates_in, sec->bt_low + i);
 		    continue;
 		}
-		if(bt_map[i].target >= 0)
-		    ULSET(keystates, bt_map[i].target);
-		ULCLR(keystates_in, bt_low + i);
+		if(sec->bt_map[i].target >= 0)
+		    ULSET(cap->keystates, sec->bt_map[i].target);
+		ULCLR(cap->keystates_in, sec->bt_low + i);
 	    }
-	    for(i = 0; i < nax; i++)
-		if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == (AXFL_MAP | AXFL_BUTTON)) {
-		    if(ax_map[i].target >= 0)
-			ULCLR(keystates_in, ax_map[i].target);
-		    if(ax_map[i].ntarget >= 0)
-			ULCLR(keystates_in, ax_map[i].ntarget);
-		    if(ax_map[i].flags & AXFL_PRESSED)
-			ULSET(keystates, ax_map[i].target);
-		    if(ax_map[i].flags & AXFL_NPRESSED)
-			ULSET(keystates, ax_map[i].ntarget);
+	    for(i = 0; i < sec->nax; i++)
+		if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == (AXFL_MAP | AXFL_BUTTON)) {
+		    if(sec->ax_map[i].target >= 0)
+			ULCLR(cap->keystates_in, sec->ax_map[i].target);
+		    if(sec->ax_map[i].ntarget >= 0)
+			ULCLR(cap->keystates_in, sec->ax_map[i].ntarget);
+		    if(sec->ax_map[i].flags & AXFL_PRESSED)
+			ULSET(cap->keystates, sec->ax_map[i].target);
+		    if(sec->ax_map[i].flags & AXFL_NPRESSED)
+			ULSET(cap->keystates, sec->ax_map[i].ntarget);
 		}
-	    if(!filter_bt)
+	    if(!sec->filter_bt)
 		for(i = 0; i < MINBITS(KEY_MAX); i++)
-		    keystates[i] |= keystates_in[i];
-	    cpmem(keystates);
+		    cap->keystates[i] |= cap->keystates_in[i];
+	    cpmem(cap->keystates);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_ABS, 0)):
 	    /* filled in by init_joy() */
-	    cpmem(absout);
+	    cpmem(cap->absout);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_KEY, 0)):
 	    /* filled in by init_joy() */
-	    cpmem(keysout);
+	    cpmem(cap->keysout);
 	    return len;
 	  default:
 	    if(_IOC_NR(request) >= _IOC_NR(EVIOCGABS(0)) &&
@@ -1502,44 +1746,49 @@ int ioctl(int fd, unsigned long request, ...)
 		/* return absinfo for *target*, unlike read which uses index */
 		/* also rescale and invert as needed */
 		int ax = _IOC_NR(request) - _IOC_NR(EVIOCGABS(0));
-		for(i = 0; i < nax; i++)
-		    if((ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP &&
-		       ax_map[i].target == ax) {
+		for(i = 0; i < sec->nax; i++)
+		    if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) == AXFL_MAP &&
+		       sec->ax_map[i].target == ax) {
 			int ret = real_ioctl(fd, EVIOCGABS(i), argp);
-			if(ret >= 0 && (ax_map[i].flags & AXFL_RESCALE)) {
-			    const struct axmap *m = &ax_map[i];
+			if(ret >= 0 && (sec->ax_map[i].flags & AXFL_RESCALE)) {
+			    const struct axmap *m = &sec->ax_map[i];
 			    int value = ((struct input_absinfo *)argp)->value;
 			    memcpy(argp, &m->ai, sizeof(m->ai));
 			    value = (value - m->offthresh) * (m->ai.maximum - m->ai.minimum) / (m->onthresh - 2 * m->offthresh) + m->ai.minimum;
 			    if(m->flags & AXFL_INVERT)
 				value = m->ai.minimum + m->ai.maximum - value;
 			    ((struct input_absinfo *)argp)->value = value;
-			} else if(ret >= 0 && (ax_map[i].flags & AXFL_INVERT)) {
+			} else if(ret >= 0 && (sec->ax_map[i].flags & AXFL_INVERT)) {
 			    struct input_absinfo *ai = argp;
-			    ai->value = ax_map[i].onthresh - ai->value;
+			    ai->value = sec->ax_map[i].onthresh - ai->value;
 			}
 			return ret;
 		    }
-		for(i = 0; i < nbt; i++)
-		    if((bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == (BTFL_MAP | BTFL_AXIS) &&
-		       (bt_map[i].onax == ax || bt_map[i].offax == ax)) {
+		for(i = 0; i < sec->nbt; i++)
+		    if((sec->bt_map[i].flags & (BTFL_MAP | BTFL_AXIS)) == (BTFL_MAP | BTFL_AXIS) &&
+		       (sec->bt_map[i].onax == ax || sec->bt_map[i].offax == ax)) {
 			/* FIXME:  support rescaling? */
 			struct input_absinfo ai = {
-			    .minimum = -1, .maximum = 1, .value = axval[i]
+			    .minimum = -1, .maximum = 1, .value = cap->axval[i]
 			    /* resolution? */
 			};
 			cpmem(ai);
 			return 0;
 		    }
-		if(!filter_ax && (ax >= nax || !(ax_map[ax].flags & AXFL_MAP)))
+		if(!sec->filter_ax && (ax >= sec->nax || !(sec->ax_map[ax].flags & AXFL_MAP)))
 		    return real_ioctl(fd, request, argp);
 		errno = EINVAL;
 		return -1;
 	    }
 	}
-    else if(fd == js_fd && _IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
-	cpstr(repl_name);
-	return len;
+    } else if(_IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
+	/* FIXME:  probably ought to lock in case of movement */
+	struct jrfd *jn;
+	for(jn = js_fd; jn < js_fd + njsfd; jn++)
+	    if(jn->fd == fd) {
+		cpstr(jn->conf->repl_name);
+		return len;
+	    }
     }
     return real_ioctl(fd, request, argp);
 }
