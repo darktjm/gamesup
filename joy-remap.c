@@ -214,9 +214,6 @@
  *
  */
 
-/* FIXME: check all integer axis and key nubers below ABS_MAX/KEY_MAX */
-/* FIXME: support % instead of values for axis->key */
-
 /* for RTLD_NEXT */
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -396,6 +393,7 @@ static int bnum(char **s)
     if(!**s)
 	return -1;
     if(isdigit(**s))
+	/* FIXME: restore *s and return -1 if value > KEY_MAX */
 	return strtol(*s, (char **)s, 0);
     const char *e;
     for(e = *s; isalnum(*e); e++);
@@ -556,14 +554,18 @@ static void init(void)
 	*e = 0;
 	switch(kw - kws) {
 	  case KW_SECTION:
+	    /* is it a continuation? */
 	    for(i = 0; i < nconf; i++)
 		if((!*ln && !conf[i].name) ||
 		   (conf[i].name && !strcmp(ln, conf[i].name)))
 		    break;
 	    if(i < nconf) {
+		/* yes */
 		sec = &conf[i];
 		has_conf = 2; /* don't allow USE */
 	    } else if(i == 1 && !sec->name && has_conf == 1) {
+		/* no, and it's the first section w/ no unnamed entries */
+		/* so replace the 1st section */
 		if(*ln) {
 		    sec->name = strdup(ln);
 		    if(!sec->name) {
@@ -572,6 +574,7 @@ static void init(void)
 		    }
 		}
 	    } else {
+		/* no, and it doesn't replace the first unnamed */
 		/* yeah, one at a time, rather than in blocks.  too lazy */
 		sec = conf;
 		conf = realloc(conf, ++nconf * sizeof(*conf));
@@ -589,9 +592,12 @@ static void init(void)
 			goto err;
 		    }
 		}
+		has_conf = 1;
 	    }
 	    break;
 	  case KW_USE:
+	    if(has_conf != 2)
+		abort_parse("use must be first in a section");
 	    for(i = 0; i < nconf; i++)
 		if((!*ln && !conf[i].name) ||
 		   (conf[i].name && !strcmp(ln, conf[i].name)))
@@ -600,8 +606,6 @@ static void init(void)
 		abort_parse("unknown section");
 	    if(i == sec - conf)
 		abort_parse("can't include self");
-	    if(has_conf != 2)
-		abort_parse("use must be first in a section");
 	    free(sec->ax_map);
 	    free(sec->bt_map);
 	    memcpy((char *)sec + offsetof(struct evjrconf, bt_low),
@@ -630,15 +634,16 @@ static void init(void)
 	regfree(&sec->type); \
 	goto err; \
     } \
-    sec->type##_str = strdup(ln); \
+    sec->type##_str = strdup(s); \
     if(!sec->type##_str) { \
-	perror(ln); \
+	perror(s); \
 	regfree(&sec->type); \
 	goto err; \
     } \
 } while(0)
 #define dupre(r) do { \
-    comp_regex(conf[i].r##_str, r); \
+    if(conf[i].r##_str) \
+	comp_regex(conf[i].r##_str, r); \
 } while(0)
 	    dupre(match);
 	    dupre(reject);
@@ -664,22 +669,23 @@ static void init(void)
 	    sec->filter_dev = 1;
 	    break;
 	  case KW_NAME:
-	    sec->repl_name = strdup(ln);
-	    if(!sec->repl_name)
-		abort_parse("name");
+#define store_repl(w) do { \
+    if(sec->repl_##w) \
+	free(sec->repl_##w); \
+    sec->repl_##w = strdup(ln); \
+    if(!sec->repl_##w) \
+	abort_parse(#w); \
+} while(0)
+	    store_repl(name);
 	    break;
 	  case KW_JSRENAME:
 	    parse_regex(jsrename);
 	    break;
 	  case KW_ID:
-	    sec->repl_id = strdup(ln);
-	    if(!sec->repl_id)
-		abort_parse("id");
+	    store_repl(id);
 	    break;
 	  case KW_UNIQ:
-	    sec->repl_uniq = strdup(ln);
-	    if(!sec->repl_uniq)
-		abort_parse("uniq");
+	    store_repl(uniq);
 	    break;
 	  case KW_AXES:
 	    /* I guess duplicates are OK here */
@@ -709,6 +715,7 @@ static void init(void)
 	    while(*ln) {
 		int a = -1, t = -1;
 		if(*ln == '!' && isdigit(ln[1])) {
+		    /* FIXME: abort if value > ABS_MAX */
 		    a = strtol(ln + 1, &ln, 0);
 		    if(*ln && *ln != ',')
 			abort_parse("invalid !");
@@ -722,7 +729,8 @@ static void init(void)
 		    continue;
 		}
 		if(isdigit(*ln))
-		    a = t = strtol(ln, (char **)&ln, 0); /* yeah, this could overflow.  Who cares? */
+		    /* FIXME: abort if value > ABS_MAX */
+		    a = t = strtol(ln, (char **)&ln, 0);
 		if(*ln != '=') {
 		    /* skip if target already used */
 		    next_auto_axis;
@@ -744,6 +752,7 @@ static void init(void)
 		    invert = AXFL_INVERT;
 		}
 		if(isdigit(*ln))
+		    /* FIXME: abort if value > ABS_MAX */
 		    a = strtol(ln, (char **)&ln, 0);
 		if(a >= 0) {
 		    if(sec->nax <= a)
@@ -753,6 +762,7 @@ static void init(void)
 		    sec->ax_map[a].flags = AXFL_MAP | invert;
 		    sec->ax_map[a].target = t < 0 ? sec->auto_ax : t;
 		    if(*ln == '-' && isdigit(ln[1])) {
+			/* FIXME: abort if value > ABS_MAX */
 			int b = strtol(ln + 1, (char **)&ln, 0);
 			if(b < a)
 			    abort_parse("invalid range");
@@ -869,6 +879,7 @@ static void init(void)
 	    while(*ln) {
 		if(!isdigit(*ln))
 		    abort_parse("invalid rescale axis");
+		/* FIXME: abort if value > ABS_MAX */
 		int t = strtol(ln, &ln, 0), a;
 		if(*ln++ != '=')
 		    abort_parse("rescale w/o =");
@@ -905,6 +916,8 @@ static void init(void)
 	    }
 	    break;
 	  case KW_PASS_AX:
+	    if(*ln)
+		abort_parse("pass_ax takes no parameter");
 	    sec->filter_ax = -1;
 	    break;
 	  case KW_BUTTONS:
@@ -999,7 +1012,9 @@ static void init(void)
 		} else if(tolower(*ln) == 'a' && tolower(ln[1]) == 'x' && isdigit(ln[2])) {
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
 			t = sec->auto_bt;
+		    /* FIXME: abort if value > ABS_MAX */
 		    a = strtol(ln + 2, (char **)&ln, 0);
+		    /* FIXME: support % instead of values */
 		    int l, h;
 		    if(*ln != '>' || !isdigit(ln[1]))
 			abort_parse("invalid axis-to-button");
@@ -1037,9 +1052,13 @@ static void init(void)
 	    }
 	    break;
 	  case KW_PASS_BT:
+	    if(*ln)
+		abort_parse("pass_bt takes no parameter");
 	    sec->filter_bt = -1;
 	    break;
 	  case KW_SYN_DROP:
+	    if(*ln)
+		abort_parse("syn_drop takes no parameter");
 	    sec->syn_drop = 1;
 	    break;
 	}
@@ -1096,14 +1115,17 @@ static void init(void)
 	/* even though technically the first device may be a gamepad due to
 	 * permissions, I'm forcing you to have a pattern */
 	/* if this is just used to rename joysticks, it still needs a dummy pattern */
-	if(!sec->match_str)
+	if(!sec->match_str) {
+	    fprintf(stderr, "section %s: ", sec->name ? sec->name : "[unnamed]");
 	    abort_parse("match pattern required");
+	}
     }
     free(cfg);
+    cfg = NULL;
     const char *ensec_s = getenv("EV_JOY_REMAP_ENABLE");
     if(ensec_s && *ensec_s) {
 	regex_t re;
-	if((ret = regcomp(&re, ln, REG_EXTENDED | REG_NOSUB))) {
+	if((ret = regcomp(&re, ensec_s, REG_EXTENDED | REG_NOSUB))) {
 	    regerror(ret, &re, buf, sizeof(buf));
 	    fprintf(stderr, "EV_JOY_REMAP_ENABLE pattern error: %.*s\n", (int)sizeof(buf), buf);
 	    regfree(&re);
@@ -1114,21 +1136,22 @@ static void init(void)
 		free_conf(&conf[i]);
 		memmove(conf + i, conf + i + 1, (nconf - i - 1) * sizeof(*conf));
 		--i;
+		--nconf;
 	    }
 	regfree(&re);
 	if(!nconf) {
-	    fputs("No sections enabled for remapper; disabled", stderr);
+	    fputs("No sections enabled for remapper; disabled\n", stderr);
 	    return;
 	}
     }
     fputs("Installed event device remapper\n", stderr);
     return;
 err:
-    for(sec = conf; nconf; nconf--, sec++) {
+    for(sec = conf; nconf; nconf--, sec++)
 	free_conf(sec);
-    }
     free(conf);
-    free(cfg);
+    if(cfg)
+	free(cfg);
 }
 
 static void free_conf(struct evjrconf *sec)
@@ -1371,7 +1394,6 @@ static struct evjrconf *allowed_sec(int fd, int evno)
 static int ev_open(const char *pathname, int fd)
 {
     struct stat st;
-    /* FIXME:  support multiple simultaneously open devices */
     if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR)
 	return fd;
     const struct evjrconf *sec;
@@ -1400,6 +1422,12 @@ static int ev_open(const char *pathname, int fd)
 	return fd;
     sec = NULL;
     if(nconf && !(sec = allowed_sec(fd, minor(st.st_rdev) - EVDEV_MINOR0))) {
+	/* if any enabled sections filter, filter. */
+	for(sec = conf; sec < conf + nconf; sec++)
+	    if(sec->filter_dev)
+		break;
+	if(sec == conf + nconf)
+	    return fd;
 /*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
 	close(fd);
 	errno = EPERM;
