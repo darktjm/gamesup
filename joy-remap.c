@@ -30,6 +30,7 @@
  * in the current directory, ~/.config, or /etc, whichever is found first.
  * Failure to find any file, or failure to parse the file it found will
  * result in an error message and no attempt at device interception.
+ *
  * Keywords are:
  *
  * match <pattern>
@@ -136,7 +137,7 @@
  *   actually has this button).  See /usr/include/linux/input-event-codes.h
  *   for codes.  Just a plain number* or range (separated by -) of
  *   numbers, optionally preceeded by a - to invert the state, maps to the
- *   next unmapped output, starting with 286 (BTN_A).  Just like with axes,
+ *   next unmapped output, starting with 0x130 (BTN_A).  Just like with axes,
  *   you can also use = to specify the output.  Axes can be mapped
  *   to buttons, as well.  Using ax<num>><num><<num> instead of an input
  *   button code says that when the axis specified by the first number has
@@ -168,6 +169,10 @@
  *   explicilty mapped are ignored.  This passes through any inputs not
  *   conflicting with outputs through.
  *
+ * syn_drop
+ *   When dropping events, rather than just removing them from the stream,
+ *   send SYN_DROP events.
+ * 
  * Note that for button-to-axis and axis-to-button mappings, the button press
  * or release event will not occur unless the state changes.  All buttons
  * are assumed to be initially released, and all axes are assumed to be
@@ -184,6 +189,9 @@
  *
  * Build with: gcc -s -Wall -O2 -shared -fPIC -o joy-remap.{so,c} -ldl
  * for debug:  gcc -g -Wall -shared -fPIC -o joy-remap.{so,c} -ldl
+ * Use clang instead of gcc if you prefer.  Don't bother with debug; gdb
+ * has a real hard time debugging LD_PRELOADs (or maybe I'm missing some
+ * special magic).
  *
  */
 
@@ -240,6 +248,8 @@ static struct axmap {
                               /* defaults to no, even if axis says otherwise */
 #define AXFL_NPRESSED (1<<6)  /* is the neg button pressed? */
 
+/* macros for accessing bits in arrays of unsigned longs */
+/* stupid kernel doesn't export its bitops, so everybody has to reimplement */
 /* these probably only work on little-endian, but that's ok for now */
 #define ULBITS (sizeof(unsigned long)*8)
 #define MINBITS(x) (((x) + ULBITS - 1)/ULBITS)
@@ -271,11 +281,12 @@ static unsigned long keysout[MINBITS(KEY_MAX)],  /* sent GBITS(EV_KEY) */
                      keystates[MINBITS(KEY_MAX)], /* sent GKEY */
                      keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
 
-static regex_t allow, reject, jsrename; /* compiled matching regexes */
-static int has_allow = 0, has_reject = 0, has_jsrename = 0, filter_dev = 0;
+static regex_t match, reject, jsrename; /* compiled matching regexes */
+static int has_match = 0, has_reject = 0, has_jsrename = 0, filter_dev = 0;
 
 static char *repl_name = NULL, *repl_id = NULL, *repl_uniq = NULL;
 static struct input_id repl_id_val;
+static int syn_drop = 0;
 
 static char buf[1024]; /* generic large buffer to reduce stack usage */
 static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER; /* in case of threads */
@@ -333,6 +344,8 @@ static int bncmp(const void *_a, const void *_b)
     return 0;
 }
 
+/* interpret string of alnum as button code */
+/* advances s if successful; returns -1 otherwise */
 /* technically s could be const char **, but then compiler complains too often */
 static int bnum(char **s)
 {
@@ -365,12 +378,13 @@ static const char * const kws[] = {
     "pass_buttons",
     "reject",
     "rescale",
+    "syn_drop",
     "uniq"
 };
 
 enum kw {
     KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_JSRENAME, KW_MATCH, KW_NAME,
-    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_UNIQ
+    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_SYN_DROP, KW_UNIQ
 };
 
 static int kwcmp(const void *_a, const void *_b)
@@ -382,6 +396,7 @@ static int kwcmp(const void *_a, const void *_b)
 /* parse config file */
 /* is this too early for file I/O?  apparently not */
 /* dlopen() docs say this must be exported, but again, apparently not */
+/* note that this attribute works with clang as well */
 __attribute__((constructor))
 static void init(void)
 {
@@ -482,26 +497,21 @@ static void init(void)
 	int ret;
 	switch(kw - kws) {
 	  case KW_MATCH:
-	    if(has_allow)
-		abort_parse("duplicate match");
-	    if((ret = regcomp(&allow, ln, REG_EXTENDED | REG_NOSUB))) {
-		regerror(ret, &allow, buf, sizeof(buf));
-		fprintf(stderr, "match pattern error: %.*s\n", (int)sizeof(buf), buf);
-		regfree(&allow);
-		goto err;
-	    } else
-		has_allow = 1;
+#define parse_regex(type) do { \
+    if(has_##type) \
+	abort_parse("duplicate " #type); \
+    if((ret = regcomp(&type, ln, REG_EXTENDED | REG_NOSUB))) { \
+	regerror(ret, &type, buf, sizeof(buf)); \
+	fprintf(stderr, #type " pattern error: %.*s\n", (int)sizeof(buf), buf); \
+	regfree(&type); \
+	goto err; \
+    } else \
+	has_##type = 1; \
+} while(0)
+	    parse_regex(match);
 	    break;
 	  case KW_REJECT:
-	    if(has_reject)
-		abort_parse("duplicate reject");
-	    if((ret = regcomp(&reject, ln, REG_EXTENDED | REG_NOSUB))) {
-		regerror(ret, &reject, buf, sizeof(buf));
-		fprintf(stderr, "reject pattern error: %.*s\n", (int)sizeof(buf), buf);
-		regfree(&reject);
-		goto err;
-	    } else
-		has_reject = 1;
+	    parse_regex(reject);
 	    break;
 	  case KW_FILTER:
 	    if(*ln)
@@ -516,15 +526,7 @@ static void init(void)
 		abort_parse("name");
 	    break;
 	  case KW_JSRENAME:
-	    if(has_jsrename)
-		abort_parse("duplicate jsrename");
-	    if((ret = regcomp(&jsrename, ln, REG_EXTENDED | REG_NOSUB))) {
-		regerror(ret, &jsrename, buf, sizeof(buf));
-		fprintf(stderr, "jsrename pattern error: %.*s\n", (int)sizeof(buf), buf);
-		regfree(&jsrename);
-		goto err;
-	    } else
-		has_jsrename = 1;
+	    parse_regex(jsrename);
 	    break;
 	  case KW_ID:
 	    if(repl_id)
@@ -898,6 +900,9 @@ static void init(void)
 	  case KW_PASS_BT:
 	    filter_bt = -1;
 	    break;
+	  case KW_SYN_DROP:
+	    syn_drop = 1;
+	    break;
 	}
 	*e = c;
 	ln = e;
@@ -952,7 +957,7 @@ static void init(void)
     /* even though technically the first device may be a gamepad due to
      * permissions, I'm forcing you to have a pattern */
     /* if this is just used to rename joysticks, it still needs a dummy pattern */
-    if(!has_allow)
+    if(!has_match)
 	abort_parse("match pattern required");
     free(cfg);
     fputs("Installed event device remapper\n", stderr);
@@ -960,9 +965,9 @@ static void init(void)
 err:
     free(ax_map);
     free(bt_map);
-    if(has_allow)
-	regfree(&allow);
-    has_allow = 0;
+    if(has_match)
+	regfree(&match);
+    has_match = 0;
     if(has_reject)
 	regfree(&reject);
     if(repl_uniq)
@@ -1133,14 +1138,14 @@ static int is_allowed(int fd, int evno)
     /* this is small enough to be local, but we're locking for buf anyway */
     static struct input_id id;
 
-    if(!has_allow)
+    if(!has_match)
 	return 1;
     /* the lock is for buf & id */
     pthread_mutex_lock(&buf_lock);
     if(real_ioctl(fd, EVIOCGNAME(sizeof(buf)), buf) < 0)
 	strcpy(buf, "ERROR: Device name unavailable");
     int rej = has_reject && !regexec(&reject, buf, 0, NULL, 0),
-	nmok = !rej && !regexec(&allow, buf, 0, NULL, 0);
+	nmok = !rej && !regexec(&match, buf, 0, NULL, 0);
     if(!rej) {
 	if(real_ioctl(fd, EVIOCGID, &id) < 0)
 	    memset(&id, 0, sizeof(id));
@@ -1150,7 +1155,7 @@ static int is_allowed(int fd, int evno)
 	if(rej)
 	    nmok = 0;
 	else if(!nmok)
-	    nmok = !regexec(&allow, buf, 0, NULL, 0);
+	    nmok = !regexec(&match, buf, 0, NULL, 0);
     }
     pthread_mutex_unlock(&buf_lock);
     return nmok;
@@ -1182,7 +1187,7 @@ static int ev_open(const char *pathname, int fd)
 	errno = EPERM;
 	return -1;
     }
-    if(has_allow && ev_fd < 0) {
+    if(has_match && ev_fd < 0) {
 	fprintf(stderr, "Intercept %s (%d)\n", pathname, fd);
 	init_joy(fd);
     }
@@ -1346,6 +1351,9 @@ ssize_t read(int fd, void *buf, size_t count)
 		    /* sending multiple events will require intercepting
 		     * poll(2), select(2), and probably others in the
 		     * same family (ppoll, pselect, epoll?, aliases) */
+		    /* the only time it's easy is if the buffer size is
+		     * big enough to just insert them, or if we can rely
+		     * on the program looping until 0 returned */
 		    /* most devices send lots of axis events, so probably
 		     * ntog will eventually be honored */
 		    if(tog) {
@@ -1363,14 +1371,34 @@ ssize_t read(int fd, void *buf, size_t count)
 	}
 	/* the best way to drop the event would be to remove it entirely.
 	 * Is this safe?  Maybe.  If the program expects data, and insists
-	 * on it, it may crash.  Instead, for now, I convert to SYN_DROPPED.
-	 * Is this safe?  not if SYN is dropped via EVIOCSMASK, or if the
-	 * program has special behavior on seeing SYN_DROPPED events. */
+	 * on it, it may crash.  Also, if removing an event reduces the
+	 * return length to 0, another read() should be done on the device.
+	 * It probably doesn't matter if the device is blocking or not,
+	 * since the behavior will mostly match what the program expects.
+	 * Well, except for the now superfluous SYN_REPORT events. */
+	/* I used to instead convert to SYN_DROPPED.  Is this safe?  not
+	 * if SYN is dropped via EVIOCSMASK, or if the program has special
+	 * behavior on seeing SYN_DROPPED events. */
+	/* Now I allow a choice */
+	/* FIXME:  add option to drop SYN_REPORT if all prior events dropped */
 	if(drop) {
-	    ev.code = SYN_DROPPED;
-	    ev.type = EV_SYN;
-	    ev.value = 0;
-	    mod = 1;
+	    if(syn_drop) {
+		ev.code = SYN_DROPPED;
+		ev.type = EV_SYN;
+		ev.value = 0;
+		mod = 1;
+	    } else {
+		mod = 0;
+		ret -= sizeof(ev);
+		if(nread > sizeof(ev)) {
+		    memmove(buf, buf + sizeof(ev), nread - sizeof(ev));
+		    buf -= sizeof(ev);
+		}
+		if(ret <= 0) {
+		    excess_read = 0;
+		    return read(fd, buf, count);
+		}
+	    }
 	}
 	if(mod) {
 	    memcpy(buf, &ev, excess_read ? nread : sizeof(ev));
