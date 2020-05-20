@@ -81,7 +81,7 @@
  * axes <list>
  *   This remaps absolute axes.  Relative axes are not supported.  It is
  *   a comma-separated list of input axes to map (regardless of whether or
- *   not the device actually has this axis).  Just a plain decimal number
+ *   not the device actually has this axis).  Just a plain number*
  *   or range of numbers (separated by -), optionally preceeded by a -
  *   to invert the values, maps to the next unmapped output axis number,
  *   starting with 0.  A blank entry skips an unmapped output for this
@@ -108,6 +108,7 @@
  *   preceeding (un)mapping.  If this keyword is missing, any axes not
  *   mapped to buttons are passed through as is.  Otherwise, any inputs not
  *   explicitly mapped are ignored.
+ *   * numbers are C-style:  decimal, octal (0 prefix), hexadecimal (0x prefix)
  *
  * rescale <list>
  *   Change the absinfo parameters for the given output axes.  Multiple
@@ -133,7 +134,7 @@
  *   This remaps buttons (key events).  It is a comma-separated list of input
  *   button (key) codes to remap (regardless of whether or not the device
  *   actually has this button).  See /usr/include/linux/input-event-codes.h
- *   for codes.  Just a plain decimal number or range (separated by -) of
+ *   for codes.  Just a plain number* or range (separated by -) of
  *   numbers, optionally preceeded by a - to invert the state, maps to the
  *   next unmapped output, starting with 286 (BTN_A).  Just like with axes,
  *   you can also use = to specify the output.  Axes can be mapped
@@ -154,12 +155,13 @@
  *     PINKIE = 293, BASE = 294, BASE2 = 295, BASE3 = 296, BASE4 = 297,
  *     BASE5 = 298, BASE6 = 299, DEAD = 303
  *   Note that most controllers do not have C or Z buttons.  Older versions
- *   of the hid_sony driver issued joystick events instead of A/B/X/Y.
- *   Also, some controllers only use axes for TL2 and TR2.  My other
- *   remappers support hex and symbolic names (using the C preprocessor with
- *   input-event-codes.h), but not this time.  As a compromise, the
- *   above-listed names are supported, case-insensitive (without the BTN_
- *   prefix, as shown).
+ *   of the hid_sony driver issued joystick events (THUMB/THUMB2/TOP/TRIGGER
+ *   instead of A/B/X/Y).  Also, some controllers only use axes for TL2 and
+ *   TR2.  My other remappers support hex and symbolic names (using the C
+ *   preprocessor with input-event-codes.h), but not this time.  As a
+ *   compromise, the above-listed names are supported, case-insensitive
+ *   (without the BTN_ prefix, as shown).
+ *   * numbers are C-style:  decimal, octal (0 prefix), hexadecimal (0x prefix)
  *
  * pass_buttons
  *   Normally, if there are any buttons keywords at all, any inputs not
@@ -337,7 +339,7 @@ static int bnum(char **s)
     if(!**s)
 	return -1;
     if(isdigit(**s))
-	return strtol(*s, (char **)s, 10);
+	return strtol(*s, (char **)s, 0);
     const char *e;
     for(e = *s; isalnum(*e); e++);
     struct bname str = { *s, e - *s}; /* code is length */
@@ -566,7 +568,7 @@ static void init(void)
 	    while(*ln) {
 		int a = -1, t = -1;
 		if(*ln == '!' && isdigit(ln[1])) {
-		    a = strtol(ln + 1, &ln, 10);
+		    a = strtol(ln + 1, &ln, 0);
 		    if(*ln && *ln != ',')
 			abort_parse("invalid !");
 		    if(nax <= a)
@@ -579,7 +581,7 @@ static void init(void)
 		    continue;
 		}
 		if(isdigit(*ln))
-		    a = t = strtol(ln, (char **)&ln, 10); /* yeah, this could overflow.  Who cares? */
+		    a = t = strtol(ln, (char **)&ln, 0); /* yeah, this could overflow.  Who cares? */
 		if(*ln != '=') {
 		    /* skip if target already used */
 		    next_auto_axis;
@@ -601,7 +603,7 @@ static void init(void)
 		    invert = AXFL_INVERT;
 		}
 		if(isdigit(*ln))
-		    a = strtol(ln, (char **)&ln, 10);
+		    a = strtol(ln, (char **)&ln, 0);
 		if(a >= 0) {
 		    if(nax <= a)
 			nax = a + 1;
@@ -610,7 +612,7 @@ static void init(void)
 		    ax_map[a].flags = AXFL_MAP | invert;
 		    ax_map[a].target = t < 0 ? auto_ax : t;
 		    if(*ln == '-' && isdigit(ln[1])) {
-			int b = strtol(ln + 1, (char **)&ln, 10);
+			int b = strtol(ln + 1, (char **)&ln, 0);
 			if(b < a)
 			    abort_parse("invalid range");
 			if(nax <= b)
@@ -726,7 +728,7 @@ static void init(void)
 	    while(*ln) {
 		if(!isdigit(*ln))
 		    abort_parse("invalid rescale axis");
-		int t = strtol(ln, &ln, 10), a;
+		int t = strtol(ln, &ln, 0), a;
 		if(*ln++ != '=')
 		    abort_parse("rescale w/o =");
 		for(a = 0; a < nax; a++)
@@ -745,15 +747,15 @@ static void init(void)
 		}
 		ax_map[a].flags |= AXFL_RESCALE;
 		memset(&ax_map[a].ai, 0, sizeof(ax_map[a].ai));
-		ax_map[a].ai.minimum = strtol(ln, &ln, 10);
+		ax_map[a].ai.minimum = strtol(ln, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.maximum = strtol(ln + 1, &ln, 10);
+		    ax_map[a].ai.maximum = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.fuzz = strtol(ln + 1, &ln, 10);
+		    ax_map[a].ai.fuzz = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.flat = strtol(ln + 1, &ln, 10);
+		    ax_map[a].ai.flat = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
-		    ax_map[a].ai.resolution = strtol(ln + 1, &ln, 10);
+		    ax_map[a].ai.resolution = strtol(ln + 1, &ln, 0);
 		if(*ln && *ln != ',')
 		    abort_parse("invalid rescale entry");
 		if(ax_map[a].ai.maximum <= ax_map[a].ai.minimum)
@@ -856,14 +858,14 @@ static void init(void)
 		} else if(tolower(*ln) == 'a' && tolower(ln[1]) == 'x' && isdigit(ln[2])) {
 		    if(t < 0) /* we don't need this flag any more as there are no ranges */
 			t = auto_bt;
-		    a = strtol(ln + 2, (char **)&ln, 10);
+		    a = strtol(ln + 2, (char **)&ln, 0);
 		    int l, h;
 		    if(*ln != '>' || !isdigit(ln[1]))
 			abort_parse("invalid axis-to-button");
-		    l = strtol(ln + 1, (char **)&ln, 10);
+		    l = strtol(ln + 1, (char **)&ln, 0);
 		    if(*ln != '<' || !isdigit(ln[1]))
 			abort_parse("invalid axis-to-button");
-		    h = strtol(ln + 1, (char **)&ln, 10);
+		    h = strtol(ln + 1, (char **)&ln, 0);
 		    if(l == h)
 			abort_parse("invalid axis-to-button thresholds");
 		    if(a >= nax)
