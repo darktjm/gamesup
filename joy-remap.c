@@ -210,8 +210,8 @@
  * for debug:  gcc -g -Wall -shared -fPIC -o joy-remap.{so,c} -ldl
  * Use clang instead of gcc if you prefer.  Don't bother with debug; gdb
  * has a real hard time debugging LD_PRELOADs (or maybe I'm missing some
- * special magic).
- *
+ * special magic).  At least crashes can be debugged using the core file.
+ * Crashing within gdb confuses gdb, and setting breakpoints doesn't work.
  */
 
 /* for RTLD_NEXT */
@@ -310,7 +310,8 @@ static int nconf = 0;
 
 /* captured fds and the config that captured them */
 /* also other per-device info */
-static struct evjrfd {
+static struct evfdcap {
+    struct evfdcap *next; /* linked list is less thread-unsafe */
     const struct evjrconf *conf;
     unsigned long absout[MINBITS(ABS_MAX)]; /* sent GBITS(EV_ABS) */
     int axval[ABS_MAX]; /* value for key-generated axes */
@@ -322,12 +323,12 @@ static struct evjrfd {
     int excess_read;
     char ebuf[sizeof(struct input_event)];
     int fd;
-} *ev_fd;
-static struct jrfd {
+} *ev_fd = NULL, *free_ev_fd = NULL;
+static struct jsfdcap {
+    struct jsfdcap *next; /* linked list is less thread-unsafe */
     const struct evjrconf *conf;
     int fd;
-} *js_fd;
-static int nevfd = 0, njsfd = 0, maxevfd = 0, maxjsfd = 0;
+} *js_fd = NULL, *free_js_fd = NULL;
 
 static char buf[1024]; /* generic large buffer to reduce stack usage */
 static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER; /* in case of threads */
@@ -1193,37 +1194,43 @@ static int real_ioctl(int fd, unsigned long request, ...)
     return next(fd, request, argp);
 }
 
+/* I also use close() sometimes, so bypass intercept */
+static int real_close(int fd)
+{
+    static int (*next)(int) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "close");
+    return next(fd);
+}
+
 /* capture event device and prepare ioctl returns */
 static void init_joy(int fd, const struct evjrconf *sec)
 {
     /* could use local lock, but it needs to be shared with close() */
     pthread_mutex_lock(&buf_lock);
-#define alloc_fd(t) do { \
-    if(max##t##fd == n##t##fd) { \
-	if(!max##t##fd) { \
-	    t##_fd = malloc(sizeof(*t##_fd)); \
-	    if(!t##_fd) { \
-		perror("fd tracker"); \
-		nconf = 0; \
-	    } \
-	    max##t##fd = 1; \
-	} else { \
-	    void *o = t##_fd; \
-	    max##t##fd *= 2; \
-	    t##_fd = realloc(t##_fd, max##t##fd * sizeof(*t##_fd)); \
-	    if(!t##_fd) { \
-		t##_fd = o; \
-		perror("fd tracker"); \
-		nconf = 0; \
-	    } \
+    struct evfdcap *cap;
+#define alloc_fd(r, t, f, s) do { \
+    if(!(r = free_##t##_fd)) { \
+	r = malloc(sizeof(*r)); \
+	if(!r) { \
+	    perror("fd tracker"); \
+	    nconf = 0; \
 	} \
+    } else { \
+	/* critical section w/ r assignment, protected by buf_lock */ \
+	free_##t##_fd = r->next; \
+    } \
+    if(r) { \
+	memset(r, 0, sizeof(*r)); \
+	r->fd = f; \
+	r->conf = s; \
     } \
 } while(0)
-    alloc_fd(ev);
-    struct evjrfd *cap = ev_fd + nevfd;
-    memset(cap, 0, sizeof(*cap));
-    cap->fd = fd;
-    cap->conf = sec;
+    alloc_fd(cap, ev, fd, sec);
+    if(!cap) {
+	pthread_mutex_unlock(&buf_lock);
+	return;
+    }
     /* set up ID from string */
     if(sec->repl_id) {
 	real_ioctl(fd, EVIOCGID, &cap->repl_id_val);
@@ -1250,6 +1257,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	    free(sec->repl_id);
 	    sec->repl_id = NULL;
 #endif
+	    goto err;
 	}
     }
     /* adjust button/axis mappings */
@@ -1261,8 +1269,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
     if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(cap->keystates)), cap->keystates) < 0 ||
        real_ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absin)), absin) < 0) {
 	perror("init_joy");
-	pthread_mutex_unlock(&buf_lock);
-	return;
+	goto err;
     }
     int i;
     /* add keys that are mapped if src is present */
@@ -1316,8 +1323,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	    struct input_absinfo ai;
 	    if(real_ioctl(fd, EVIOCGABS(i), &ai) < 0) {
 		perror("init_joy");
-		pthread_mutex_unlock(&buf_lock);
-		return;
+		goto err;
 	    }
 	    sec->ax_map[i].offthresh = ai.minimum;
 	    sec->ax_map[i].onthresh = ai.minimum + ai.maximum;
@@ -1350,7 +1356,15 @@ static void init_joy(int fd, const struct evjrconf *sec)
     if(!sec->filter_ax)
 	for(i = 0; i < MINBITS(ABS_MAX); i++)
 	    cap->absout[i] |= absin[i];
-    nevfd++;
+    /* critical section, protected well enough by buf_lock */
+    cap->next = ev_fd;
+    ev_fd = cap;
+    pthread_mutex_unlock(&buf_lock);
+    return;
+err:
+    /* critical section, protected by buf_lock */
+    cap->next = free_ev_fd;
+    free_ev_fd = cap;
     pthread_mutex_unlock(&buf_lock);
 }
 
@@ -1404,18 +1418,24 @@ static int ev_open(const char *pathname, int fd)
 		break;
 	if(sec >= conf) {
 	    pthread_mutex_lock(&buf_lock);
-	    if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0)
+	    if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0) {
 		for(; sec >= conf; sec--)
 		    if(sec->jsrename_str && sec->repl_name &&
 		       !regexec(&sec->jsrename, buf, 0, NULL, 0)) {
-			alloc_fd(js);
-			js_fd[njsfd].fd = fd;
-			js_fd[njsfd].conf = sec;
-			njsfd++;
+			struct jsfdcap *jn;
+			alloc_fd(jn, js, fd, sec);
+			if(jn) { /* else error/aborting cap */
+			    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, sec->repl_name);
+			    /* critical section, protected well enough by buf_lock */
+			    jn->next = js_fd;
+			    js_fd = jn;
+			}
+			break;
 		    }
-	    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, sec->repl_name);
+	    } else
+		perror("jsname");
+	    pthread_mutex_unlock(&buf_lock);
 	}
-	pthread_mutex_unlock(&buf_lock);
 	return fd;
     }
     if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR)
@@ -1429,7 +1449,7 @@ static int ev_open(const char *pathname, int fd)
 	if(sec == conf + nconf)
 	    return fd;
 /*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
-	close(fd);
+	real_close(fd);
 	errno = EPERM;
 	return -1;
     }
@@ -1473,40 +1493,35 @@ int open64(const char *pathname, int flags, ...)
 
 int close(int fd)
 {
-    static int (*next)(int) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "close");
-    int ret = next(fd);
-    int i;
-
     pthread_mutex_lock(&buf_lock);
 #define close_fd(t) do { \
-    for(i = 0; i < n##t##fd; i++) \
-	if(t##_fd[i].fd == fd) { \
-	    memmove(t##_fd + i, t##_fd + i + 1, \
-		    (n##t##fd - i - 1) * sizeof(*t##_fd)); \
-	    n##t##fd--; \
+    struct t##fdcap **p; \
+    for(p = &t##_fd; *p; p = &(*p)->next) \
+	if((*p)->fd == fd) { \
+	    struct t##fdcap *c = *p; \
+	    /* critical section, protected by buf_lock */ \
+	    *p = c->next; \
+	    /* critical section, protected by buf_lock */ \
+	    c->next = free_##t##_fd; \
+	    free_##t##_fd = c; \
 	    fprintf(stderr, "closing %d\n", fd); \
+	    /* skip js search if this is ev */ \
 	    pthread_mutex_unlock(&buf_lock); \
-	    return ret; \
+	    return real_close(fd); \
 	} \
 } while(0)
     close_fd(ev);
     close_fd(js);
     pthread_mutex_unlock(&buf_lock);
-    return ret;
+    return real_close(fd);
 }
 
-/* FIXME:  probably ought to lock any access due to possible movement */
-static struct evjrfd *cap_of(int fd)
+static struct evfdcap *cap_of(int fd)
 {
-    struct evjrfd *cap;
-    for(cap = ev_fd; cap < ev_fd + nevfd; cap++)
+    for(struct evfdcap *cap = ev_fd; cap; cap = cap->next)
 	if(cap->fd == fd)
-	    break;
-    if(cap >= ev_fd + nevfd)
-	return NULL;
-    return cap;
+	    return cap;
+    return NULL;
 }
 
 /* this is where most of the translation takes place:  modify read events */
@@ -1521,7 +1536,7 @@ ssize_t read(int fd, void *buf, size_t count)
     /* very unlikely to ever happen */
     struct input_event ev;
     int ret_adj = 0;
-    struct evjrfd *cap = cap_of(fd);
+    struct evfdcap *cap = cap_of(fd);
     if(cap && cap->excess_read) {
 	ret_adj = count < cap->excess_read ? count : cap->excess_read;
 	memcpy(buf, cap->ebuf, ret_adj);
@@ -1692,7 +1707,7 @@ int ioctl(int fd, unsigned long request, ...)
 	va_end(va);
     }
     
-    struct evjrfd *cap = cap_of(fd);
+    struct evfdcap *cap = cap_of(fd);
     if(cap) {
 	const struct evjrconf *sec = cap->conf;
 #define cpstr(s) do { \
@@ -1810,9 +1825,7 @@ int ioctl(int fd, unsigned long request, ...)
 	    }
 	}
     } else if(_IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
-	/* FIXME:  probably ought to lock in case of movement */
-	struct jrfd *jn;
-	for(jn = js_fd; jn < js_fd + njsfd; jn++)
+	for(struct jsfdcap *jn = js_fd; jn; jn = jn->next)
 	    if(jn->fd == fd) {
 		cpstr(jn->conf->repl_name);
 		return len;
