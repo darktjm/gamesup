@@ -1,0 +1,46 @@
+#!/bin/sh
+# find English patches that exceed main installer's max version
+# print target path if -l arg. given or if patch doesn't exist
+# note that this was written with pre-March2017 version numbers
+# (a.b.c.d); the only fix to support new version numbers ((buildid))
+# is to strip out the parentheses, which probably doesn't work because
+# there is no guarantee build IDs monotonically increase (or change at all).
+
+while read -r x y z; do
+  test : = "$y" || continue
+  test -z "$z" && patch= inst=
+  case "$x" in
+    '"installers"') inst=1; lver= ;;
+    '"patches"') patch=1 ;;
+    '"gamename"') eval game="${z%,}" ;;
+    '"id"') case "$z" in
+	      '"en'[0-9]*) lang=en ;;
+	      *) lang=x
+	    esac ;;
+    '"path"')
+      test -z "$patch$inst" && continue
+      test en = "$lang" || continue
+      z="${z%,}"
+      z="${z//[()]/}"
+      v="${z##*_}"
+      v="${v%.*}"
+      if [ $patch ]; then
+        case "$z" in
+	  *'.sh"')  eval iver=$lver ;;
+	  *'.exe"') test -n "$lver" && continue; eval iver=$wver ;;
+	  *) continue ;;
+	esac
+	eval z="$z"
+	if [ ${v##*.} -gt ${iver##*.} ]; then
+	  echo $game/${z##*/}
+	fi
+      else
+        case "$z" in
+	  *'.sh"')  lver=$v ;;
+	  *'.exe"') wver=$v ;;
+	esac
+      fi ;;
+  esac
+done <~/.cache/lgogdownloader/gamedetails.json | while read x; do
+  test x-l = "x$1" -o ! -f "/mnt/usb3f/gog/$x" && echo "$x"
+done

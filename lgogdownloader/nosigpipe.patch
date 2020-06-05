@@ -1,0 +1,26 @@
+commit 00e62f8b22e9c3aa6b8ea6a8efbfe1fb2b3dcd0a
+Author: Thomas J. Moore <darktjm@gmail.com>
+Date:   Fri Apr 17 17:03:34 2020 -0500
+
+    Suppress SIGPIPE during cache update
+
+diff --git a/main.cpp b/main.cpp
+index 78be7a5..6ec0064 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -15,6 +15,7 @@
+ #include <fstream>
+ #include <boost/filesystem.hpp>
+ #include <boost/program_options.hpp>
++#include <signal.h>
+ 
+ namespace bpo = boost::program_options;
+ Config Globals::globalConfig;
+@@ -26,6 +27,7 @@ template<typename T> void set_vm_value(std::map<std::string, bpo::variable_value
+ 
+ int main(int argc, char *argv[])
+ {
++    signal(SIGPIPE, SIG_IGN);
+     rhash_library_init();
+ 
+     // Constants for option selection with include/exclude

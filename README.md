@@ -20,6 +20,29 @@ are willing to look through the git-log and git-diff output and
 determine for yourself what changed.  I really only expect you to look
 at them for inspiration, not use them directly.
 
+lgogdownloader
+==============
+To download games from gog, I use `lgogdownloader`.  Check your
+distro, alternate package sites, or google it to obtain it; I use
+either gentoo's version or the latest git depending on my mood.  Use
+it.  It's the only reasonable way to manage more than 5-10 games on
+gog.  I currently patch mine to not change the shelf search order when
+updating the cache, to ignore SIGPIPE during cache updates, to only
+write changelogs if they change, and to make cache updates fast enough
+for my current limited Internet access to finish.  Look in the
+`lgogdownloader` subdirectory; it should be obvious which patch is
+which.  I may propose those upstream some day if I get things in
+order.  I also use two support scripts currently: `gog-checkpatch` was
+written before the March 2017 great gog renaming, when version numbers
+could be easily compared, so it no longer really works.  Its purpose
+is to detect if I have to install a patch to the latest full download.
+Currently, only Dragon Age: Origins Ultimate is detected by the script
+(I used to have more, but don't remember which).  The second is
+`lgqc`, which does an offline check using the cache to see if all the
+files `lgogdownloader` would download are present (and of the correct
+size, if the XML files are present in the cache).  It's very
+restrictive (see top comment block for details).
+
 nonet
 =====
 First of all, I don't let any games or anything Windows-related, for
@@ -119,13 +142,14 @@ things needed.
 
   - Since setuid programs (like `nonet`) drop `LD_LIBRARY_PATH`, among
     other things, I preserve it if non-empty by prefixing the command
-    with "`env LD_LIBRARY_PATH=`...".
+    with "`env LD_LIBRARY_PATH=`...".  The same is done for LD_PRELOAD,
+    which is also disabled immediately and then re-enabled for the game
+    only.  This avoids some (but not all) spurious errors or other
+    issues with loading the preload into every command.
 
   - I save the game's main process ID in a known location, so that I
-    can kill a game using killgame.  This is bound to a global key in
-    the window manager, but some games manage to override these, so
-    maybe a lower-level hack will be necessary (e.g. outside of X
-    entirely).
+    can kill a game using killgame.  This is bound to a global key using
+    `actkbd`; see below.
 
   - I save the game's name, if requested, so that a global key config
     can be used to run a script to save the current game.  I use this
@@ -136,7 +160,11 @@ things needed.
 
   - I run `xboxdrv` using `mkxpad` (see below) if the game doesn't work
     right with my controller.  For now, I expect the game script itself
-    to tell me this.
+    to tell me this.  I am slowly replacing this with a new method:
+
+  - I preload `~/lib/joy-remap.so` or `~/lib/joy-remap-32.so` to do
+    controller remapping.  This can be used instead of `xboxdrv` for
+    a slightly less invasive remapper.
 
 If `dogame` manages to survive running the game, it will then try to
 restore things as they were.  If nothing else, I can run "`dogame true`"
@@ -171,13 +199,15 @@ name and its arguments:
    - `-d` -> use next parameter as "executable name" for determination of dir
    - `-g` -> change to game's root directory (assumed to end in /game/)
    - `-w` -> make game's root directory (assumed to end in /game/)
-     writable using unionfs
+     writable using unionfs; probably needs `-c` as well.
    - `-u` -> dismount writable unionfs mount if still mounted
    - `-j` -> notify user if /dev/input/js0 not present
-   - `-J` -> use ~/lib/joy-remap.so LD_PRELOAD
-   - `-J32` -> use ~/lib/joy-remap-32.so LD_PRELOAD
-   - `-x` ... `--` -> start up `xboxdrv` supplying extra args up to `--`
-     note that `--` is mandatory, even if no extra args given.
+   - `-J` *sec* -> use ~/lib/joy-remap.so LD_PRELOAD; set section re
+     to *sec*
+   - `-J32` *sec* -> use ~/lib/joy-remap-32.so LD_PRELOAD; set section
+     re to *sec*
+   - `-x` *args* `--` -> start up `xboxdrv` supplying extra *args* up to `--`;
+     note that `--` is mandatory, even if no extra *args* given.
 
 I generally make short names for all of my games, and create a
 launcher script with that name in `/usr/local/bin`.  During
@@ -201,8 +231,10 @@ these pesky games.  I use the following:
     Style FullScreen PositionPlacement, !Title, !Borders
     Style NoIconify UseStyle FullScreen, !Iconifiable
 
-Then, for each afflicted game, I find out the title, and add styles
-for those games, like so:
+Then, for each afflicted game, I find out the title (for those that
+don't iconify, it's in the title bar, and for those that do, I use
+`xwininfo -root -tree` to find it), and add styles for those games,
+like so:
 
     Style "Fell Seal" UseStyle FullScreen
     Style "7 Billion Humans" UseStyle NoIconify
@@ -610,11 +642,12 @@ play movies correctly?
 Usage:  `dowine` [*options*] *exefile* *args*
 
 To create/use a 64-bit prefix, always set `WINEARCH=win64` in the
-environment.  I may fix this in the future to set it if the prefix is
-already 64-bit.
+environment.  This is done automatically if the prefix is already
+initialized.
 
   - Version selection:
-      - `-s` = `-s4` = current stable (4.0.x), which is also the default wine
+      - `-s` = `-s5` = current stable (5.0.x), which is also the default wine
+      - `-s4` = 4.0.x (must be manually linked as wine-4)
       - `-s3` = 3.0.x (must be manually linked as wine-3)
       - `-s2` = 2.0.x (must be manually linked as wine-2)
       - `-d` = wine-vanilla:  latest vanilla wine
@@ -887,7 +920,7 @@ it back in the early 90s.
 I use the `fs-uae.conf` here as my base config for games.  Note that
 ROMs are someting you'll have to figure out for yourself.  Likewise,
 `min-wb` is not something I'm providing here:  It's a minimal
-Workbench that just boots to CLI and allows me to basic tasks.  It
+Workbench that just boots to CLI and allows me to do basic tasks.  It
 also contains UAEQuit in `c`.  This is how I end games.  Where to
 get it is not entirely clear, but it's basically part of UAE, which
 just calls the UAE resident resource to shut down the emulator.  The
@@ -928,13 +961,13 @@ option may be skipped, and if it is skipped, the equals sign may also
 be separated by whitespace.  Multiple options are permitted on a line,
 but not mixing of skipped `--` and unskipped `--`.  Whitespace on
 lines with multiple words starting with `--` (or with no leading `--`)
-are assumed to separate arguments; use a single argument on a line by
+are assumed to be separate arguments; use a single argument on a line by
 itself to preserve whitespace in the argument.
 
 Playstation
 -----------
 
-I use wrappers for Playstation 1 and 2 games that provide per-game`
+I use wrappers for Playstation 1 and 2 games that provide per-game
 configuration and per-game memory cards (since the emulators don't,
 really).  They also provide a convenient (for me) way to select a game
 to play.  To list all images, run the script.  To select one from a
@@ -956,7 +989,7 @@ used to use my own custom version with improved JIT and other fixes,
 but I don't care any more now and just run Gentoo's current ebuild
 (1.1.94, I guess).  Among other things, the JIT in that version
 doesn't work at all any more.  Luckily the performance of my own
-machine has improved since the time I card so JIT isn't vital any
+machine has improved since the time I cared, so JIT isn't vital any
 more.  There are still slowdowns in some places, but whatever.
 
 The PS2 script is `ps2` for which I use `PCSX2`.  I have very little
@@ -984,3 +1017,15 @@ not like any of my save states are any good any more, anyway.  I'd
 rather just rewrite my own emulators from scratch (that goes for the
 Playstation emulators as well), but I don't have the motivation for that
 any more.
+
+Licence
+=======
+
+Everything that came from me is in the public domain.  This includes
+my changes to GPL'ed code, as I am not distributing the GPL'ed code
+itself.  I used to care about accreditation, but now I only ask (but
+have no way of enforcing) that you do not accredit to me something I
+did not do (i.e., if you change it, it's yours) and that you do not
+accredit to yourself something you didn't do.  I'd rather you just not
+accredit to anyone at all.  Do this as a courtesy, not because I force
+you to.

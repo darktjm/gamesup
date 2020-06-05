@@ -1,0 +1,164 @@
+#!/bin/sh
+
+# "Quick" check to see if all files are there
+# Using lgogdownloader --download takes for bloody ever and requires net access
+# This is slower than it should be, but faster than doing galaxy API checks
+# on every installer and trial downloads on every extra like lgogdownloader
+# would do
+# This may also be less accurate due to reliance on cache accuracy
+
+# Assumptions:
+#  1) use-cache = true.  Seriously, the whole point is to use the cache.
+#  2) Default platform is l,w.  This is hard to change in this script.
+#  3) gamespecific overrides are present for any game where you want to change
+#     the platform; no other changes are recognized.  The only accepted
+#     alternate platforms are w and w+l/l+w.  No Mac, ever.
+#  4) Language is English.  To support another language, something similar to
+#     how it deals with platforms would need to be done (i.e., allow English
+#     if desired language unavailable)
+#  5) automatic-xml-generation = true (for xml size checks) (not really required)
+#  6) No patches or language packs, only complete installers & extras.
+#     I used to have a few games that needed patches (for which I wrote
+#     gog-checkpatch, which no longer really works right).  It's rare enough
+#     that manual checks are probably best.  Currently the only game I have
+#     flagged by gog-checkpatch is dragon_age_originas_ultimate.
+#  7) All subdir-* variables set to %gamename%.  Changing this will require
+#     using the "type" field to alter the path as needed (only applies to
+#     subdir-dlc, subdir-extras, and subdir-game, since that's all that's
+#     checked)
+
+# I should probably port this entire process to lgogdownloader itself, to
+# remove some of the limitations, make it faster, and make it standard
+
+groot=`sed -n -e 's/^[ 	]*directory[ 	]*=[ 	]*//;T;p' ~/.config/lgogdownloader/config.cfg`
+test -d "$groot" || exit 1
+
+get_re() {
+  re=
+  while read -r a b; do
+     test Rp = "$a" || continue
+     re="${re}${re:+|}$b"
+  done <"$1"
+  echo "$re"
+}
+bl="`get_re ~/.config/lgogdownloader/blacklist.txt`"
+
+# grrr.. need to sort somehow to get "gamename" field at top of each section
+# it's in (or write this in a language that can parse json correctly)
+
+# this works, I guess, but it's slow as hell.  Best to use multiple read
+# read streams, maybe
+sort_gamename_first() {
+  local rest= x
+  while IFS= read -r x; do
+    case "$x" in
+      *'"gamename"'*:*) echo "$x"; continue ;;
+    esac
+    rest="$rest${rest:+
+}$x"
+    case "$x" in
+      *\"*) ;;  # only unquoted braces
+      *{*) rest="$rest${rest:+
+}`sort_gamename_first`" ;;
+      *}*) echo "$rest"; return 0 ;;
+    esac
+  done
+  test -n "$rest" && echo "$rest"
+}
+
+# this is much faster: just keep a list in a variable
+# an array would probably be better, but this is easiest
+next_gamename() {
+  local b=0 x gn
+  while read -r x; do
+    case "$x" in
+      *'"gamename"'*) x="${x%\"*}"; x="${x##*\"}"; if [ $b -eq 2 ]; then echo "$x"; gn="$x"; else ogn="$x";  fi ;;
+      *\"*) ;; # only unquoted braces
+      *{*) b=$((b+1)); test $b -eq 2 && gn= ;;
+      *}*) if [ $b -eq 2 -a -z "$gn" ]; then echo "$ogn"; fi; b=$((b-1)) ;;
+    esac
+  done
+}
+games="`next_gamename < ~/.cache/lgogdownloader/gamedetails.json`"
+
+b=0
+gn=
+fn=
+fsz=0
+inst=
+bfn=
+gotl=
+#sort_gamename_first < ~/.cache/lgogdownloader/gamedetails.json | ( while read -r l; do
+while read -r l; do
+  arg="${l#*: }"; arg="${arg%,*}"; arg="${arg#*\"}"; arg="${arg%\"*}"
+  case "$l" in
+#    *'"gamename"'*) test $b -eq 2 && gn="$arg" ;;
+    *'"size"'*) fsz="$arg" ;;
+    *'"language"'*) lang=$arg ;;
+    *'"path"'*) test 1 = $lang && fn="${arg##*/}" ;;  # yes, just English
+    *'"platform"'*) plat=$arg; test 2 = $plat && fn= ;; # always after fn; drop mac
+    *'"type"'*) case $arg in
+# type:
+# 1 = installer
+# 2 = extra
+# 4 = patch
+# 8 = lang pack
+# 16 = is-a-DLC flag
+          4|20) fn= ;; # always after fn, so drop patches here
+	  1|17) inst=y ;;
+	  *) inst= ;;
+       esac ;;
+    *\"*) ;; # no quoted {}
+    *{*) b=$((b+1)); if [ $b -eq 2 ]; then gn="${games%%
+*}"; games="${games#*
+}"; gotl=; fi ;;
+    *}*) b=$((b-1))
+         if [ -n "$fn" ]; then
+	    # would be faster to do this last, on entire list at once
+	    fn="`echo \"\$gn/\$fn\" | egrep -v \"\$bl\"`"
+	    test -z "$fn" && continue
+	    if [ -n "$bfn" ]; then # can only happen if Windows installer missing
+	      if [ -z "$inst" -o "${bfn%%/*}" != "$gn" ]; then
+	        echo "$bfn"
+		bfn=
+              elif [ -n "$inst" -a 4 = $plat ]; then
+	        bfn=
+	      fi
+	    fi
+	    # the sizes in gamedetails.json are all (or at least mostly) wrong!
+#	    test $fsz -eq "0`stat -c %s \"\$groot/\$fn\" 2>/dev/null`" && fn=
+	    # so use XML if present
+	    xmlsz="`sed -n -e 's/.*total_size=.//;T;s/\".*//;p' ~/.cache/lgogdownloader/xml/\"\$fn\".xml 2>/dev/null`"
+	    if [ -n "$xmlsz" ]; then
+	      test $xmlsz -eq "0`stat -c %s \"\$groot/\$fn\" 2>/dev/null`" && fn=
+            else
+	    # otherwise just use existence
+	      test -n "$fn" && test -f "$groot/$fn" && fn=
+	    fi
+	    # most of the time win appears first, but sometimes linux
+	    if [ -z "$fn" ]; then
+	      test 4 = "$plat" && gotl=y
+	      continue
+	    fi
+	    if [ -n "$inst" ]; then
+	      addb=
+	      case `sed -n -e 's/"$//;s/"platform".*"//;T;p' ~/.config/lgogdownloader/gamespecific/${gn}.conf 2>/dev/null` in
+	        "")  if [ $plat -eq 4 ]; then gotl=y; elif [ -z "$gotl" ]; then addb=1; else fn=; fi ;;
+		*l*) ;; # assumed to be w+l or l+w
+		*w*) test $plat -ne 1 && fn= ;;
+	      esac
+	      if [ -n "$addb" ]; then
+	        bfn="${bfn}${bfn:+
+}$fn"
+	      elif [ -n "$fn" ]; then
+	        echo "$fn"
+	      fi
+	    fi
+	    fn=
+	 fi
+         ;;
+  esac
+done <~/.cache/lgogdownloader/gamedetails.json
+
+test -n "$bfn" && echo "$bfn"
+#)
