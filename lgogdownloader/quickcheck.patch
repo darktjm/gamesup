@@ -1,0 +1,308 @@
+commit a1c3d055b759dfc6ac2b011e12a5deaa4f4e020a
+Author: Thomas J. Moore <darktjm@gmail.com>
+Date:   Tue Jun 9 21:48:49 2020 -0500
+
+    Added two disconnected, cache-only quick checks:  check-orphans and
+      quick-download-check
+
+diff --git a/include/config.h b/include/config.h
+index fe8e29a..e8db478 100644
+--- a/include/config.h
++++ b/include/config.h
+@@ -210,6 +210,7 @@ class Config
+         bool bResetConfig;
+ 
+         bool bDownload;
++	bool bQuickCheck;
+         bool bRepair;
+         bool bUpdated;
+         bool bList;
+diff --git a/include/downloader.h b/include/downloader.h
+index 6a3ee5e..4d75569 100644
+--- a/include/downloader.h
++++ b/include/downloader.h
+@@ -103,6 +103,7 @@ class Downloader
+         void clearUpdateNotifications();
+         void repair();
+         void download();
++	void downloadCacheCheck();
+         void checkOrphans();
+         void checkStatus();
+         void updateCache();
+@@ -133,9 +134,9 @@ class Downloader
+         int saveGameDetailsCache();
+         std::vector<gameDetails> getGameDetailsFromJsonNode(Json::Value root, const int& recursion_level = 0);
+         static std::string getSerialsFromJSON(const Json::Value& json);
+-        void saveSerials(const std::string& serials, const std::string& filepath);
++        void saveSerials(const std::string& serials, const std::string& filepath, bool pretend = false);
+         static std::string getChangelogFromJSON(const Json::Value& json);
+-        void saveChangelog(const std::string& changelog, const std::string& filepath);
++        void saveChangelog(const std::string& changelog, const std::string& filepath, bool pretend = false);
+         static void processDownloadQueue(Config conf, const unsigned int& tid);
+         static int progressCallbackForThread(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+         template <typename T> void printProgress(const ThreadSafeQueue<T>& download_queue);
+diff --git a/main.cpp b/main.cpp
+index 6ec0064..bbee0fd 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -187,6 +187,7 @@ int main(int argc, char *argv[])
+             ("list", bpo::value<bool>(&Globals::globalConfig.bList)->zero_tokens()->default_value(false), "List games")
+             ("list-details", bpo::value<bool>(&Globals::globalConfig.bListDetails)->zero_tokens()->default_value(false), "List games with detailed info")
+             ("download", bpo::value<bool>(&Globals::globalConfig.bDownload)->zero_tokens()->default_value(false), "Download")
++	    ("quick-download-check", bpo::value<bool>(&Globals::globalConfig.bQuickCheck)->zero_tokens()->default_value(false), "Check what files would be downloaded based only on the cache")
+             ("repair", bpo::value<bool>(&Globals::globalConfig.bRepair)->zero_tokens()->default_value(false), "Repair downloaded files\nUse --repair --download to redownload files when filesizes don't match (possibly different version). Redownload will rename the old file (appends .old to filename)")
+             ("game", bpo::value<std::string>(&Globals::globalConfig.sGameRegex)->default_value(""), "Set regular expression filter\nfor download/list/repair (Perl syntax)")
+             ("create-xml", bpo::value<std::string>(&Globals::globalConfig.sXMLFile)->implicit_value("automatic"), "Create GOG XML for file\n\"automatic\" to enable automatic XML creation")
+@@ -606,21 +607,31 @@ int main(int argc, char *argv[])
+     bool bIsLoggedin = downloader.isLoggedIn();
+ 
+     // Login because we are not logged in
+-    while (iLoginTries++ < Globals::globalConfig.iRetries && !bIsLoggedin)
+-    {
+-        bLoginOK = downloader.login();
+-        if (bLoginOK)
+-        {
+-            bIsLoggedin = downloader.isLoggedIn();
+-        }
+-    }
+-
+-    // Login failed, cleanup
+-    if (!bLoginOK && !bIsLoggedin)
+-    {
+-        curl_global_cleanup();
+-        ssl_thread_cleanup();
+-        return 1;
++    // But only if necessary -- for now, disable if checking for orphans
++    // and using cache and not also downloading (there are other conditions
++    // where login still needed, but I'm tired of messing with it)
++    // And also if doing a quick check using only cache
++    if(!Globals::globalConfig.bUseCache ||
++       ((Globals::globalConfig.sOrphanRegex.empty() || Globals::globalConfig.bDownload) &&
++	   !Globals::globalConfig.bQuickCheck) /* ||
++       !downloader.loadGameDetailsCache() */) { // no way to check cache validity here
++
++	while (iLoginTries++ < Globals::globalConfig.iRetries && !bIsLoggedin)
++	{
++	    bLoginOK = downloader.login();
++	    if (bLoginOK)
++	    {
++		bIsLoggedin = downloader.isLoggedIn();
++	    }
++	}
++
++	// Login failed, cleanup
++	if (!bLoginOK && !bIsLoggedin)
++	{
++	    curl_global_cleanup();
++	    ssl_thread_cleanup();
++	    return 1;
++	}
+     }
+ 
+     // Make sure that config file and cookie file are only readable/writable by owner
+@@ -717,12 +728,20 @@ int main(int argc, char *argv[])
+         }
+     }
+ 
+-    bool bInitOK = downloader.init();
+-    if (!bInitOK)
+-    {
+-        curl_global_cleanup();
+-        ssl_thread_cleanup();
+-        return 1;
++    // don't init downloader just for orphan check from cache
++    // or quick check
++    // this condition isn't really right; see above
++    if(!Globals::globalConfig.bUseCache ||
++       ((Globals::globalConfig.sOrphanRegex.empty() || Globals::globalConfig.bDownload) &&
++	   !Globals::globalConfig.bQuickCheck) /* ||
++       !downloader.loadGameDetailsCache() */) { // no way to check cache validity here
++	bool bInitOK = downloader.init();
++	if (!bInitOK)
++	{
++	    curl_global_cleanup();
++	    ssl_thread_cleanup();
++	    return 1;
++	}
+     }
+ 
+     int res = 0;
+@@ -746,6 +765,8 @@ int main(int argc, char *argv[])
+         downloader.repair();
+     else if (Globals::globalConfig.bDownload) // Download games
+         downloader.download();
++    else if (Globals::globalConfig.bQuickCheck) // what would "download games" download?
++	downloader.downloadCacheCheck();
+     else if (Globals::globalConfig.bListDetails || Globals::globalConfig.bList) // Detailed list of games/extras
+         res = downloader.listGames();
+     else if (!Globals::globalConfig.sOrphanRegex.empty()) // Check for orphaned files if regex for orphans is set
+diff --git a/src/downloader.cpp b/src/downloader.cpp
+index 3efea53..c08d5fe 100644
+--- a/src/downloader.cpp
++++ b/src/downloader.cpp
+@@ -802,6 +802,107 @@ void Downloader::repair()
+     }
+ }
+ 
++
++void Downloader::downloadCacheCheck()
++{
++    if (this->games.empty())
++        this->getGameDetails();
++
++    for (unsigned int i = 0; i < games.size(); ++i)
++    {
++        gameSpecificConfig conf;
++        conf.dlConf = Globals::globalConfig.dlConf;
++        conf.dirConf = Globals::globalConfig.dirConf;
++
++        if (conf.dlConf.bSaveSerials && !games[i].serials.empty())
++        {
++            std::string filepath = games[i].getSerialsFilepath();
++            this->saveSerials(games[i].serials, filepath, true);
++        }
++
++        if (conf.dlConf.bSaveChangelogs && !games[i].changelog.empty())
++        {
++            std::string filepath = games[i].getChangelogFilepath();
++            this->saveChangelog(games[i].changelog, filepath, true);
++        }
++
++        if (conf.dlConf.bDLC && !games[i].dlcs.empty())
++        {
++            for (unsigned int j = 0; j < games[i].dlcs.size(); ++j)
++            {
++                if (conf.dlConf.bSaveSerials && !games[i].dlcs[j].serials.empty())
++                {
++                    std::string filepath = games[i].dlcs[j].getSerialsFilepath();
++                    this->saveSerials(games[i].dlcs[j].serials, filepath, true);
++                }
++                if (conf.dlConf.bSaveChangelogs && !games[i].dlcs[j].changelog.empty())
++                {
++                    std::string filepath = games[i].dlcs[j].getChangelogFilepath();
++                    this->saveChangelog(games[i].dlcs[j].changelog, filepath, true);
++                }
++            }
++        }
++
++        auto vFiles = games[i].getGameFileVectorFiltered(conf.dlConf.iInclude);
++        for (auto gf : vFiles)
++        {
++	    // Get directory from filepath
++	    boost::filesystem::path filepath = gf.getFilepath();
++	    filepath = boost::filesystem::absolute(filepath, boost::filesystem::current_path());
++
++	    // Skip blacklisted files
++	    if (Globals::globalConfig.blacklist.isBlacklisted(filepath.string()))
++		continue;
++
++            unsigned long long filesize = 0, act_size = 0;
++            try
++            {
++                filesize = std::stoll(gf.size);
++            }
++            catch (std::invalid_argument& e)
++            {
++                filesize = 0;
++            }
++
++	    std::string filenameXML = filepath.filename().string() + ".xml";
++	    std::string xml_directory = Globals::globalConfig.sXMLDirectory + "/" + gf.gamename;
++	    boost::filesystem::path local_xml_file = xml_directory + "/" + filenameXML;
++
++	    // probably good enough fallback if XML not present
++	    bool bIsComplete = boost::filesystem::exists(filepath) &&
++		               boost::filesystem::is_regular_file(filepath);
++
++	    if (bIsComplete)
++		act_size = boost::filesystem::file_size(filepath);
++
++	    // using XML really only works on installers, where XML is dl'd
++	    // rather than generated, but I'll use it anyway
++	    if (bIsComplete && boost::filesystem::exists(local_xml_file)) {
++		tinyxml2::XMLDocument local_xml;
++		local_xml.LoadFile(local_xml_file.string().c_str());
++		tinyxml2::XMLElement *fileElem = local_xml.FirstChildElement("file");
++		if (fileElem) {
++		    filesize = std::stoll(fileElem->Attribute("total_size"));
++		    bIsComplete = filesize == act_size;
++		}
++#if 0
++	    // gf.size is known to be wrong in many cases
++	    // even with 5% slop, I get a lot of completed files listed here
++	    } else if (bIsComplete) {
++		// within 5% may be correct
++		bIsComplete = act_size >= filesize || (filesize - act_size) * 100 / filesize < 5;
++#endif
++	    }
++
++	    if (!bIsComplete)
++		std::cout << "Downloading \"" << filepath.string() << "\" " << (filesize - act_size) << '/' << filesize << std::endl;
++        }
++
++    }
++
++}
++
++
+ void Downloader::download()
+ {
+     if (this->games.empty())
+@@ -2260,13 +2361,18 @@ void Downloader::updateCache()
+ }
+ 
+ // Save serials to file
+-void Downloader::saveSerials(const std::string& serials, const std::string& filepath)
++void Downloader::saveSerials(const std::string& serials, const std::string& filepath, bool pretend)
+ {
+     bool bFileExists = boost::filesystem::exists(filepath);
+ 
+     if (bFileExists)
+         return;
+ 
++    if (pretend) {
++        std::cout << "Saving serials: " << filepath << std::endl;
++	return;
++    }
++
+     // Get directory from filepath
+     boost::filesystem::path pathname = filepath;
+     std::string directory = pathname.parent_path().string();
+@@ -2306,8 +2412,21 @@ void Downloader::saveSerials(const std::string& serials, const std::string& file
+ }
+ 
+ // Save changelog to file
+-void Downloader::saveChangelog(const std::string& changelog, const std::string& filepath)
++void Downloader::saveChangelog(const std::string& changelog, const std::string& filepath, bool pretend)
+ {
++    try {
++	std::string olog;
++	boost::filesystem::load_string_file(filepath, olog);
++	if (olog == changelog)
++	    return;
++    }
++    catch (std::ios_base::failure& ex) {} // ignore missing file
++
++    if (pretend) {
++        std::cout << "Saving changelog: " << filepath << std::endl;
++	return;
++    }
++
+     // Get directory from filepath
+     boost::filesystem::path pathname = filepath;
+     std::string directory = pathname.parent_path().string();
+@@ -2331,13 +2450,6 @@ void Downloader::saveChangelog(const std::string& changelog, const std::string&
+         }
+     }
+ 
+-    try {
+-	std::string olog;
+-	boost::filesystem::load_string_file(filepath, olog);
+-	if (olog == changelog)
+-	    return;
+-    }
+-    catch (std::ios_base::failure& ex) {} // ignore missing file
+     std::ofstream ofs(filepath);
+     if (ofs)
+     {
+

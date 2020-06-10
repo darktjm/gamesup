@@ -28,20 +28,17 @@ either gentoo's version or the latest git depending on my mood.  Use
 it.  It's the only reasonable way to manage more than 5-10 games on
 gog.  I currently patch mine to not change the shelf search order when
 updating the cache, to ignore SIGPIPE during cache updates, to only
-write changelogs if they change, and to make cache updates fast enough
-for my current limited Internet access to finish.  Look in the
+write changelogs if they change, to make cache updates fast enough
+for my current limited Internet access to finish, and a way to check
+orphans and what would be downloaded while disconnected.  Look in the
 `lgogdownloader` subdirectory; it should be obvious which patch is
 which.  I may propose those upstream some day if I get things in
-order.  I also use two support scripts currently: `gog-checkpatch` was
+order.  I also use one support script currently: `gog-checkpatch` was
 written before the March 2017 great gog renaming, when version numbers
 could be easily compared, so it no longer really works.  Its purpose
 is to detect if I have to install a patch to the latest full download.
 Currently, only Dragon Age: Origins Ultimate is detected by the script
-(I used to have more, but don't remember which).  The second is
-`lgqc`, which does an offline check using the cache to see if all the
-files `lgogdownloader` would download are present (and of the correct
-size, if the XML files are present in the cache).  It's very
-restrictive (see top comment block for details).
+(I used to have more, but don't remember which).
 
 nonet
 =====
