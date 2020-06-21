@@ -123,7 +123,7 @@ prefix_setup() {
   test -n "$1" && return
   # enable wine-9 (will autodetect backend, so no need to set in registry)
   #  using standalone configurator program creates z: and other crap, so don't
-  # enable dxvk
+  # enable dxvk (FIXME: supposedly d3d10 overrides no longer needed)
   # set default GOG installer options
   # enable opengl 4.5 (probably not needed any more and maybe counterproductive)
   # attempt to set USERPROFILE dir (doesn't work)
@@ -166,14 +166,17 @@ EOF
   mkdir -p windows/system32
   if [ win64 = "$WINEARCH" ]; then
     # I guess syswow64 is actually the 32-bit stuff, and system32 is 64-bit
-    ln -sf /usr/lib64/d3d9-nine.dll.so windows/system32/d3d9.dll
     (cd windows/system32 && ln -sf "$windir"/dxvk/x64/* .)
+    # as of dxvk-1.5, d9vk is included.  For now, I choose d3d9-nine.
+    ln -sf /usr/lib64/d3d9-nine.dll.so windows/system32/d3d9.dll
     mkdir -p windows/syswow64
-    ln -sf /usr/lib32/d3d9-nine.dll.so windows/syswow64/d3d9.dll
     (cd windows/syswow64 && ln -sf "$windir"/dxvk/x32/* .)
+    # as of dxvk-1.5, d9vk is included.  For now, I choose d3d9-nine.
+    ln -sf /usr/lib32/d3d9-nine.dll.so windows/syswow64/d3d9.dll
   else
-    ln -sf /usr/lib32/d3d9-nine.dll.so windows/system32/d3d9.dll
     (cd windows/system32 && ln -sf "$windir"/dxvk/x32/* .)
+    # as of dxvk-1.5, d9vk is included.  For now, I choose d3d9-nine.
+    ln -sf /usr/lib32/d3d9-nine.dll.so windows/system32/d3d9.dll
   fi
 )
 }

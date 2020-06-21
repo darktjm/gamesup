@@ -1,0 +1,3 @@
+\{FOREACH}
+\{_id} \{esc(_ver,'\ ')} \{_inst_size} \{_setup_size} \{_cmd} \{esc(_dir,'\ ')}
+\{END}

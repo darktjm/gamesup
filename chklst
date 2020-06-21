@@ -1,0 +1,70 @@
+#!/bin/sh
+
+tmpl=
+test "x$1" = x-t && tmpl=y
+
+pr() {
+  echo "$1: $2"
+  if [ -n "$tmpl" -a -n "$3" ]; then
+    echo -n "\\{FOREACH {_id=='$1'}}\{"
+    case "$4" in
+      \'*) echo -n "_$3=$4'" ;;
+      *)   echo -n "(_$3=$4)" ;;
+    esac
+    echo '}\{END}'
+  fi
+}
+
+grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while read id ver sz isz cmd dir; do
+  dir="${dir#\'}"
+  dir="${dir%\'}"
+  if [ -z "$dir" ]; then
+    pr $id "no dir"
+    continue
+  fi
+  rd=
+  for r in wine "" dosbox scummvm ags; do
+     test -d /usr/local/games/$r/"$dir" || continue
+     rd=/usr/local/games/$r/"$dir"
+     break
+  done
+  test -z "$rd" && test -f /usr/local/games/inf/"$dir" && rd=/usr/local/games/inf
+  test -z "$rd" && pr $id "not installed in \"$dir\"" && continue
+  case "$rd" in
+     */inf/*) asz="$(du -s "$rd/$dir"* | (sz=0; while read a b; do sz=$((sz+a)); done; echo $sz))" ;;
+     *) asz=$(du -s "$rd" | cut -d\	 -f1) ;;
+  esac
+  test "$asz" -eq "$sz" || pr $id "Install Size(K) should be $asz, not $sz" inst_size $asz
+  asz=0
+  iver=
+  ver="${ver#\'}"
+  ver="${ver%\'}"
+  for x in "$rd"/* "$rd"/*/*; do
+    test -h "$x" || continue
+    case "`readlink \"\$x\"`" in
+      /mnt/usb3f/gog/"$id"/*) ;;
+      *) continue ;;
+    esac
+    if [ -z "$iver" ]; then
+      case "$x" in
+        *.bin) iver="${x%-*.*}" ;;
+	*)     iver="${x%.*}" ;;
+      esac
+      iver="${iver##*/}"
+      iver="${iver#gog_}"
+      iver="${iver#setup_}"
+      iver="${iver#$id}"
+    fi
+    test -f "$x" || continue # always wrong version
+    asz=$((asz+$(stat -Lc %s "$x")))
+  done
+  var=setup_size
+  test $asz -eq 0 && var=
+  test $asz -eq "$isz" || pr $id "Downld Size should be $asz, not $isz" "$var" $asz
+  if [ "x${iver%_$ver}" = "x$iver" -a -n "$ver$iver" ]; then
+    iver="${iver#_}"
+    # there is no real way to guarantee this will ever be right
+    # so mark for manual fixing
+    pr $id "Installed version mismatch ($iver not $ver)" ver "'FIXV'.substr(' ${iver//\'/\'+\"\'\"+\'}',-36,36).'"
+  fi
+done

@@ -733,22 +733,21 @@ The wine-game.sh script adds a few command-line options to all that use it:
 
 grok
 ====
-I used to keep a plain text file, `gog-status`, with notes about all of
-my game installs.  When the number of games became large, and I also
-added more information to the file, I decided a database would be
+I used to keep a plain text file, `gog-status`, with notes about all
+of my game installs.  When the number of games became large, and I
+also added more information to the file, I decided a database would be
 better.  To that end, I experimented with some tools and ended up
 making a Qt port of `grok`, available [here as well](
-https://bitbucket.org/darktjm/grok).  I have included my grok
-database definition and templates under the `grok` directory; if you
-want to use them or try them out, copy them to `~/.grok` first.  I have
-also included a few sample entries in the database, not chosen for
-their completeness (I am in the process of once again
-checking/updating all games' entries).  Note that I have a few changes
-to grok I have yet to check in at the time of this writing (including
-a generic SQL exporter that obsolets the "sql" template), and have
-discovered new bugs that I have yet to even document.  Use at your own
-risk.  Maybe I'll switch to libreoffice-base or kexi and abandon my
-work on grok some day, but it's all just too much trouble.
+https://bitbucket.org/darktjm/grok).  I have included my grok database
+definition and templates under the `grok` directory; if you want to
+use them or try them out, copy them to `~/.grok` first.  I have also
+included my current database, woefully in need of updating. (I am in
+the process of once again checking/updating all games' entries).  Note
+that I may have a few changes to grok I have yet to check in at the time
+of this writing, and have discovered new bugs that I have yet to even
+document.  Use at your own risk.  Maybe I'll switch to
+libreoffice-base or kexi and abandon my work on grok some day, but
+it's all just too much trouble.
 
 A quick note on the templates: `gcs` outputs to a native GCStar
 database I used before I switched to grok.  `sql-gcs` exported to the
@@ -763,40 +762,56 @@ advantage of having some of its info read from the database itself.
 This is my current output from `summary`; judge for yourself if I have
 too many games (I do):
 
-    188 Linux games (11 nonfunctional; 5 converted to wine; 25 uninstalled)
+    232 Linux games (12 nonfunctional; 2 converted to wine; 1 uninstalled)
     
-    98 DOS games (0 uninstalled, 11 w/ Amiga alternates)
+    102 DOS games (1 uninstalled, 11 w/ Amiga alternates)
       note:  bt1-3 are hidden in a Linux game; this accounts for 3 more Amiga games
     
-    309 Wine games (37 nonfunctional; 5 converted from Linux; 4 uninstalled)
-      3 non-GOG
+    381 Wine games (44 nonfunctional; 2 converted from Linux; 1 uninstalled)
+      4 non-GOG
     
-    38 hidden games (16 Linux, 15 Windows, 7 DOS)
+    40 hidden games (18 Linux, 15 Windows, 7 DOS)
     
-    Currently 37 unusable Wine-only games:
-       cmbo deadlock2 deadlock deusex2 fench fenchlh fog2 gciv inq inst legr mh 
-       mirror mi2  ppb-bru ppb-fj prod ppin rtk smbtas smstw civ3 pirates ss1 
-       calig lohtits3 lohtocs2 txex tr6 tron2 2w2 wh40kcg wh40krow wh40ksr x2 
+    Currently 44 unusable Wine-only games:
+       aspy bg1 bgtutu bge cmbo cons crt1 crt2 crt3 crt4 crys deusex dist fench 
+       fenchlh fallh fo3 gciv inst idng lohtocs legr mh mirror mi2 pc prod ppin 
+       rtk smbtas smstw civ3 spra lohtocs2 tb txex tr6 tron2 2w2 underrail 
+       wh40kcg wh40krow x2 xnext   [note: in my recent game retest, I skipped 5 or so games and just marked
+       them broken for now, to be processed later]
+    
+    Currently 2 unusable Linux games: (at least barely usable in wine)
+       trine2 trine3 
+    Currently 8 games unusable in both Linux and Wine
+       diablo halcyon hofate mable obs styg bt4 vran 
+    
+    Currently 27 games with serious movie playback issues
+       anb bcn bdivinity rayne ctp2 cors mfc2 darkstone ga gmast gothic inq kq8 
+       konung2 konung msn mh nwn omikron sacred silver kotor txex tr6 2w u9 
        xnext 
-    Currently 5 unusable Linux games: (at least barely usable in wine)
-       eschalon1 eschalon2 eschalon3 trine2 trine3 
-    Currently 6 games unusable in both Linux and Wine
-       observer aragami incrpede satellite_reign bards_tale vran 
-    
-    Currently 29 games with serious movie playback issues
-       anb rayne rayne2 ctp2 cors darkstone divinity2 ga gothic hnep hnep2 hnep3 
-       inq kq8 konung2 konung msn mh nwn omikron sacred silver kotor calig txex 
-       tr6 2w u9 xnext 
-    Currently 3 games with no music (not sure if Konung ever had any)
-       konung2 konung se4 
+    Currently 5 games with no music (not sure if Konung ever had any)
+       bast konung2 konung se4 war3 
     Currently 14 games with broken editors
-       aow3 divos dao elvenlegacy grimd homm5 homm5-toe ja2ub eisen nwn2 
+       divos dao elvenlegacy etherlords2 grimd homm5 homm5-toe ja2ub eisen nwn2 
        spellforce witcher2 titq torch 
     
     Note: the following have 3rd party Linux ports, so no point in messing
     with Windows (except nwn editor, and ctp2 until movies work):
-       aoc2 diablo eadorg ehtb expconq fs2 ja2 nwn oriente morrowind u4 exult 
-       exult openxcom openxcom 
+       aoc2 diablo eadorg ehtb expconq fbk fs2 ja2 nwn oriente morrowind u4 
+       exult exult openxcom openxcom 
+
+The `list` template is used by the `chklst` tool to verify that I have
+updated the database after mass updates/installs.  The tool's `-t`
+option generates a grok template, which can be executed by copying the
+template to the database template directory (`~/.grok/gog_games.tm/`)
+and then exporting using that template while in the GUI.  Doing so on
+the command line discards all changes.  After executing the template
+this way, save the result.  Keep in mind that the tool requires manual
+intervention for version number changes, since it extracts them from
+the file name (rather than the `gameinfo` file(s)).  In fact, it is a
+good idea to manually edit the result to remove spurious errors (e.g.
+due to stupid version number extraction).  The tool obviously also
+expects my own way of storing games in `/usr/local/games`, with soft
+links to the installeers in `/mnt/usb3f/gog`.
 
 ds4
 ===
@@ -1015,7 +1030,7 @@ rather just rewrite my own emulators from scratch (that goes for the
 Playstation emulators as well), but I don't have the motivation for that
 any more.
 
-Licence
+License
 =======
 
 Everything that came from me is in the public domain.  This includes
