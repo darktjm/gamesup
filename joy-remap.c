@@ -451,6 +451,8 @@ static int kwcmp(const void *_a, const void *_b)
 
 static void free_conf(struct evjrconf *sec);
 
+static long (*real_syscall)(long number, ...);
+
 /* parse config file */
 /* is this too early for file I/O?  apparently not */
 /* dlopen() docs say this must be exported, but again, apparently not */
@@ -458,6 +460,7 @@ static void free_conf(struct evjrconf *sec);
 __attribute__((constructor))
 static void init(void)
 {
+    real_syscall = dlsym(RTLD_NEXT, "syscall");
     const char *fname = getenv("EV_JOY_REMAP_CONFIG"), *logn = getenv("EV_JOY_REMAP_LOG");
     FILE *f;
     long fsize;
@@ -1481,6 +1484,10 @@ static int ev_open(const char *fn, const char *pathname, int fd)
     return fd;
 }
 
+/* FIXME: this is not thread-safe */
+/* it's really only for open(), though, so it's not likely to trigger */
+volatile static int syscalling = 0;
+
 int open(const char *pathname, int flags, ...)
 {
     static int (*next)(const char *, int, ...) = NULL;
@@ -1493,7 +1500,10 @@ int open(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open("open", pathname, next(pathname, flags, mode));
+    syscalling = 1;
+    int ret = ev_open("open", pathname, next(pathname, flags, mode));
+    syscalling = 0;
+    return ret;
 }
 
 /* identical to above, for programs that call this alias */
@@ -1509,10 +1519,69 @@ int open64(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open("open64", pathname, next(pathname, flags, mode));
+    syscalling = 1;
+    int ret = ev_open("open64", pathname, next(pathname, flags, mode));
+    syscalling = 0;
+    return ret;
 }
 
-#if 0
+/* mono seems to use syscall().  That is pretty much impossible to intercept */
+/* at least not without arch-dependent asm */
+/* and that's assuming mono even uses glibc's syscall() so I can override */
+#include <sys/syscall.h>
+
+static long opensys(long scno, const char *path, int flags, mode_t mode)
+{
+    syscalling = 1;
+    int ret = ev_open("opensys", path, syscall(SYS_open, path, flags, mode));
+    syscalling = 0;
+    return ret;
+}
+
+static long openatsys(long scno, int dirfd, const char *path, int flags, mode_t mode)
+{
+    syscalling = 1;
+    int ret = ev_open("openatsys", path, syscall(SYS_openat, dirfd, path, flags, mode));
+    syscalling = 0;
+    return ret;
+}
+
+long  __attribute((naked)) syscall(long number, ...)
+{
+asm volatile (
+"       cmpl $0, %[syscalling]\n"
+"       jne dosys\n"
+#ifdef __amd64
+"       cmpq %[open_sc], %%rdi\n"
+"       je %P[opensys]\n"
+"       cmpq %[openat_sc], %%rdi\n"
+"       je %P[openatsys]\n"	      
+"dosys:\n"
+"       mov %P[real_syscall](%%rip), %%rax\n"
+"       jmp *%%rax\n"
+#else
+#ifdef __i386
+"       mov    4(%%esp),%%eax\n"
+"       cmpl %[open_sc], %%eax\n"
+"       je opensys /* can't use %[opensys] or %p[opensys] */\n"
+"       cmpl %[openat_sc], %%eax\n"
+"       je openatsys /* can't use %[openatsys] or %p[openatsys] */\n"
+"dosys:\n"
+"       mov %[real_syscall], %%eax\n"
+"       jmp *%%eax\n"
+#else
+#error "unknown arch"
+#endif
+#endif
+    : : [syscalling]"m"(syscalling), [real_syscall]"m"(real_syscall),
+	[open_sc]"i"(SYS_open), [opensys]"m"(opensys),
+	[openat_sc]"i"(SYS_openat), [openatsys]"m"(openatsys)
+#ifdef __i386
+    : "eax"
+#endif
+    );
+}
+
 /* path-relative opens */
 /* not really necessary, as no known program uses them */
 /* they are used indirectly by fopen(), though; but fopen always uses libc */
@@ -1528,7 +1597,10 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open("openat", pathname, next(dirfd, pathname, flags, mode));
+    syscalling = 1;
+    int ret = ev_open("openat", pathname, next(dirfd, pathname, flags, mode));
+    syscalling = 0;
+    return ret;
 }
 
 int openat64(int dirfd, const char *pathname, int flags, ...)
@@ -1543,9 +1615,11 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
+    syscalling = 1;
+    int ret = ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
+    syscalling = 0;
+    return ret;
 }
-#endif
 
 /* glibc also exports numerous "internal" symbols beginning with __ */
 /* not going to intercept them, for now. */
@@ -1581,7 +1655,6 @@ int close(int fd)
     return real_close(fd);
 }
 
-#if 0
 /* fopen seems to be what c++ uses */
 /* requires fread, fclose intercept as well, and probably more */
 /* however, gcc uses read(), so only fclose() for now */
@@ -1590,7 +1663,9 @@ FILE *fopen(const char *pathname, const char *mode)
     static FILE * (*next)(const char *, const char *) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "fopen");
+    syscalling = 1;
     FILE *res = next(pathname, mode);
+    syscalling = 0;
     if(!res)
 	return res;
     int fd = fileno(res);
@@ -1605,7 +1680,9 @@ FILE *fopen64(const char *pathname, const char *mode)
     static FILE * (*next)(const char *, const char *) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "fopen64");
+    syscalling = 1;
     FILE *res = next(pathname, mode);
+    syscalling = 0;
     if(!res)
 	return res;
     int fd = fileno(res);
@@ -1628,7 +1705,6 @@ int fclose(FILE *f)
     ev_close(fd);
     return next(f);
 }
-#endif
 
 static struct evfdcap *cap_of(int fd)
 {
