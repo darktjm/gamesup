@@ -80,7 +80,7 @@ else
 	    for e in "${ext[@]}"; do
 		for f in *."$e"; do
 		    case "$f" in
-	        	$bop"$game"$eop".$e") g+=("${f%.$e}") ;;
+	        	$bop$game$eop".$e") g+=("${f%.$e}") ;;
 	            esac
 		done
 	    done

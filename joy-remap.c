@@ -4,7 +4,10 @@
  * it doesn't need root, and it doesn't deal with problems using uinput.
  * It's very simplistic, intended to map exactly one controller to what
  * one program expects to see.  It really doesn't support hot-plugging,
- * although it might work.  It doesn't support multiple devices, although
+ * although it might work.  Internal support for hot-plugging, or at least
+ * persistence in the face of temporary disconnects, really requires uinput,
+ * since every possible use of the file descriptor would otherwise have to be
+ * intercepted.  It doesn't support multiple devices, although
  * it wouldn't be hard to support later on.*  It is also unable to merge
  * multiple devices into one, such as mapping the Dualshock 3+ motion
  * sensors into the main controller.  It also doesn't support adding
@@ -20,6 +23,11 @@
  * * one way to support multiple controllers right now would be to compile
  *   two copies of this shim, using different shim names and different
  *   environment variable names, and use them both.  Not guaranteed to work.
+ *
+ * Some messages are normally printed to stderr.  In order to catch them
+ * even if the program redirects stderr, or if you just want them stored
+ * elsewhere, set EV_JOY_REMAP_LOG to something else.  To hide, just set
+ * to /dev/null.  To see even if redirected, set to /dev/tty.
  *
  * This uses a configuration file, with one directive per line.  Blank
  * lines and lines beginning with # are ignored, as is initial and trailing
@@ -245,6 +253,8 @@
 #define JSDEV_MINOR0 0
 #define JSDEV_NMINOR 16
 
+static FILE *logf;
+
 /* macros for accessing bits in arrays of unsigned longs */
 /* stupid kernel doesn't export its bitops, so everybody has to reimplement */
 /* these probably only work on little-endian, but that's ok for now */
@@ -448,12 +458,21 @@ static void free_conf(struct evjrconf *sec);
 __attribute__((constructor))
 static void init(void)
 {
-    const char *fname = getenv("EV_JOY_REMAP_CONFIG");
+    const char *fname = getenv("EV_JOY_REMAP_CONFIG"), *logn = getenv("EV_JOY_REMAP_LOG");
     FILE *f;
     long fsize;
     char *cfg;
     struct evjrconf *sec;
 
+    if(logn) {
+	logf = fopen(logn, "w");
+	if(!logf)
+	    perror(logn);
+	else
+	    setbuf(logf, NULL);
+    }
+    if(!logf)
+	logf = stderr;
     if(fname && *fname)
 	f = fopen(fname, "r");
     else if(!(f = fopen((fname = "ev_joy_remap.conf"), "r"))) {
@@ -465,19 +484,19 @@ static void init(void)
 	    f = fopen("/etc/ev_joy_remap.conf", "r");
     }
     if(!f) {
-	perror(fname);
+	fprintf(logf, "%s: %s\n", fname, strerror(errno));
 	return;
     }
     /* config should be short enough to fit in memory */
     /* this eliminates the need for line read gymnastics */
     if(fseek(f, 0, SEEK_END) || (fsize = ftell(f)) < 0 || fseek(f, 0, SEEK_SET) ||
        !(cfg = malloc(fsize + 1))) {
-	perror(fname);
+	fprintf(logf, "%s: %s\n", fname, strerror(errno));
 	fclose(f);
 	return;
     }
     if(fread(cfg, fsize, 1, f) != 1) {
-	perror(fname);
+	fprintf(logf, "%s: %s\n", fname, strerror(errno));
 	fclose(f);
 	free(cfg);
 	return;
@@ -485,7 +504,7 @@ static void init(void)
     fclose(f);
     sec = conf = calloc(sizeof(*conf), (nconf = 1));
     if(!conf) {
-	perror("conf");
+	fprintf(logf, "%s: %s\n", "conf", strerror(errno));
 	free(cfg);
 	nconf = 0;
 	return;
@@ -495,7 +514,7 @@ static void init(void)
     sec->ax_map = calloc((sec->max_ax = 18), sizeof(*sec->ax_map));
     sec->bt_map = calloc((sec->max_bt = 15), sizeof(*sec->bt_map));
     if(!sec->ax_map || !sec->bt_map) {
-	perror("mapping");
+	fprintf(logf, "%s: %s\n", "mapping", strerror(errno));
 	free(cfg);
 	if(sec->ax_map)
 	    free(sec->ax_map);
@@ -507,7 +526,7 @@ static void init(void)
     sec->auto_bt = BTN_A - 1;
     int lno = 1;
 #define abort_parse(msg) do { \
-    fprintf(stderr, "error parsing map on line %d: " msg "\n", lno); \
+    fprintf(logf, "error parsing map on line %d: " msg "\n", lno); \
     goto err; \
 } while(0)
 #define map_resize(what, sz) do { \
@@ -570,7 +589,7 @@ static void init(void)
 		if(*ln) {
 		    sec->name = strdup(ln);
 		    if(!sec->name) {
-			perror("sec name");
+			fprintf(logf, "%s: %s\n", "sec name", strerror(errno));
 			goto err;
 		    }
 		}
@@ -581,7 +600,7 @@ static void init(void)
 		conf = realloc(conf, ++nconf * sizeof(*conf));
 		if(!conf) {
 		    conf = sec;
-		    perror("expand conf");
+		    fprintf(logf, "%s: %s\n", "expand conf", strerror(errno));
 		    goto err;
 		}
 		sec = &conf[nconf - 1];
@@ -589,7 +608,7 @@ static void init(void)
 		if(*ln) {
 		    sec->name = strdup(ln);
 		    if(!sec->name) {
-			perror("sec name");
+			fprintf(logf, "%s: %s\n", "sec name", strerror(errno));
 			goto err;
 		    }
 		}
@@ -616,8 +635,8 @@ static void init(void)
 	    sec->bt_map = malloc(sec->max_bt * sizeof(*sec->bt_map));
 	    if(!sec->ax_map || !sec->bt_map)
 		abort_parse("no mem");
-	    memcpy(sec->ax_map, conf[i].ax_map, sec->nax * sizeof(*sec->ax_map));
-	    memcpy(sec->bt_map, conf[i].bt_map, sec->nbt * sizeof(*sec->bt_map));
+	    memcpy(sec->ax_map, conf[i].ax_map, sec->max_ax * sizeof(*sec->ax_map));
+	    memcpy(sec->bt_map, conf[i].bt_map, sec->max_bt * sizeof(*sec->bt_map));
 #define dupstr(s) do { \
     if(conf[i].s) { \
 	sec->s = strdup(conf[i].s); \
@@ -631,13 +650,13 @@ static void init(void)
 #define comp_regex(s, type) do { \
     if((ret = regcomp(&sec->type, s, REG_EXTENDED | REG_NOSUB))) { \
 	regerror(ret, &sec->type, buf, sizeof(buf)); \
-	fprintf(stderr, #type " pattern error: %.*s\n", (int)sizeof(buf), buf); \
+	fprintf(logf, #type " pattern error: %.*s\n", (int)sizeof(buf), buf); \
 	regfree(&sec->type); \
 	goto err; \
     } \
     sec->type##_str = strdup(s); \
     if(!sec->type##_str) { \
-	perror(s); \
+	fprintf(logf, "%s: %s\n", s, strerror(errno)); \
 	regfree(&sec->type); \
 	goto err; \
     } \
@@ -885,7 +904,7 @@ static void init(void)
 		if(*ln++ != '=')
 		    abort_parse("rescale w/o =");
 		for(a = 0; a < sec->nax; a++)
-		    if(sec->ax_map[a].target == t)
+		    if(sec->ax_map[a].target == t && (sec->ax_map[a].flags & AXFL_MAP))
 			break;
 		if(a == sec->nax) {
 		    a = t;
@@ -909,11 +928,13 @@ static void init(void)
 		    sec->ax_map[a].ai.flat = strtol(ln + 1, &ln, 0);
 		if(*ln == ':')
 		    sec->ax_map[a].ai.resolution = strtol(ln + 1, &ln, 0);
-		if(*ln && *ln != ',')
-		    abort_parse("invalid rescale entry");
 		if(sec->ax_map[a].ai.maximum <= sec->ax_map[a].ai.minimum)
 		    abort_parse("invalid rescale range");
 		/* since I don't entirely understand fuzz & flat, I won't check */
+		if(*ln && *ln != ',')
+		    abort_parse("invalid rescale entry");
+		if(*ln)
+		    ln++;
 	    }
 	    break;
 	  case KW_PASS_AX:
@@ -1117,7 +1138,7 @@ static void init(void)
 	 * permissions, I'm forcing you to have a pattern */
 	/* if this is just used to rename joysticks, it still needs a dummy pattern */
 	if(!sec->match_str) {
-	    fprintf(stderr, "section %s: ", sec->name ? sec->name : "[unnamed]");
+	    fprintf(logf, "section %s: ", sec->name ? sec->name : "[unnamed]");
 	    abort_parse("match pattern required");
 	}
     }
@@ -1128,7 +1149,7 @@ static void init(void)
 	regex_t re;
 	if((ret = regcomp(&re, ensec_s, REG_EXTENDED | REG_NOSUB))) {
 	    regerror(ret, &re, buf, sizeof(buf));
-	    fprintf(stderr, "EV_JOY_REMAP_ENABLE pattern error: %.*s\n", (int)sizeof(buf), buf);
+	    fprintf(logf, "EV_JOY_REMAP_ENABLE pattern error: %.*s\n", (int)sizeof(buf), buf);
 	    regfree(&re);
 	    goto err;
 	}
@@ -1141,11 +1162,11 @@ static void init(void)
 	    }
 	regfree(&re);
 	if(!nconf) {
-	    fputs("No sections enabled for remapper; disabled\n", stderr);
+	    fputs("No sections enabled for remapper; disabled\n", logf);
 	    return;
 	}
     }
-    fputs("Installed event device remapper\n", stderr);
+    fputs("Installed event device remapper\n", logf);
     return;
 err:
     for(sec = conf; nconf; nconf--, sec++)
@@ -1213,7 +1234,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
     if(!(r = free_##t##_fd)) { \
 	r = malloc(sizeof(*r)); \
 	if(!r) { \
-	    perror("fd tracker"); \
+	    fprintf(logf, "%s: %s\n", "fd tracker", strerror(errno)); \
 	    nconf = 0; \
 	} \
     } else { \
@@ -1249,7 +1270,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	    }
 	}
 	if(*s) {
-	    fprintf(stderr, "joy-remap:  invalid id @ %s\n", s);
+	    fprintf(logf, "joy-remap:  invalid id @ %s\n", s);
 	    /* really, this should set ncconf to 0 and abort all remapping */
 	    /* just like all other parse errors */
 	    /* maybe I should parse it more in init() */
@@ -1268,7 +1289,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
     memset(cap->keystates, 0, sizeof(cap->keystates));
     if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(cap->keystates)), cap->keystates) < 0 ||
        real_ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absin)), absin) < 0) {
-	perror("init_joy");
+	fprintf(logf, "%s: %s\n", "init_joy", strerror(errno));
 	goto err;
     }
     int i;
@@ -1281,7 +1302,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	    continue;
 	}
 	if(!ULISSET(cap->keystates, sec->bt_low + i)) {
-	    fprintf(stderr, "warning: disabling button %d due to missing %d\n",
+	    fprintf(logf, "warning: disabling button %d due to missing %d\n",
 		    sec->bt_map[i].target, sec->bt_low + i);
 	    continue;
 	}
@@ -1292,7 +1313,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	if((sec->ax_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
 	    continue;
 	if(!ULISSET(absin, i)) {
-	    fprintf(stderr, "warning: disabling button %d/%d due to missing axis %d\n",
+	    fprintf(logf, "warning: disabling button %d/%d due to missing axis %d\n",
 		    sec->ax_map[i].target, sec->ax_map[i].ntarget, i);
 	    continue;
 	}
@@ -1311,7 +1332,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	    continue;
 	}
 	if(!ULISSET(absin, i)) {
-	    fprintf(stderr, "warning: disabling axis %d due to missing %d\n",
+	    fprintf(logf, "warning: disabling axis %d due to missing %d\n",
 		    sec->ax_map[i].target, i);
 	    continue;
 	}
@@ -1322,7 +1343,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	if(sec->ax_map[i].flags & (AXFL_INVERT | AXFL_RESCALE)) {
 	    struct input_absinfo ai;
 	    if(real_ioctl(fd, EVIOCGABS(i), &ai) < 0) {
-		perror("init_joy");
+		fprintf(logf, "%s: %s\n", "init_joy", strerror(errno));
 		goto err;
 	    }
 	    sec->ax_map[i].offthresh = ai.minimum;
@@ -1333,7 +1354,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	if((sec->bt_map[i].flags & (AXFL_MAP | AXFL_BUTTON)) != (AXFL_MAP | AXFL_BUTTON))
 	    continue;
 	if(!ULISSET(cap->keystates, sec->bt_low + i)) {
-	    fprintf(stderr, "warning: disabling axis %d/%d due to missing button %d\n",
+	    fprintf(logf, "warning: disabling axis %d/%d due to missing button %d\n",
 		    sec->bt_map[i].onax, sec->bt_map[i].offax, i);
 	    continue;
 	}
@@ -1405,7 +1426,7 @@ static struct evjrconf *allowed_sec(int fd, int evno)
 }
 
 /* common code for multiple nearly identical open() functions */
-static int ev_open(const char *pathname, int fd)
+static int ev_open(const char *fn, const char *pathname, int fd)
 {
     struct stat st;
     if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR)
@@ -1425,7 +1446,7 @@ static int ev_open(const char *pathname, int fd)
 			struct jsfdcap *jn;
 			alloc_fd(jn, js, fd, sec);
 			if(jn) { /* else error/aborting cap */
-			    fprintf(stderr, "renaming %s (%s to %s)\n", pathname, buf, sec->repl_name);
+			    fprintf(logf, "[%s/%d] renaming %s (%s to %s)\n", fn, fd, pathname, buf, sec->repl_name);
 			    /* critical section, protected well enough by buf_lock */
 			    jn->next = js_fd;
 			    js_fd = jn;
@@ -1433,7 +1454,7 @@ static int ev_open(const char *pathname, int fd)
 			break;
 		    }
 	    } else
-		perror("jsname");
+		fprintf(logf, "%s: %s\n", "jsname", strerror(errno));
 	    pthread_mutex_unlock(&buf_lock);
 	}
 	return fd;
@@ -1448,13 +1469,13 @@ static int ev_open(const char *pathname, int fd)
 		break;
 	if(sec == conf + nconf)
 	    return fd;
-/*    fprintf(stderr, "Rejecting open of %s\n", pathname); */
+/*    fprintf(logf, "[%s/%d] Rejecting open of %s\n", fn, fd, pathname); */
 	real_close(fd);
 	errno = EPERM;
 	return -1;
     }
     if(sec) {
-	fprintf(stderr, "Intercept %s (%d)\n", pathname, fd);
+	fprintf(logf, "[%s/%d] Intercept %s\n", fn, fd, pathname);
 	init_joy(fd, sec);
     }
     return fd;
@@ -1472,7 +1493,7 @@ int open(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open(pathname, next(pathname, flags, mode));
+    return ev_open("open", pathname, next(pathname, flags, mode));
 }
 
 /* identical to above, for programs that call this alias */
@@ -1488,10 +1509,49 @@ int open64(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    return ev_open(pathname, next(pathname, flags, mode));
+    return ev_open("open64", pathname, next(pathname, flags, mode));
 }
 
-int close(int fd)
+#if 0
+/* path-relative opens */
+/* not really necessary, as no known program uses them */
+/* they are used indirectly by fopen(), though; but fopen always uses libc */
+int openat(int dirfd, const char *pathname, int flags, ...)
+{
+    static int (*next)(int, const char *, int, ...) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "openat");
+    mode_t mode = 0;
+    if(flags & O_CREAT) {
+	va_list va;
+	va_start(va, flags);
+	mode = va_arg(va, mode_t);
+	va_end(va);
+    }
+    return ev_open("openat", pathname, next(dirfd, pathname, flags, mode));
+}
+
+int openat64(int dirfd, const char *pathname, int flags, ...)
+{
+    static int (*next)(int, const char *, int, ...) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "openat64");
+    mode_t mode = 0;
+    if(flags & O_CREAT) {
+	va_list va;
+	va_start(va, flags);
+	mode = va_arg(va, mode_t);
+	va_end(va);
+    }
+    return ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
+}
+#endif
+
+/* glibc also exports numerous "internal" symbols beginning with __ */
+/* not going to intercept them, for now. */
+/* the only other open is open_to_handle_at, which I don't want to deal with */
+
+static void ev_close(int fd)
 {
     pthread_mutex_lock(&buf_lock);
 #define close_fd(t) do { \
@@ -1504,17 +1564,71 @@ int close(int fd)
 	    /* critical section, protected by buf_lock */ \
 	    c->next = free_##t##_fd; \
 	    free_##t##_fd = c; \
-	    fprintf(stderr, "closing %d\n", fd); \
+	    fprintf(logf, "closing %d\n", fd); \
 	    /* skip js search if this is ev */ \
 	    pthread_mutex_unlock(&buf_lock); \
-	    return real_close(fd); \
+	    return; \
 	} \
 } while(0)
     close_fd(ev);
     close_fd(js);
     pthread_mutex_unlock(&buf_lock);
+}
+
+int close(int fd)
+{
+    ev_close(fd);
     return real_close(fd);
 }
+
+#if 0
+/* fopen seems to be what c++ uses */
+/* requires fread, fclose intercept as well, and probably more */
+/* however, gcc uses read(), so only fclose() for now */
+FILE *fopen(const char *pathname, const char *mode)
+{
+    static FILE * (*next)(const char *, const char *) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "fopen");
+    FILE *res = next(pathname, mode);
+    if(!res)
+	return res;
+    int fd = fileno(res);
+    if(fd < 0)
+	return res;
+    fd = ev_open("fopen", pathname, fd);
+    return res;
+}
+
+FILE *fopen64(const char *pathname, const char *mode)
+{
+    static FILE * (*next)(const char *, const char *) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "fopen64");
+    FILE *res = next(pathname, mode);
+    if(!res)
+	return res;
+    int fd = fileno(res);
+    if(fd < 0)
+	return res;
+    fd = ev_open("fopen64", pathname, fd);
+    return res;
+}
+
+int fclose(FILE *f)
+{
+    static int (*next)(FILE *) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "fclose");
+    if(!f)
+	return next(f);
+    int fd = fileno(f);
+    if(fd < 0)
+	return next(f);
+    ev_close(fd);
+    return next(f);
+}
+#endif
 
 static struct evfdcap *cap_of(int fd)
 {
@@ -1525,6 +1639,8 @@ static struct evfdcap *cap_of(int fd)
 }
 
 /* this is where most of the translation takes place:  modify read events */
+/* note that I do not intercept other forms of read as no known program uses them */
+/* e.g. readv, pread, preadv, aio_read, fread, fscanf, getc/fgetc, fgets */
 ssize_t read(int fd, void *buf, size_t count)
 {
     static ssize_t (*next)(int, void *, size_t) = NULL;
@@ -1606,7 +1722,7 @@ ssize_t read(int fd, void *buf, size_t count)
 		    mod = ev.code != m->target || (m->flags & (AXFL_INVERT | AXFL_RESCALE));
 		    ev.code = m->target;
 		    if(m->flags & AXFL_RESCALE) {
-			ev.value = (ev.value - m->offthresh) * (m->ai.maximum - m->ai.minimum) / (m->onthresh - 2 * m->offthresh) + m->ai.minimum;
+			ev.value = (ev.value - m->offthresh) * ((long)m->ai.maximum - m->ai.minimum + 1) / ((long)m->onthresh - 2 * m->offthresh + 1) + m->ai.minimum;
 			if(m->flags & AXFL_INVERT)
 			    ev.value = m->ai.minimum + m->ai.maximum - ev.value;
 		    } else if(m->flags & AXFL_INVERT)
@@ -1710,16 +1826,18 @@ int ioctl(int fd, unsigned long request, ...)
     struct evfdcap *cap = cap_of(fd);
     if(cap) {
 	const struct evjrconf *sec = cap->conf;
-#define cpstr(s) do { \
+#define cpstr(n, s) do { \
     if(!s) \
 	return real_ioctl(fd, request, argp); \
+    fprintf(logf, "%d: EVIOC" n " -> %s\n", fd, s); \
     len = strlen(s); \
     if(++len < _IOC_SIZE(request)) \
 	memcpy(argp, s, len); \
     else \
 	memcpy(argp, s, (len = _IOC_SIZE(request))); \
 } while(0)
-#define cpmem(m) do { \
+#define cpmem(n, m) do { \
+    fprintf(logf, "%d: altered EVIOC" n "\n", fd); \
     len = _IOC_SIZE(request); \
     if(len > sizeof(m)) { \
 	memset((char *)argp + sizeof(m), 0, len - sizeof(m)); \
@@ -1729,16 +1847,17 @@ int ioctl(int fd, unsigned long request, ...)
 } while(0)
 	switch(_IOC_NR(request)) {
 	  case _IOC_NR(EVIOCGNAME(0)):
-	    cpstr(sec->repl_name);
+	    cpstr("GNAME", sec->repl_name);
 	    return len;
 	  case _IOC_NR(EVIOCGID):
 	    if(!sec->repl_id)
 		break;
+	    fprintf(logf, "%d: altered ID\n", fd);
 	    /* cap->repl_id_val was filled in by init_joy() */
 	    memcpy(argp, &cap->repl_id_val, sizeof(cap->repl_id_val));
 	    return 0;
 	  case _IOC_NR(EVIOCGUNIQ(0)):
-	    cpstr(sec->repl_uniq);
+	    cpstr("GUNIQ", sec->repl_uniq);
 	    return len;
 	  case _IOC_NR(EVIOCGKEY(0)):
 	    /* this code mostly matches init_joy()'s GKEY mask initializer */
@@ -1773,15 +1892,15 @@ int ioctl(int fd, unsigned long request, ...)
 	    if(!sec->filter_bt)
 		for(i = 0; i < MINBITS(KEY_MAX); i++)
 		    cap->keystates[i] |= cap->keystates_in[i];
-	    cpmem(cap->keystates);
+	    cpmem("GKEY()", cap->keystates);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_ABS, 0)):
 	    /* filled in by init_joy() */
-	    cpmem(cap->absout);
+	    cpmem("GBIT(EV_ABS)", cap->absout);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_KEY, 0)):
 	    /* filled in by init_joy() */
-	    cpmem(cap->keysout);
+	    cpmem("GBIT(EV_KEY)", cap->keysout);
 	    return len;
 	  default:
 	    if(_IOC_NR(request) >= _IOC_NR(EVIOCGABS(0)) &&
@@ -1795,9 +1914,9 @@ int ioctl(int fd, unsigned long request, ...)
 			int ret = real_ioctl(fd, EVIOCGABS(i), argp);
 			if(ret >= 0 && (sec->ax_map[i].flags & AXFL_RESCALE)) {
 			    const struct axmap *m = &sec->ax_map[i];
-			    int value = ((struct input_absinfo *)argp)->value;
+			    long value = ((struct input_absinfo *)argp)->value;
 			    memcpy(argp, &m->ai, sizeof(m->ai));
-			    value = (value - m->offthresh) * (m->ai.maximum - m->ai.minimum) / (m->onthresh - 2 * m->offthresh) + m->ai.minimum;
+			    value = (value - m->offthresh) * ((long)m->ai.maximum - m->ai.minimum + 1) / ((long)m->onthresh - 2 * m->offthresh + 1) + m->ai.minimum;
 			    if(m->flags & AXFL_INVERT)
 				value = m->ai.minimum + m->ai.maximum - value;
 			    ((struct input_absinfo *)argp)->value = value;
@@ -1815,7 +1934,7 @@ int ioctl(int fd, unsigned long request, ...)
 			    .minimum = -1, .maximum = 1, .value = cap->axval[i]
 			    /* resolution? */
 			};
-			cpmem(ai);
+			cpmem("GABS", ai);
 			return 0;
 		    }
 		if(!sec->filter_ax && (ax >= sec->nax || !(sec->ax_map[ax].flags & AXFL_MAP)))
@@ -1827,7 +1946,8 @@ int ioctl(int fd, unsigned long request, ...)
     } else if(_IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
 	for(struct jsfdcap *jn = js_fd; jn; jn = jn->next)
 	    if(jn->fd == fd) {
-		cpstr(jn->conf->repl_name);
+		/* yeah, JSIOC not EVIOC, but it's just a message */
+		cpstr("JGNAME", jn->conf->repl_name);
 		return len;
 	    }
     }
