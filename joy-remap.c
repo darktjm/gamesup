@@ -29,6 +29,19 @@
  * elsewhere, set EV_JOY_REMAP_LOG to something else.  To hide, just set
  * to /dev/null.  To see even if redirected, set to /dev/tty.
  *
+ * There are many ways an event device can be accessed.  Following the
+ * open, the only methods supported are read and ioctl.  The actual
+ * method of opening is expected to be open/open64, finished by close.
+ * The CAP_* defines below can also be used to enable other methods:
+ * openat/openat64, fopen/fclose, and syscall(open,openat).  There are
+ * also many ways this entire shim can be disabled.  For example:
+ * explicit symbol lookups from libc, forking after unsetting LD_PRELOAD,
+ * use of an unsupported access method, and explicitly dlopen()ing libc.
+ * In fact, one game I have does the latter, which can be disabled by
+ * placing a dummy, empty shared object file named libc.so.6 somewhere
+ * the game can find it (hopefully this needn't be in its LD_LIBRARY_PATH).
+ *    gcc -shared -x c /dev/null -o libc.so.6 -Wl,--as-needed
+ *
  * This uses a configuration file, with one directive per line.  Blank
  * lines and lines beginning with # are ignored, as is initial and trailing
  * whitespace.  The directives are case-insensitive keywords, followed by
@@ -221,6 +234,15 @@
  * special magic).  At least crashes can be debugged using the core file.
  * Crashing within gdb confuses gdb, and setting breakpoints doesn't work.
  */
+
+/* Every intercept takes time, albeit usually unnoticabbly little */
+/* The only ones known to work are open and open64 */
+#define CAP_OPENAT  1  /* this is the syscall used by glibc, but nobody calls this */
+#define CAP_FOPEN   1  /* for c++; assumes use of read() rather than fread() */
+#define CAP_SYSCALL 1  /* for mono, I guess */
+/* glibc also exports numerous "internal" symbols beginning with __ */
+/* not going to intercept them, for now. */
+/* the only other open is open_to_handle_at, which I don't want to deal with */
 
 /* for RTLD_NEXT */
 #ifndef _GNU_SOURCE
@@ -451,7 +473,9 @@ static int kwcmp(const void *_a, const void *_b)
 
 static void free_conf(struct evjrconf *sec);
 
+#if CAP_SYSCALL
 static long (*real_syscall)(long number, ...);
+#endif
 
 /* parse config file */
 /* is this too early for file I/O?  apparently not */
@@ -460,8 +484,11 @@ static long (*real_syscall)(long number, ...);
 __attribute__((constructor))
 static void init(void)
 {
-    real_syscall = dlsym(RTLD_NEXT, "syscall");
-    const char *fname = getenv("EV_JOY_REMAP_CONFIG"), *logn = getenv("EV_JOY_REMAP_LOG");
+#if CAP_SYSCALL
+    real_syscall = dlsym(RTLD_NEXT, "syscall");  /* needs to be first! */
+#endif
+    const char *fname = getenv("EV_JOY_REMAP_CONFIG"),
+	       *logn = getenv("EV_JOY_REMAP_LOG");
     FILE *f;
     long fsize;
     char *cfg;
@@ -1484,9 +1511,16 @@ static int ev_open(const char *fn, const char *pathname, int fd)
     return fd;
 }
 
+#if CAP_SYSCALL
 /* FIXME: this is not thread-safe */
 /* it's really only for open(), though, so it's not likely to trigger */
 volatile static int syscalling = 0;
+#define DIS_SYSCALL syscalling = 1
+#define EN_SYSCALL  syscalling = 0
+#else
+#define DIS_SYSCALL
+#define EN_SYSCALL
+#endif
 
 int open(const char *pathname, int flags, ...)
 {
@@ -1500,9 +1534,9 @@ int open(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("open", pathname, next(pathname, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
 
@@ -1519,30 +1553,31 @@ int open64(const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("open64", pathname, next(pathname, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
 
 /* mono seems to use syscall().  That is pretty much impossible to intercept */
+#if CAP_SYSCALL
 /* at least not without arch-dependent asm */
 /* and that's assuming mono even uses glibc's syscall() so I can override */
 #include <sys/syscall.h>
 
 static long opensys(long scno, const char *path, int flags, mode_t mode)
 {
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("opensys", path, syscall(SYS_open, path, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
 
 static long openatsys(long scno, int dirfd, const char *path, int flags, mode_t mode)
 {
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("openatsys", path, syscall(SYS_openat, dirfd, path, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
 
@@ -1581,8 +1616,10 @@ asm volatile (
 #endif
     );
 }
+#endif
 
 /* path-relative opens */
+#if CAP_OPENAT
 /* not really necessary, as no known program uses them */
 /* they are used indirectly by fopen(), though; but fopen always uses libc */
 int openat(int dirfd, const char *pathname, int flags, ...)
@@ -1597,9 +1634,9 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("openat", pathname, next(dirfd, pathname, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
 
@@ -1615,15 +1652,12 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
-    syscalling = 1;
+    DIS_SYSCALL;
     int ret = ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
-    syscalling = 0;
+    EN_SYSCALL;
     return ret;
 }
-
-/* glibc also exports numerous "internal" symbols beginning with __ */
-/* not going to intercept them, for now. */
-/* the only other open is open_to_handle_at, which I don't want to deal with */
+#endif
 
 static void ev_close(int fd)
 {
@@ -1656,6 +1690,7 @@ int close(int fd)
 }
 
 /* fopen seems to be what c++ uses */
+#if CAP_FOPEN
 /* requires fread, fclose intercept as well, and probably more */
 /* however, gcc uses read(), so only fclose() for now */
 FILE *fopen(const char *pathname, const char *mode)
@@ -1663,9 +1698,9 @@ FILE *fopen(const char *pathname, const char *mode)
     static FILE * (*next)(const char *, const char *) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "fopen");
-    syscalling = 1;
+    DIS_SYSCALL;
     FILE *res = next(pathname, mode);
-    syscalling = 0;
+    EN_SYSCALL;
     if(!res)
 	return res;
     int fd = fileno(res);
@@ -1680,9 +1715,9 @@ FILE *fopen64(const char *pathname, const char *mode)
     static FILE * (*next)(const char *, const char *) = NULL;
     if(!next)
 	next = dlsym(RTLD_NEXT, "fopen64");
-    syscalling = 1;
+    DIS_SYSCALL;
     FILE *res = next(pathname, mode);
-    syscalling = 0;
+    EN_SYSCALL;
     if(!res)
 	return res;
     int fd = fileno(res);
@@ -1705,6 +1740,7 @@ int fclose(FILE *f)
     ev_close(fd);
     return next(f);
 }
+#endif
 
 static struct evfdcap *cap_of(int fd)
 {
