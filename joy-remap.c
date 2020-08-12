@@ -227,12 +227,15 @@
  * > LD_PRELOAD="<path_to>/joy-remap.so" <cmd>
  *
  *
- * Build with: gcc -s -Wall -O2 -shared -fPIC -o joy-remap.{so,c} -ldl
- * for debug:  gcc -g -Wall -shared -fPIC -o joy-remap.{so,c} -ldl
+ * Build with: gcc -s -Wall -O2 -shared -fPIC -o joy-remap.{so,c} -ldl -lpthread
+ * for debug:  gcc -g -Wall -shared -fPIC -o joy-remap.{so,c} -ldl -lpthread
  * Use clang instead of gcc if you prefer.  Don't bother with debug; gdb
  * has a real hard time debugging LD_PRELOADs (or maybe I'm missing some
  * special magic).  At least crashes can be debugged using the core file.
  * Crashing within gdb confuses gdb, and setting breakpoints doesn't work.
+ * Note that you have to use -lpthread in order to have this use pthread's
+ * open64 rather than libc's.  This code uses pthread code, anyway.  Code
+ * that hard-codes use of errno var might now work quite right.
  */
 
 /* Every intercept takes time, albeit usually unnoticabbly little */
@@ -240,9 +243,14 @@
 #define CAP_OPENAT  1  /* this is the syscall used by glibc, but nobody calls this */
 #define CAP_FOPEN   1  /* for c++; assumes use of read() rather than fread() */
 #define CAP_SYSCALL 1  /* for mono, I guess */
+/* note that altough I made changes to the asm to get the SYSCALL code to
+ * compile on clang, I have not tested the compiled clang version at all */
+/* the sysall only intercepts open and openat, not openat2, read, ioctl, etc */
 /* glibc also exports numerous "internal" symbols beginning with __ */
 /* not going to intercept them, for now. */
 /* the only other open is open_to_handle_at, which I don't want to deal with */
+/* direct syscalls bypassing libc entirely could work, but won't, ever */
+/* In fact, I may remove all of the above given that nothing I have uses them */
 
 /* for RTLD_NEXT */
 #ifndef _GNU_SOURCE
@@ -1459,8 +1467,11 @@ static struct evjrconf *allowed_sec(int fd, int evno)
 static int ev_open(const char *fn, const char *pathname, int fd)
 {
     struct stat st;
-    if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR)
+    int en = errno;
+    if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR) {
+	errno = en;
 	return fd;
+    }
     const struct evjrconf *sec;
     if(minor(st.st_rdev) >= JSDEV_MINOR0 &&
        minor(st.st_rdev) < JSDEV_MINOR0 + JSDEV_NMINOR) {
@@ -1487,18 +1498,23 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 		fprintf(logf, "%s: %s\n", "jsname", strerror(errno));
 	    pthread_mutex_unlock(&buf_lock);
 	}
+	errno = en;
 	return fd;
     }
-    if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR)
+    if(minor(st.st_rdev) < EVDEV_MINOR0 || minor(st.st_rdev) >= EVDEV_MINOR0 + EVDEV_NMINOR) {
+	errno = en;
 	return fd;
+    }
     sec = NULL;
     if(nconf && !(sec = allowed_sec(fd, minor(st.st_rdev) - EVDEV_MINOR0))) {
 	/* if any enabled sections filter, filter. */
 	for(sec = conf; sec < conf + nconf; sec++)
 	    if(sec->filter_dev)
 		break;
-	if(sec == conf + nconf)
+	if(sec == conf + nconf) {
+	    errno = en;
 	    return fd;
+	}
 /*    fprintf(logf, "[%s/%d] Rejecting open of %s\n", fn, fd, pathname); */
 	real_close(fd);
 	errno = EPERM;
@@ -1508,6 +1524,7 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 	fprintf(logf, "[%s/%d] Intercept %s\n", fn, fd, pathname);
 	init_joy(fd, sec);
     }
+    errno = en;
     return fd;
 }
 
@@ -1565,7 +1582,8 @@ int open64(const char *pathname, int flags, ...)
 /* and that's assuming mono even uses glibc's syscall() so I can override */
 #include <sys/syscall.h>
 
-static long opensys(long scno, const char *path, int flags, mode_t mode)
+/* on i386, the asm code can't reference this from C, so needs used attr */
+static long __attribute((used)) opensys(long scno, const char *path, int flags, mode_t mode)
 {
     DIS_SYSCALL;
     int ret = ev_open("opensys", path, syscall(SYS_open, path, flags, mode));
@@ -1573,7 +1591,8 @@ static long opensys(long scno, const char *path, int flags, mode_t mode)
     return ret;
 }
 
-static long openatsys(long scno, int dirfd, const char *path, int flags, mode_t mode)
+/* on i386, the asm code can't reference this from C, so needs used attr */
+static long __attribute((used)) openatsys(long scno, int dirfd, const char *path, int flags, mode_t mode)
 {
     DIS_SYSCALL;
     int ret = ev_open("openatsys", path, syscall(SYS_openat, dirfd, path, flags, mode));
@@ -1598,9 +1617,9 @@ asm volatile (
 #ifdef __i386
 "       mov    4(%%esp),%%eax\n"
 "       cmpl %[open_sc], %%eax\n"
-"       je opensys /* can't use %[opensys] or %p[opensys] */\n"
+"       je opensys /* can't use %%[opensys] */\n"
 "       cmpl %[openat_sc], %%eax\n"
-"       je openatsys /* can't use %[openatsys] or %p[openatsys] */\n"
+"       je openatsys /* can't use %%[openatsys] */\n"
 "dosys:\n"
 "       mov %[real_syscall], %%eax\n"
 "       jmp *%%eax\n"
@@ -1609,8 +1628,10 @@ asm volatile (
 #endif
 #endif
     : : [syscalling]"m"(syscalling), [real_syscall]"m"(real_syscall),
-	[open_sc]"i"(SYS_open), [opensys]"m"(opensys),
-	[openat_sc]"i"(SYS_openat), [openatsys]"m"(openatsys)
+	[open_sc]"i"(SYS_open), [openat_sc]"i"(SYS_openat)
+#ifdef __amd64  /* can't use this in i386 code beause it thinks it's data */
+	,[opensys]"p"(opensys), [openatsys]"p"(openatsys)
+#endif
 #ifdef __i386
     : "eax"
 #endif
@@ -1703,7 +1724,9 @@ FILE *fopen(const char *pathname, const char *mode)
     EN_SYSCALL;
     if(!res)
 	return res;
+    int en = errno;
     int fd = fileno(res);
+    errno = en;
     if(fd < 0)
 	return res;
     fd = ev_open("fopen", pathname, fd);
@@ -1720,7 +1743,9 @@ FILE *fopen64(const char *pathname, const char *mode)
     EN_SYSCALL;
     if(!res)
 	return res;
+    int en = errno;
     int fd = fileno(res);
+    errno = en;
     if(fd < 0)
 	return res;
     fd = ev_open("fopen64", pathname, fd);
@@ -1734,7 +1759,9 @@ int fclose(FILE *f)
 	next = dlsym(RTLD_NEXT, "fclose");
     if(!f)
 	return next(f);
+    int en = errno;
     int fd = fileno(f);
+    errno = en;
     if(fd < 0)
 	return next(f);
     ev_close(fd);
