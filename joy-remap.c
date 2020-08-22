@@ -1869,7 +1869,7 @@ FILE *fopen64(const char *pathname, const char *mode)
     errno = en;
     if(fd < 0)
 	return res;
-    if(ev_open("fopen", pathname, fd) < 0) {
+    if(ev_open("fopen64", pathname, fd) < 0) {
 	fclose(res);
 	return NULL;
     }
@@ -2099,16 +2099,21 @@ ssize_t read(int fd, void *buf, size_t count)
 		    return read(fd, buf, count);
 		}
 	    }
+	    /* js may also shift numbers */
+	    int newnum;
+	    if(ev.type == EV_KEY)
+		/* FIXME:  error if < BTN_MISC */
+		newnum = cap->js_extra->out_btn_map[ev.code - BTN_MISC];
+	    else
+		newnum = cap->js_extra->out_ax_map[ev.code];
+	    if(newnum != jev.number)
+		mod = 1;
 	    if(mod) {
 		jev.type = (jev.type & JS_EVENT_INIT) |
 		    (ev.type == EV_KEY ? JS_EVENT_BUTTON : JS_EVENT_AXIS);
 		/* FIXME:  value probably needs adjusting for axes */
 		jev.value = ev.value;
-		if(ev.type == EV_KEY)
-		    /* FIXME:  error if < BTN_MISC */
-		    jev.number = cap->js_extra->out_btn_map[ev.code - BTN_MISC];
-		else
-		    jev.number = cap->js_extra->out_ax_map[ev.code];
+		jev.number = newnum;
 		memcpy(buf, &jev, cap->excess_read ? nread : sizeof(jev));
 		if(cap->excess_read)
 		    memcpy(cap->ebuf, (char *)&jev + nread, cap->excess_read);
