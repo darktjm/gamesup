@@ -101,13 +101,10 @@
  *   the version number right now, as I don't know of any software that
  *   depends on the version.
  *
- * jsrename <pattern>
- *   This is a match pattern for joystick device names (/dev/input/jsX).
- *   Joystick devices do not advertise the device ID, so it matches the
- *   name only.   The first device opened which matches this name will
- *   be renamed by the name directive above.  Any other changes, such
- *   as button and axis remapping, should be done using jscal.  This will
- *   likely always be a dummy pattern, such as . or just blank.
+ * jsrename
+ *   If present, the joystick device associated with the filter is renamed.
+ *   This will cause the event device to be opened and closed, so if something
+ *   else is filtering out the event device, it may not work.
  *
  * id <idcode>
  *   Replace the advertised ID of the device.  The idcode must be of the
@@ -209,6 +206,13 @@
  *   explicilty mapped are ignored.  This passes through any inputs not
  *   conflicting with outputs through.
  *
+ * jsremap
+ *   If present, do remapping as if the js device was generated from the
+ *   remapped event device in the standard way.  This includes renaming,
+ *   so the jsrename is not additionally needed.  As with jsrename, this
+ *   will cause the event device to be opened and closed, so if something
+ *   else is filtering out the event device, it may not work.
+ *
  * syn_drop
  *   When dropping events, rather than just removing them from the stream,
  *   send SYN_DROP events.
@@ -259,7 +263,10 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <ctype.h>
+/* fortified glibc makes read() some sort of complex beast that is incompatible */
+#define read internal_read
 #include <unistd.h>
+#undef read
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <fcntl.h>
@@ -271,6 +278,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <regex.h>
+#include <dirent.h>
 /* why would you be scanning for devices in parallel?  Oh well, some
  * jackass will try and screw this up, so may as well support it */
 #include <pthread.h>
@@ -336,20 +344,24 @@ static struct evjrconf {
     struct butmap *bt_map;
     char *repl_name, *repl_id, *repl_uniq;
     /* since there is no regcopy() or equiv., need strings for KW_USE */
-    char *match_str, *reject_str, *jsrename_str;
-    regex_t match, reject, jsrename; /* compiled matching regexes */
+    char *match_str, *reject_str;
+    regex_t match, reject; /* compiled matching regexes */
     /* stuff below this is safe to copy on USE */
     int bt_low, nbt, nax; /* mapping array valid bounds */
     int max_ax, max_bt; /* mapping array sizes */
     int auto_ax, auto_bt; /* during parse: current auto-assigned inputs */
     int filter_ax, filter_bt; /* flag:  pass-through unmapped? */
     int filter_dev; /* flag:  filter non-matching devs completely? */
-    int syn_drop; /* use SYN_DROP instead of deleting drops? */
+    char jsrename; /* rename js device associated with event device? */
+    char jsremap; /* do full js remapping? */
+    char syn_drop; /* use SYN_DROP instead of deleting drops? */
 } *conf;
 static int nconf = 0;
 
 /* captured fds and the config that captured them */
 /* also other per-device info */
+
+struct js_extra;
 static struct evfdcap {
     struct evfdcap *next; /* linked list is less thread-unsafe */
     const struct evjrconf *conf;
@@ -360,18 +372,25 @@ static struct evfdcap {
 	          keystates[MINBITS(KEY_MAX)], /* sent GKEY */
 	          keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
     struct input_id repl_id_val;
-    int excess_read;
     char ebuf[sizeof(struct input_event)];
+    char excess_read;
+    char is_js;
+    struct js_extra *js_extra;
     int fd;
 } *ev_fd = NULL, *free_ev_fd = NULL;
-static struct jsfdcap {
-    struct jsfdcap *next; /* linked list is less thread-unsafe */
-    const struct evjrconf *conf;
-    int fd;
-} *js_fd = NULL, *free_js_fd = NULL;
+
+struct js_extra {
+    /* in:  index = js-code, value = ev-code */
+    __u8 in_ax_map[ABS_MAX];
+    __u16 in_btn_map[KEY_MAX - BTN_MISC + 1];
+    /* out:  index = ev-code, value = js-code */
+    __u8 out_ax_map[ABS_MAX];
+    __u16 out_btn_map[KEY_MAX - BTN_MISC + 1];
+};
 
 static char buf[1024]; /* generic large buffer to reduce stack usage */
-static pthread_mutex_t buf_lock = PTHREAD_MUTEX_INITIALIZER; /* in case of threads */
+/* in case of threads; used to just be access lock for buf[] */
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* array must be alphabetized */
 static const struct bname {
@@ -454,6 +473,7 @@ static const char * const kws[] = {
     "buttons",
     "filter",
     "id",
+    "jsremap",
     "jsrename",
     "match",
     "name",
@@ -468,9 +488,9 @@ static const char * const kws[] = {
 };
 
 enum kw {
-    KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_JSRENAME, KW_MATCH, KW_NAME,
-    KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_SECTION, KW_SYN_DROP,
-    KW_UNIQ, KW_USE
+    KW_AXES, KW_BUTTONS, KW_FILTER, KW_ID, KW_JSREMAP, KW_JSRENAME, KW_MATCH,
+    KW_NAME, KW_PASS_AX, KW_PASS_BT, KW_REJECT, KW_RESCALE, KW_SECTION,
+    KW_SYN_DROP, KW_UNIQ, KW_USE
 };
 
 static int kwcmp(const void *_a, const void *_b)
@@ -705,7 +725,6 @@ static void init(void)
 } while(0)
 	    dupre(match);
 	    dupre(reject);
-	    dupre(jsrename);
 	    break;
 	  case KW_MATCH:
 #define parse_regex(type) do { \
@@ -737,7 +756,9 @@ static void init(void)
 	    store_repl(name);
 	    break;
 	  case KW_JSRENAME:
-	    parse_regex(jsrename);
+	    if(*ln)
+		abort_parse("jsrename takes no parameter");
+	    sec->jsrename = 1;
 	    break;
 	  case KW_ID:
 	    store_repl(id);
@@ -1116,6 +1137,11 @@ static void init(void)
 		abort_parse("pass_bt takes no parameter");
 	    sec->filter_bt = -1;
 	    break;
+	  case KW_JSREMAP:
+	    if(*ln)
+		abort_parse("jsremap takes no parameter");
+	    sec->jsremap = 1;
+	    break;
 	  case KW_SYN_DROP:
 	    if(*ln)
 		abort_parse("syn_drop takes no parameter");
@@ -1228,7 +1254,6 @@ static void free_conf(struct evjrconf *sec)
 } while(0)
     free_re(match);
     free_re(reject);
-    free_re(jsrename);
     if(sec->repl_uniq)
 	free(sec->repl_uniq);
     if(sec->repl_id)
@@ -1237,7 +1262,7 @@ static void free_conf(struct evjrconf *sec)
 	free(sec->repl_name);
 }
 
-/* I use ioctl() a bit here, so bypass intercept */
+/* I use some intercepted functions below, so bypass intercept */
 static int real_ioctl(int fd, unsigned long request, ...)
 {
     static int (*next)(int, unsigned long, ...) = NULL;
@@ -1253,7 +1278,6 @@ static int real_ioctl(int fd, unsigned long request, ...)
     return next(fd, request, argp);
 }
 
-/* I also use close() sometimes, so bypass intercept */
 static int real_close(int fd)
 {
     static int (*next)(int) = NULL;
@@ -1262,32 +1286,91 @@ static int real_close(int fd)
     return next(fd);
 }
 
+static void ev_close(int fd);
+
+static int real_open(const char *pathname, int flags, mode_t mode)
+{
+    static int (*next)(const char *, int, ...) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "open");
+    return next(pathname, flags, mode);
+}
+
+#if CAP_OPENAT
+static int real_openat(int dirfd, const char *pathname, int flags, mode_t mode)
+{
+    static int (*next)(int, const char *, int, ...) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "openat");
+    return next(dirfd, pathname, flags, mode);
+}
+#else
+#define real_openat openat
+#endif
+
+/* determine what js device belongs to an event device or vice-versa */
+/* requires /sys (and access to it) */
+static int js_ev(int q, int is_js)
+{
+    char buf[10]; /* "event%d"; 0-31; 8 is enough */
+    int d = real_open("/sys/class/input", O_PATH, 0), d2;
+    if(d < 0)
+	return -1;
+    if(is_js)
+	sprintf(buf, "js%d", q);
+    else
+	sprintf(buf, "event%d", q);
+    d2 = real_openat(d, buf, O_PATH, 0);
+    real_close(d);
+    if(d2 < 0)
+	return -1;
+    d = real_openat(d2, "device", O_RDONLY, 0);  /* O_PATH doesn't allow readdir */
+    real_close(d2);
+    if(d < 0)
+	return -1;
+    DIR *dp = fdopendir(d);
+    if(!dp) {
+	real_close(d);
+	return -1;
+    }
+    /* no need to use readdir_r, as different streams use different dirents */
+    const struct dirent *de;
+    int noff = is_js ? 5 : 2;
+    const char *n = is_js ? "event" : "js";
+    while((de = readdir(dp))) {
+	if(memcmp(de->d_name, n, noff) || !isdigit(de->d_name[noff]))
+	    continue;
+	int ret = atoi(de->d_name + noff);
+	closedir(dp);
+	return ret;
+    }
+    closedir(dp);
+    return -1;
+}
+
 /* capture event device and prepare ioctl returns */
-static void init_joy(int fd, const struct evjrconf *sec)
+static void init_evdev(int fd, const struct evjrconf *sec)
 {
     /* could use local lock, but it needs to be shared with close() */
-    pthread_mutex_lock(&buf_lock);
+    pthread_mutex_lock(&lock);
     struct evfdcap *cap;
-#define alloc_fd(r, t, f, s) do { \
-    if(!(r = free_##t##_fd)) { \
-	r = malloc(sizeof(*r)); \
-	if(!r) { \
-	    fprintf(logf, "%s: %s\n", "fd tracker", strerror(errno)); \
-	    nconf = 0; \
-	} \
-    } else { \
-	/* critical section w/ r assignment, protected by buf_lock */ \
-	free_##t##_fd = r->next; \
-    } \
-    if(r) { \
-	memset(r, 0, sizeof(*r)); \
-	r->fd = f; \
-	r->conf = s; \
-    } \
-} while(0)
-    alloc_fd(cap, ev, fd, sec);
+    if(!(cap = free_ev_fd)) {
+	cap = malloc(sizeof(*cap));
+	if(!cap) {
+	    fprintf(logf, "%s: %s\n", "fd tracker", strerror(errno));
+	    nconf = 0;
+	}
+    } else {
+	/* critical section w/ cap assignment, protected by lock */
+	free_ev_fd = cap->next;
+    }
+    if(cap) {
+	memset(cap, 0, sizeof(*cap));
+	cap->fd = fd;
+	cap->conf = sec;
+    }
     if(!cap) {
-	pthread_mutex_unlock(&buf_lock);
+	pthread_mutex_unlock(&lock);
 	return;
     }
     /* set up ID from string */
@@ -1327,7 +1410,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
     memset(cap->keystates, 0, sizeof(cap->keystates));
     if(real_ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(cap->keystates)), cap->keystates) < 0 ||
        real_ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absin)), absin) < 0) {
-	fprintf(logf, "%s: %s\n", "init_joy", strerror(errno));
+	fprintf(logf, "%s: %s\n", "init_evdev", strerror(errno));
 	goto err;
     }
     int i;
@@ -1381,7 +1464,7 @@ static void init_joy(int fd, const struct evjrconf *sec)
 	if(sec->ax_map[i].flags & (AXFL_INVERT | AXFL_RESCALE)) {
 	    struct input_absinfo ai;
 	    if(real_ioctl(fd, EVIOCGABS(i), &ai) < 0) {
-		fprintf(logf, "%s: %s\n", "init_joy", strerror(errno));
+		fprintf(logf, "%s: %s\n", "init_evdev", strerror(errno));
 		goto err;
 	    }
 	    sec->ax_map[i].offthresh = ai.minimum;
@@ -1415,16 +1498,16 @@ static void init_joy(int fd, const struct evjrconf *sec)
     if(!sec->filter_ax)
 	for(i = 0; i < MINBITS(ABS_MAX); i++)
 	    cap->absout[i] |= absin[i];
-    /* critical section, protected well enough by buf_lock */
+    /* critical section, protected well enough by lock */
     cap->next = ev_fd;
     ev_fd = cap;
-    pthread_mutex_unlock(&buf_lock);
+    pthread_mutex_unlock(&lock);
     return;
 err:
-    /* critical section, protected by buf_lock */
+    /* critical section, protected by lock */
     cap->next = free_ev_fd;
     free_ev_fd = cap;
-    pthread_mutex_unlock(&buf_lock);
+    pthread_mutex_unlock(&lock);
 }
 
 /* return NULL if nothing allows fd */
@@ -1437,7 +1520,7 @@ static struct evjrconf *allowed_sec(int fd, int evno)
     struct evjrconf *sec;
 
     /* the lock is for buf & id */
-    pthread_mutex_lock(&buf_lock);
+    pthread_mutex_lock(&lock);
     if(real_ioctl(fd, EVIOCGNAME(sizeof(buf)), buf) < 0)
 	strcpy(buf, "ERROR: Device name unavailable");
     if(real_ioctl(fd, EVIOCGID, &id) < 0)
@@ -1455,48 +1538,91 @@ static struct evjrconf *allowed_sec(int fd, int evno)
 		nmok = !regexec(&sec->match, ibuf, 0, NULL, 0);
 	}
 	if(nmok) {
-	    pthread_mutex_unlock(&buf_lock);
+	    pthread_mutex_unlock(&lock);
 	    return sec;
 	}
     }
-    pthread_mutex_unlock(&buf_lock);
+    pthread_mutex_unlock(&lock);
     return NULL;
+}
+
+static struct evfdcap *cap_of(int fd)
+{
+    struct evfdcap *cap;
+    pthread_mutex_lock(&lock);
+    for(cap = ev_fd; cap; cap = cap->next)
+	if(cap->fd == fd)
+	    break;
+    pthread_mutex_unlock(&lock);
+    return cap;
 }
 
 /* common code for multiple nearly identical open() functions */
 static int ev_open(const char *fn, const char *pathname, int fd)
 {
+    if(!nconf || fd < 0)
+	return fd;
     struct stat st;
     int en = errno;
-    if(fd < 0 || fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR) {
+    if(fstat(fd, &st) || !S_ISCHR(st.st_mode) || major(st.st_rdev) != INPUT_MAJOR) {
 	errno = en;
 	return fd;
     }
     const struct evjrconf *sec;
     if(minor(st.st_rdev) >= JSDEV_MINOR0 &&
        minor(st.st_rdev) < JSDEV_MINOR0 + JSDEV_NMINOR) {
-	for(sec = conf + nconf - 1; sec >= conf; sec--)
-	    if(sec->jsrename_str && sec->repl_name)
-		break;
-	if(sec >= conf) {
-	    pthread_mutex_lock(&buf_lock);
-	    if(real_ioctl(fd, JSIOCGNAME(sizeof(buf)), buf) >= 0) {
-		for(; sec >= conf; sec--)
-		    if(sec->jsrename_str && sec->repl_name &&
-		       !regexec(&sec->jsrename, buf, 0, NULL, 0)) {
-			struct jsfdcap *jn;
-			alloc_fd(jn, js, fd, sec);
-			if(jn) { /* else error/aborting cap */
-			    fprintf(logf, "[%s/%d] renaming %s (%s to %s)\n", fn, fd, pathname, buf, sec->repl_name);
-			    /* critical section, protected well enough by buf_lock */
-			    jn->next = js_fd;
-			    js_fd = jn;
-			}
-			break;
+	/* note: this is char to avoid gcc warning on %d below */
+	char evno = js_ev(minor(st.st_rdev) - JSDEV_MINOR0, 1);
+	if(evno >= 0) {
+	    int d = real_open("/dev/input", O_PATH, 0);
+	    if(d >= 0) {
+		char evn[10];
+		sprintf(evn, "event%d", evno);
+		int e = real_openat(d, evn, O_RDONLY, 0);
+		struct evfdcap *cap = NULL;
+		if(e >= 0) {
+		    e = ev_open("ev_open", evn, e);
+		    /* FIXME:  only filter if jsremap set in filtering conf block */
+		    if(e < 0) {
+			real_close(fd);
+			errno = EPERM;
+			return -1;
 		    }
-	    } else
-		fprintf(logf, "%s: %s\n", "jsname", strerror(errno));
-	    pthread_mutex_unlock(&buf_lock);
+		    cap = cap_of(e);
+		    real_close(e);
+		    if(!cap->conf->jsremap && !cap->conf->jsrename) {
+			ev_close(e); /* FIXME:  spurious closing msg */
+			errno = en;
+			return fd;
+		    }
+		    cap->fd = fd;
+		    cap->is_js = 1;
+		    if(cap->conf->jsremap) {
+			cap->js_extra = malloc(sizeof(*cap->js_extra));
+			if(!cap->js_extra) {
+			    /* FIXME:  just bomb out completely */
+			    /* or at least also do an ev_close() */
+			    real_close(d);
+			    real_close(fd);
+			    return -1;
+			}
+			real_ioctl(fd, JSIOCGAXMAP, &cap->js_extra->in_ax_map);
+			real_ioctl(fd, JSIOCGBTNMAP, &cap->js_extra->in_btn_map);
+			int idx, i;
+			for(i = idx = 0; i < ABS_CNT; i++)
+			    if(ULISSET(cap->absout, i))
+				cap->js_extra->out_ax_map[i] = idx++;
+			for(i = BTN_MISC, idx = 0; i < KEY_MAX; i++)
+			    if(ULISSET(cap->keysout, i))
+				cap->js_extra->out_btn_map[i - BTN_MISC] = idx++;
+		    }
+		    fprintf(logf, "[%s/%d] %s %s\n",
+			    fn, fd,
+			    cap->conf->jsremap ? "Intercepted" : "Renaming",
+			    pathname);
+		}
+		real_close(d);
+	    }
 	}
 	errno = en;
 	return fd;
@@ -1507,7 +1633,7 @@ static int ev_open(const char *fn, const char *pathname, int fd)
     }
     sec = NULL;
     if(nconf && !(sec = allowed_sec(fd, minor(st.st_rdev) - EVDEV_MINOR0))) {
-	/* if any enabled sections filter, filter. */
+	/* if any enabled sections filter, filter this device. */
 	for(sec = conf; sec < conf + nconf; sec++)
 	    if(sec->filter_dev)
 		break;
@@ -1515,14 +1641,16 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 	    errno = en;
 	    return fd;
 	}
-/*    fprintf(logf, "[%s/%d] Rejecting open of %s\n", fn, fd, pathname); */
+	if(strcmp(fn, "ev_open"))
+	    fprintf(logf, "[%s/%d] Rejecting open of %s\n", fn, fd, pathname);
 	real_close(fd);
 	errno = EPERM;
 	return -1;
     }
     if(sec) {
-	fprintf(logf, "[%s/%d] Intercept %s\n", fn, fd, pathname);
-	init_joy(fd, sec);
+	init_evdev(fd, sec);
+	if(strcmp(fn, "ev_open"))
+	    fprintf(logf, "[%s/%d] Intercepted %s\n", fn, fd, pathname);
     }
     errno = en;
     return fd;
@@ -1541,9 +1669,6 @@ volatile static int syscalling = 0;
 
 int open(const char *pathname, int flags, ...)
 {
-    static int (*next)(const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "open");
     mode_t mode = 0;
     if(flags & O_CREAT) {
 	va_list va;
@@ -1552,7 +1677,7 @@ int open(const char *pathname, int flags, ...)
 	va_end(va);
     }
     DIS_SYSCALL;
-    int ret = ev_open("open", pathname, next(pathname, flags, mode));
+    int ret = ev_open("open", pathname, real_open(pathname, flags, mode));
     EN_SYSCALL;
     return ret;
 }
@@ -1645,9 +1770,6 @@ asm volatile (
 /* they are used indirectly by fopen(), though; but fopen always uses libc */
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
-    static int (*next)(int, const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "openat");
     mode_t mode = 0;
     if(flags & O_CREAT) {
 	va_list va;
@@ -1656,7 +1778,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 	va_end(va);
     }
     DIS_SYSCALL;
-    int ret = ev_open("openat", pathname, next(dirfd, pathname, flags, mode));
+    int ret = ev_open("openat", pathname, real_openat(dirfd, pathname, flags, mode));
     EN_SYSCALL;
     return ret;
 }
@@ -1682,26 +1804,22 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 
 static void ev_close(int fd)
 {
-    pthread_mutex_lock(&buf_lock);
-#define close_fd(t) do { \
-    struct t##fdcap **p; \
-    for(p = &t##_fd; *p; p = &(*p)->next) \
-	if((*p)->fd == fd) { \
-	    struct t##fdcap *c = *p; \
-	    /* critical section, protected by buf_lock */ \
-	    *p = c->next; \
-	    /* critical section, protected by buf_lock */ \
-	    c->next = free_##t##_fd; \
-	    free_##t##_fd = c; \
-	    fprintf(logf, "closing %d\n", fd); \
-	    /* skip js search if this is ev */ \
-	    pthread_mutex_unlock(&buf_lock); \
-	    return; \
-	} \
-} while(0)
-    close_fd(ev);
-    close_fd(js);
-    pthread_mutex_unlock(&buf_lock);
+    pthread_mutex_lock(&lock);
+    struct evfdcap **p;
+    for(p = &ev_fd; *p; p = &(*p)->next)
+	if((*p)->fd == fd) {
+	    struct evfdcap *c = *p;
+	    /* critical section, protected by lock */
+	    *p = c->next;
+	    /* critical section, protected by lock */
+	    c->next = free_ev_fd;
+	    if(c->js_extra)
+		free(c->js_extra);
+	    free_ev_fd = c;
+	    fprintf(logf, "closing %d\n", fd);
+	    break;
+	}
+    pthread_mutex_unlock(&lock);
 }
 
 int close(int fd)
@@ -1729,7 +1847,10 @@ FILE *fopen(const char *pathname, const char *mode)
     errno = en;
     if(fd < 0)
 	return res;
-    fd = ev_open("fopen", pathname, fd);
+    if(ev_open("fopen", pathname, fd) < 0) {
+	fclose(res);
+	return NULL;
+    }
     return res;
 }
 
@@ -1748,7 +1869,10 @@ FILE *fopen64(const char *pathname, const char *mode)
     errno = en;
     if(fd < 0)
 	return res;
-    fd = ev_open("fopen64", pathname, fd);
+    if(ev_open("fopen", pathname, fd) < 0) {
+	fclose(res);
+	return NULL;
+    }
     return res;
 }
 
@@ -1759,9 +1883,7 @@ int fclose(FILE *f)
 	next = dlsym(RTLD_NEXT, "fclose");
     if(!f)
 	return next(f);
-    int en = errno;
     int fd = fileno(f);
-    errno = en;
     if(fd < 0)
 	return next(f);
     ev_close(fd);
@@ -1769,17 +1891,101 @@ int fclose(FILE *f)
 }
 #endif
 
-static struct evfdcap *cap_of(int fd)
-{
-    for(struct evfdcap *cap = ev_fd; cap; cap = cap->next)
-	if(cap->fd == fd)
-	    return cap;
-    return NULL;
-}
-
 /* this is where most of the translation takes place:  modify read events */
 /* note that I do not intercept other forms of read as no known program uses them */
 /* e.g. readv, pread, preadv, aio_read, fread, fscanf, getc/fgetc, fgets */
+static void process_ev_read(struct input_event *ev, const struct evjrconf *sec,
+			    struct evfdcap *cap, int *_mod, int *_drop)
+{
+    int drop = 0, mod = 0; /* drop it?  copy it back? */
+    if(ev->type == EV_KEY) {
+	drop = sec->filter_bt;
+	const struct butmap *m = &sec->bt_map[ev->code - sec->bt_low];
+	if(ev->code >= sec->bt_low && ev->code < sec->bt_low + sec->nbt &&
+	   (m->flags & BTFL_MAP)) {
+	    if((drop = m->target == -1))
+		;
+	    else if(!(m->flags & BTFL_AXIS)) {
+		mod = ev->code != m->target || (m->flags & BTFL_INVERT);
+		ev->code = m->target;
+		if(m->flags & BTFL_INVERT)
+		    ev->value = 1 - ev->value;
+	    } else {
+		int pressed = ev->value;
+		int ax = pressed ? m->onax : m->offax;
+		if(ax < 0)
+		    drop = 1;
+		else {
+		    ev->type = EV_ABS;
+		    ev->code = ax;
+		    cap->axval[ax] = ev->value = pressed ? m->onval : m->offval;
+		    mod = 1;
+		}
+	    }
+	}
+    } else if(ev->type == EV_ABS) {
+	drop = sec->filter_ax;
+	struct axmap *m = &sec->ax_map[ev->code];
+	if(ev->code >= 0 && ev->code < sec->nax && (m->flags & AXFL_MAP)) {
+	    if((drop = m->target == -1))
+		;
+	    else if(!(m->flags & AXFL_BUTTON)) {
+		mod = ev->code != m->target || (m->flags & (AXFL_INVERT | AXFL_RESCALE));
+		ev->code = m->target;
+		if(m->flags & AXFL_RESCALE) {
+		    ev->value = (ev->value - m->offthresh) * ((long)m->ai.maximum - m->ai.minimum + 1) / ((long)m->onthresh - 2 * m->offthresh + 1) + m->ai.minimum;
+		    if(m->flags & AXFL_INVERT)
+			ev->value = m->ai.minimum + m->ai.maximum - ev->value;
+		} else if(m->flags & AXFL_INVERT)
+			ev->value = m->onthresh - ev->value;
+	    } else {
+		mod = 1;
+		ev->type = EV_KEY;
+
+		int pressed = !!(m->flags & AXFL_PRESSED);
+		int npressed = !(m->flags & AXFL_NPRESSED);
+		int tog, ntog; /* did the target/ntarget state change? */
+		if(ev->value >= m->onthresh)
+		    tog = !pressed;
+		else if(ev->value < m->offthresh)
+		    tog = pressed;
+		else
+		    tog = 0;
+		if(ev->value <= m->nonthresh)
+		    ntog = !npressed;
+		else if(ev->value > m->noffthresh)
+		    ntog = npressed;
+		else
+		    ntog = 0;
+		/* can't send multiple events right now, so if tog and
+		 * ntog, only tog is honored */
+		/* sending multiple events will require intercepting
+		 * poll(2), select(2), and probably others in the
+		 * same family (ppoll, pselect, epoll?, aliases) */
+		/* the only time it's easy is if the buffer size is
+		 * big enough to just insert them, or if we can rely
+		 * on the program looping until 0 returned */
+		/* most devices send lots of axis events, so probably
+		 * ntog will eventually be honored */
+		if(tog) {
+		    ev->code = m->target;
+		    ev->value = !pressed;
+		    m->flags ^= AXFL_PRESSED;
+		} else if(ntog) {
+		    ev->code = m->ntarget;
+		    ev->value = !npressed;
+		    m->flags ^= AXFL_NPRESSED;
+		} else
+		    drop = 1;
+	    }
+	}
+    }
+    *_mod = mod;
+    *_drop = drop;
+    return;
+}
+
+
 ssize_t read(int fd, void *buf, size_t count)
 {
     static ssize_t (*next)(int, void *, size_t) = NULL;
@@ -1789,7 +1995,6 @@ ssize_t read(int fd, void *buf, size_t count)
      * sizeof(ev).  Need to force a read of even multiple from device and
      * keep the excess read for future returns */
     /* very unlikely to ever happen */
-    struct input_event ev;
     int ret_adj = 0;
     struct evfdcap *cap = cap_of(fd);
     if(cap && cap->excess_read) {
@@ -1808,9 +2013,13 @@ ssize_t read(int fd, void *buf, size_t count)
 	return ret;
     const struct evjrconf *sec = cap->conf;
     int nread = ret;
+    struct input_event ev;
+    struct js_event jev = {}; /* init to shut gcc up */
+    int ev_size = cap->js_extra ? sizeof(jev) : sizeof(ev);
+    void *evp = cap->js_extra ? (void *)&jev : (void *)&ev;
     while(nread > 0) {
-	if(nread < sizeof(ev)) {
-	    int todo = cap->excess_read = sizeof(ev) - nread;
+	if(nread < ev_size) {
+	    int todo = cap->excess_read = ev_size - nread;
 	    while(todo > 0) {
 		int r = next(fd, cap->ebuf + cap->excess_read - todo, todo);
 		if(r < 0 && errno != EINTR && errno != EAGAIN) {
@@ -1820,132 +2029,93 @@ ssize_t read(int fd, void *buf, size_t count)
 		if(r > 0)
 		    todo -= r;
 	    }
-	    memcpy(&ev, buf, nread);
-	    memcpy(((char *)&ev) + nread, cap->ebuf, cap->excess_read);
+	    memcpy(evp, buf, nread);
+	    memcpy(((char *)&evp) + nread, cap->ebuf, cap->excess_read);
 	} else
-	    memcpy(&ev, buf, sizeof(ev));
-	/* now ev has an event. */
-	int drop = 0, mod = 0; /* drop it?  copy it back? */
-	if(ev.type == EV_KEY) {
-	    drop = sec->filter_bt;
-	    const struct butmap *m = &sec->bt_map[ev.code - sec->bt_low];
-	    if(ev.code >= sec->bt_low && ev.code < sec->bt_low + sec->nbt &&
-	       (m->flags & BTFL_MAP)) {
-		if((drop = m->target == -1))
-		    ;
-		else if(!(m->flags & BTFL_AXIS)) {
-		    mod = ev.code != m->target || (m->flags & BTFL_INVERT);
-		    ev.code = m->target;
-		    if(m->flags & BTFL_INVERT)
-			ev.value = 1 - ev.value;
+	    memcpy(evp, buf, ev_size);
+	/* now jev/ev has an event. */
+	int mod, drop;
+	if(!cap->js_extra) {
+	    process_ev_read(&ev, sec, cap, &mod, &drop);
+	    /* the best way to drop the event would be to remove it entirely.
+	     * Is this safe?  Maybe.  If the program expects data, and insists
+	     * on it, it may crash.  Also, if removing an event reduces the
+	     * return length to 0, another read() should be done on the device.
+	     * It probably doesn't matter if the device is blocking or not,
+	     * since the behavior will mostly match what the program expects.
+	     * Well, except for the now superfluous SYN_REPORT events. */
+	    /* I used to instead convert to SYN_DROPPED.  Is this safe?  not
+	     * if SYN is dropped via EVIOCSMASK, or if the program has special
+	     * behavior on seeing SYN_DROPPED events. */
+	    /* Now I allow a choice */
+	    /* FIXME:  add option to drop SYN_REPORT if all prior events dropped */
+	    if(drop) {
+		if(sec->syn_drop) {
+		    ev.code = SYN_DROPPED;
+		    ev.type = EV_SYN;
+		    ev.value = 0;
+		    mod = 1;
 		} else {
-		    int pressed = ev.value;
-		    int ax = pressed ? m->onax : m->offax;
-		    if(ax < 0)
-			drop = 1;
-		    else {
-			ev.type = EV_ABS;
-			ev.code = ax;
-			cap->axval[ax] = ev.value = pressed ? m->onval : m->offval;
-			mod = 1;
+		    mod = 0;
+		    ret -= sizeof(ev);
+		    if(nread > sizeof(ev)) {
+			memmove(buf, buf + sizeof(ev), nread - sizeof(ev));
+			buf -= sizeof(ev);
+		    }
+		    if(ret <= 0) {
+			cap->excess_read = 0;
+			return read(fd, buf, count);
 		    }
 		}
 	    }
-	} else if(ev.type == EV_ABS) {
-	    drop = sec->filter_ax;
-	    struct axmap *m = &sec->ax_map[ev.code];
-	    if(ev.code >= 0 && ev.code < sec->nax && (m->flags & AXFL_MAP)) {
-		if((drop = m->target == -1))
-		    ;
-		else if(!(m->flags & AXFL_BUTTON)) {
-		    mod = ev.code != m->target || (m->flags & (AXFL_INVERT | AXFL_RESCALE));
-		    ev.code = m->target;
-		    if(m->flags & AXFL_RESCALE) {
-			ev.value = (ev.value - m->offthresh) * ((long)m->ai.maximum - m->ai.minimum + 1) / ((long)m->onthresh - 2 * m->offthresh + 1) + m->ai.minimum;
-			if(m->flags & AXFL_INVERT)
-			    ev.value = m->ai.minimum + m->ai.maximum - ev.value;
-		    } else if(m->flags & AXFL_INVERT)
-			ev.value = m->onthresh - ev.value;
-		} else {
-		    mod = 1;
-		    ev.type = EV_KEY;
-
-		    int pressed = !!(m->flags & AXFL_PRESSED);
-		    int npressed = !(m->flags & AXFL_NPRESSED);
-		    int tog, ntog; /* did the target/ntarget state change? */
-		    if(ev.value >= m->onthresh)
-			tog = !pressed;
-		    else if(ev.value < m->offthresh)
-			tog = pressed;
-		    else
-			tog = 0;
-		    if(ev.value <= m->nonthresh)
-			ntog = !npressed;
-		    else if(ev.value > m->noffthresh)
-			ntog = npressed;
-		    else
-			ntog = 0;
-		    /* can't send multiple events right now, so if tog and
-		     * ntog, only tog is honored */
-		    /* sending multiple events will require intercepting
-		     * poll(2), select(2), and probably others in the
-		     * same family (ppoll, pselect, epoll?, aliases) */
-		    /* the only time it's easy is if the buffer size is
-		     * big enough to just insert them, or if we can rely
-		     * on the program looping until 0 returned */
-		    /* most devices send lots of axis events, so probably
-		     * ntog will eventually be honored */
-		    if(tog) {
-			ev.code = m->target;
-			ev.value = !pressed;
-			m->flags ^= AXFL_PRESSED;
-		    } else if(ntog) {
-			ev.code = m->ntarget;
-			ev.value = !npressed;
-			m->flags ^= AXFL_NPRESSED;
-		    } else
-			drop = 1;
-		}
+	    if(mod) {
+		memcpy(buf, &ev, cap->excess_read ? nread : sizeof(ev));
+		if(cap->excess_read)
+		    memcpy(cap->ebuf, (char *)&ev + nread, cap->excess_read);
 	    }
-	}
-	/* the best way to drop the event would be to remove it entirely.
-	 * Is this safe?  Maybe.  If the program expects data, and insists
-	 * on it, it may crash.  Also, if removing an event reduces the
-	 * return length to 0, another read() should be done on the device.
-	 * It probably doesn't matter if the device is blocking or not,
-	 * since the behavior will mostly match what the program expects.
-	 * Well, except for the now superfluous SYN_REPORT events. */
-	/* I used to instead convert to SYN_DROPPED.  Is this safe?  not
-	 * if SYN is dropped via EVIOCSMASK, or if the program has special
-	 * behavior on seeing SYN_DROPPED events. */
-	/* Now I allow a choice */
-	/* FIXME:  add option to drop SYN_REPORT if all prior events dropped */
-	if(drop) {
-	    if(sec->syn_drop) {
-		ev.code = SYN_DROPPED;
-		ev.type = EV_SYN;
-		ev.value = 0;
-		mod = 1;
-	    } else {
+	    nread -= sizeof(ev);
+	    buf += sizeof(ev);
+	} else {
+	    /* FIXME:  value probably needs adjusting for axes */
+	    ev.value = jev.value;
+	    if((jev.type & ~JS_EVENT_INIT) == JS_EVENT_BUTTON) {
+		ev.type = EV_KEY;
+		ev.code = cap->js_extra->in_btn_map[jev.number];
+	    } else if((jev.type & ~JS_EVENT_INIT) == JS_EVENT_AXIS) {
+		ev.type = EV_ABS;
+		ev.code = cap->js_extra->in_ax_map[jev.number];
+	    }
+	    process_ev_read(&ev, sec, cap, &mod, &drop);
+	    if(drop) {
+		/* JS offers no SYN_DROPPED, so just drop entirely */
 		mod = 0;
-		ret -= sizeof(ev);
-		if(nread > sizeof(ev)) {
-		    memmove(buf, buf + sizeof(ev), nread - sizeof(ev));
-		    buf -= sizeof(ev);
+		ret -= sizeof(jev);
+		if(nread > sizeof(jev)) {
+		    memmove(buf, buf + sizeof(jev), nread - sizeof(jev));
+		    buf -= sizeof(jev);
 		}
 		if(ret <= 0) {
 		    cap->excess_read = 0;
 		    return read(fd, buf, count);
 		}
 	    }
+	    if(mod) {
+		jev.type = (jev.type & JS_EVENT_INIT) |
+		    (ev.type == EV_KEY ? JS_EVENT_BUTTON : JS_EVENT_AXIS);
+		/* FIXME:  value probably needs adjusting for axes */
+		jev.value = ev.value;
+		if(ev.type == EV_KEY)
+		    /* FIXME:  error if < BTN_MISC */
+		    jev.number = cap->js_extra->out_btn_map[ev.code - BTN_MISC];
+		else
+		    jev.number = cap->js_extra->out_ax_map[ev.code];
+		memcpy(buf, &jev, cap->excess_read ? nread : sizeof(jev));
+		if(cap->excess_read)
+		    memcpy(cap->ebuf, (char *)&jev + nread, cap->excess_read);
+	    }
+	    nread -= sizeof(jev);
+	    buf += sizeof(jev);
 	}
-	if(mod) {
-	    memcpy(buf, &ev, cap->excess_read ? nread : sizeof(ev));
-	    if(cap->excess_read)
-		memcpy(cap->ebuf, (char *)&ev + nread, cap->excess_read);
-	}
-	nread -= sizeof(ev);
-	buf += sizeof(ev);
     }
     return ret + ret_adj;
 }
@@ -1961,10 +2131,12 @@ int ioctl(int fd, unsigned long request, ...)
 	argp = va_arg(va, void *);
 	va_end(va);
     }
-    
+
     struct evfdcap *cap = cap_of(fd);
-    if(cap) {
-	const struct evjrconf *sec = cap->conf;
+    if(!cap)
+	return real_ioctl(fd, request, argp);
+    const struct evjrconf *sec = cap->conf;
+    if(!cap->is_js) {
 #define cpstr(n, s) do { \
     if(!s) \
 	return real_ioctl(fd, request, argp); \
@@ -1992,14 +2164,14 @@ int ioctl(int fd, unsigned long request, ...)
 	    if(!sec->repl_id)
 		break;
 	    fprintf(logf, "%d: altered ID\n", fd);
-	    /* cap->repl_id_val was filled in by init_joy() */
+	    /* cap->repl_id_val was filled in by init_evdev() */
 	    memcpy(argp, &cap->repl_id_val, sizeof(cap->repl_id_val));
 	    return 0;
 	  case _IOC_NR(EVIOCGUNIQ(0)):
 	    cpstr("GUNIQ", sec->repl_uniq);
 	    return len;
 	  case _IOC_NR(EVIOCGKEY(0)):
-	    /* this code mostly matches init_joy()'s GKEY mask initializer */
+	    /* this code mostly matches init_evdev()'s GKEY mask initializer */
 	    /* except that it has to handle INVERT as needed */
 	    memset(&cap->keystates, 0, sizeof(cap->keystates));
 	    ret = real_ioctl(fd, EVIOCGKEY(sizeof(cap->keystates_in)), cap->keystates_in);
@@ -2034,11 +2206,11 @@ int ioctl(int fd, unsigned long request, ...)
 	    cpmem("GKEY()", cap->keystates);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_ABS, 0)):
-	    /* filled in by init_joy() */
+	    /* filled in by init_evdev() */
 	    cpmem("GBIT(EV_ABS)", cap->absout);
 	    return len;
 	  case _IOC_NR(EVIOCGBIT(EV_KEY, 0)):
-	    /* filled in by init_joy() */
+	    /* filled in by init_evdev() */
 	    cpmem("GBIT(EV_KEY)", cap->keysout);
 	    return len;
 	  default:
@@ -2082,13 +2254,48 @@ int ioctl(int fd, unsigned long request, ...)
 		return -1;
 	    }
 	}
-    } else if(_IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
-	for(struct jsfdcap *jn = js_fd; jn; jn = jn->next)
-	    if(jn->fd == fd) {
-		/* yeah, JSIOC not EVIOC, but it's just a message */
-		cpstr("JGNAME", jn->conf->repl_name);
-		return len;
-	    }
+    } else if(cap->js_extra || _IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
+	int i;
+	__u8 idx = 0;
+	/* yeah, JSIOC not EVIOC, but it's just messages */
+	switch(_IOC_NR(request)) {
+	  case _IOC_NR(JSIOCGNAME(0)):
+	    cpstr("JGNAME", sec->repl_name);
+	    return len;
+
+	  /* the following are computed instead of stored for now */
+	  case _IOC_NR(JSIOCGAXES):
+	    for(i = 0; i < ABS_CNT; i++)
+		if(ULISSET(cap->absout, i))
+		    idx++;
+	    cpmem("GAXES", idx);
+	    return 0;
+	  case _IOC_NR(JSIOCGBUTTONS):
+	      for(i = BTN_MISC; i < KEY_MAX; i++)
+		  if(ULISSET(cap->keysout, i))
+		      idx++;
+	    cpmem("GBUTTONS", idx);
+	    return 0;
+	  case _IOC_NR(JSIOCGAXMAP): /* set mapping not supported */
+	    for(i = 0; i < ABS_CNT; i++)
+		if(ULISSET(cap->absout, i)) {
+		    if(idx < _IOC_SIZE(request))
+			((__u8 *)argp)[idx] = i;
+		    idx++;
+		}
+	    fprintf(logf, "%d: altered JSIOCGAXMAP\n", fd);
+	    return 0;
+	  case _IOC_NR(JSIOCGBTNMAP): /* set mapping not supported */
+	    for(i = BTN_MISC; i < KEY_MAX; i++)
+		if(ULISSET(cap->keysout, i)) {
+		    if(idx < _IOC_SIZE(request) / 2)
+			((__u16 *)argp)[idx] = i;
+		    idx++;
+		}
+	    fprintf(logf, "%d: altered JSIOCGBTNMAP\n", fd);
+	    return 0;  /* FIXME:  -EINVAL if buttons out of range */
+	  /* set/get correction not supported */
+	}
     }
     return real_ioctl(fd, request, argp);
 }
