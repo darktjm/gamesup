@@ -35,12 +35,10 @@
  * also many ways this entire shim can be disabled.  For example:
  * explicit symbol lookups from libc, forking after unsetting LD_PRELOAD,
  * use of an unsupported access method, and explicitly dlopen()ing libc.
- * In fact, one game I have does the latter, which can be disabled by
- * placing a dummy, empty shared object file named libc.so.6 somewhere
- * the game can find it (hopefully this needn't be in its LD_LIBRARY_PATH).
- *    gcc -shared -x c /dev/null -o libc.so.6 -Wl,--as-needed
- * I will probably eventually intercept dlopen() to disable reloading
- * libc, libpthread, and libdl.
+ * In fact, one game I have does the latter, so I have added a dlopen
+ * intercept which disallows libc, libpthread, or libdl from being opened.
+ * If this causes problems, I may add an environment override to disable
+ * this feature.
  *
  * This uses a configuration file, with one directive per line.  Blank
  * lines and lines beginning with # are ignored, as is initial and trailing
@@ -139,7 +137,7 @@
  *   negative is left unmapped and the positive uses the inverse of the
  *   middle.  Button codes are described below.  Finally, a list entry
  *   consisting of an axis number preceeded by an exclamation point (!)
- *   disables that axis for input, removing any existing mapping to that
+ *   disables that axis for input, removing any existing mapping using that
  *   axis.  Note that in all cases, any mapping for an input overrides any
  *   preceeding (un)mapping.  If this keyword is missing, any axes not
  *   mapped to buttons are passed through as is.  Otherwise, any inputs not
@@ -363,6 +361,8 @@ static struct evjrconf {
     /* since there is no regcopy() or equiv., need strings for KW_USE */
     char *match_str, *reject_str;
     regex_t match, reject; /* compiled matching regexes */
+    __u8 *jsaxmap; /* jscal -u-like remapping; 1st element is len */
+    __u16 *jsbtmap; /* jscal -u-like remapping; 1st element is len */
     /* stuff below this is safe to copy on USE */
     int bt_low, nbt, nax; /* mapping array valid bounds */
     int max_ax, max_bt; /* mapping array sizes */
@@ -372,8 +372,6 @@ static struct evjrconf {
     char jsrename; /* rename js device associated with event device? */
     char jsremap; /* do full js remapping? */
     char syn_drop; /* use SYN_DROP instead of deleting drops? */
-    __u8 *jsaxmap; /* jscal -u-like remapping; 1st element is len */
-    __u16 *jsbtmap; /* jscal -u-like remapping; 1st element is len */
 } *conf;
 static int nconf = 0;
 
@@ -384,6 +382,7 @@ struct js_extra;
 static struct evfdcap {
     struct evfdcap *next; /* linked list is less thread-unsafe */
     const struct evjrconf *conf;
+    struct js_extra *js_extra;  /* only there if jsremap */
     unsigned long absout[MINBITS(ABS_MAX)]; /* sent GBITS(EV_ABS) */
     int axval[ABS_MAX]; /* value for key-generated axes */
     /* FIXME:  do I need to support EVIOC[GS]KEYCODE*? */
@@ -391,18 +390,17 @@ static struct evfdcap {
 	          keystates[MINBITS(KEY_MAX)], /* sent GKEY */
 	          keystates_in[MINBITS(KEY_MAX)];  /* device GKEY */
     struct input_id repl_id_val;
+    int fd;
     char ebuf[sizeof(struct input_event)];
     char excess_read;
     char is_js;
-    struct js_extra *js_extra;
-    int fd;
 } *ev_fd = NULL, *free_ev_fd = NULL;
 
 struct js_extra {
     /* in:  index = js-code, value = ev-code */
     __u8 in_ax_map[ABS_MAX];
     __u16 in_btn_map[KEY_MAX - BTN_MISC + 1];
-    /* out:  index = ev-code, value = js-code */
+    /* out:  index = ev-code, value = js-code (0xff/0xffff == no map) */
     __u8 out_ax_map[ABS_MAX];
     __u16 out_btn_map[KEY_MAX - BTN_MISC + 1];
 };
@@ -2409,3 +2407,37 @@ int ioctl(int fd, unsigned long request, ...)
     }
     return real_ioctl(fd, request, argp);
 }
+
+#if 0
+/* disallow dlopen() of libc or libpthreads, which disables this LD_PRELOAD */
+/* this is extremely unreliable and dangerous as written */
+/* since my only use case can be solved differently, I'll leave it off */
+/* that is, until/unless I can figure out how to do this safely/reliably */
+void *dlopen(const char *filename, int flags)
+{
+    static void *(*next)(const char *, int) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "dlopen");
+    if(!filename)
+	return next(filename, flags);
+    const char *s = strrchr(filename, '/');
+    if(!s++)
+	s = filename;
+    /* I should probably also check for ones missing .so extension */
+    /* and maybe even ones that have a dot after lib name */
+    /* I should probably also have an env override to disable this code */
+    if(!memcmp(s, "libc.so", 7) || !memcmp(s, "libpthread.so", 13) ||
+       !memcmp(s, "libdl.so", 8)) {
+	fprintf(logf, "Disallowing dlopen of %s/%x\n", filename, flags);
+	/* ugh.  RTLD_DEFAULT, the best value, is NULL, so it looks like a failure */
+	/* it's the only one that actually works, though, since mono eventually gives up */
+	return RTLD_DEFAULT;
+	/* can't return RTLD_NEXT because that skips */
+//	return RTLD_NEXT;
+	/* doing an actual dlopen on NULL should work, but doesn't.  Don't know why. */
+	/* maybe I need to use some magic set of flags */
+//	return next(NULL, RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD);
+    }
+    return next(filename, flags);
+}
+#endif
