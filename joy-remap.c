@@ -1,28 +1,26 @@
 /*
  * LD_PRELOAD shim which remaps axis and button events for gamepad event
- * devices.  Use jscal to do it for js devices.  Since it's an LD_PRELOAD,
- * it doesn't need root, and it doesn't deal with problems using uinput.
- * It's very simplistic, intended to map exactly one controller to what
- * one program expects to see.  It really doesn't support hot-plugging,
- * although it might work.  Internal support for hot-plugging, or at least
+ * devices.  Use jscal to do it for js devices, although I have now added
+ * enough js suport that it might work for you, as well.  Since it's an
+ * LD_PRELOAD, it doesn't need root, and it doesn't deal with other problems
+ * using uinput.  It's very simplistic, intended to map exactly one
+ * controller to what one program expects to see.  Since it supports multiple
+ * opens of multiple devices, it should work with multiple controllers and
+ * in-game hotplugging.  Internal support for hot-plugging, or at least
  * persistence in the face of temporary disconnects, really requires uinput,
  * since every possible use of the file descriptor would otherwise have to be
- * intercepted.  It doesn't support multiple devices, although
- * it wouldn't be hard to support later on.*  It is also unable to merge
- * multiple devices into one, such as mapping the Dualshock 3+ motion
- * sensors into the main controller.  It also doesn't support adding
- * autofire and chording.  Since it happens at the user level, js devices
- * associated with the same gamepad will not be affected; again, use jscal
- * for that (sort of) or one of the uinput-based remappers.  Since a few
- * games use the device name to decide mapping, this does support that,
- * and only that, for js devices.  Really, given that js devices have never
- * supported force feedback, and likely never will, new programs should not
- * be using them, in the first place.  Of course Linux doesn't exactly make
- * it easy to figure out which event device(s) to use, either.
- *
- * * one way to support multiple controllers right now would be to compile
- *   two copies of this shim, using different shim names and different
- *   environment variable names, and use them both.  Not guaranteed to work.
+ * intercepted.  It is also unable to merge multiple devices into one, such
+ * as mapping the Dualshock 3+ motion sensors into the main controller.
+ * It also doesn't support adding autofire and chording.  Since it happens
+ * at the user level, js devices associated with the same gamepad will not
+ * be affected, unless they use the built-in jsremap feature.  I used to say
+ * to use jscal for that, but jscal has global effect and doesn't support
+ * e.g. axis-to-button or vice-versa.  I also support only overriding the
+ * name of a js device in case a game uses name-based heuristics.  Really,
+ * given that js devices have never supported force feedback, and likely
+ * never will, new programs should not be using them, in the first place.
+ * Of course Linux doesn't exactly make it easy to figure out which event
+ * device(s) to use, either.  Don't even get me started on LEDs.
  *
  * Some messages are normally printed to stderr.  In order to catch them
  * even if the program redirects stderr, or if you just want them stored
@@ -41,6 +39,8 @@
  * placing a dummy, empty shared object file named libc.so.6 somewhere
  * the game can find it (hopefully this needn't be in its LD_LIBRARY_PATH).
  *    gcc -shared -x c /dev/null -o libc.so.6 -Wl,--as-needed
+ * I will probably eventually intercept dlopen() to disable reloading
+ * libc, libpthread, and libdl.
  *
  * This uses a configuration file, with one directive per line.  Blank
  * lines and lines beginning with # are ignored, as is initial and trailing
@@ -81,9 +81,7 @@
  *   generated from the device ID (capital 4-digit hex for all fields but the
  *   last, which is decimal):
  *     <bus type>:<vendor id>:<product id>:<version>-<event device #>
- *   Only the first accepted match is remapped.  Note that if an application
- *   supports hot-plugging, and the old device is not closed before opening
- *   the new one, the new device will not be remapped.
+ *   All accepted matches are remapped.
  *
  * filter
  *   If present, this keyword indicates that all non-matching event devices
@@ -122,13 +120,13 @@
  *   not the device actually has this axis).  Just a plain number*
  *   or range of numbers (separated by -), optionally preceeded by a -
  *   to invert the values, maps to the next unmapped output axis number,
- *   starting with 0.  A blank entry skips an unmapped output for this
- *   auto-assignment.  Two numbers separated by = (wiith a an optional -
- *   after the = for inversion) indicate the output axis to the left of
- *   equals and the input to the right.  Note that hats (dpads) start at 16.
+ *   starting with 0.  Note that hats (dpads) start at 16.  A blank entry
+ *   skips an unmapped output for this auto-assignment.  Two numbers
+ *   separated by = (wiith a an optional - after the = for inversion)
+ *   indicate the output axis to the left of equals and the input to the right.
  *   Ranges are also allowed after the =, in which case the range is
  *   assigned in sequential order (unlike auto-assignment, which skips
- *   outputs already mapped).  Finally, in place of the input axis number
+ *   outputs already mapped).  In place of the input axis number
  *   or range in either form, a button triplet, preceeded by the letter b,
  *   separated by less-than signs, may be specified:  b<but><<but><<but>
  *   where <but> is the  button event for negative, middle, and positive
@@ -145,7 +143,7 @@
  *   axis.  Note that in all cases, any mapping for an input overrides any
  *   preceeding (un)mapping.  If this keyword is missing, any axes not
  *   mapped to buttons are passed through as is.  Otherwise, any inputs not
- *   explicitly mapped are ignored.
+ *   explicitly mapped are (normally) ignored.
  *   * numbers are C-style:  decimal, octal (0 prefix), hexadecimal (0x prefix)
  *
  * rescale <list>
@@ -206,12 +204,25 @@
  *   explicilty mapped are ignored.  This passes through any inputs not
  *   conflicting with outputs through.
  *
- * jsremap
+ * jsremap [remappings]
  *   If present, do remapping as if the js device was generated from the
  *   remapped event device in the standard way.  This includes renaming,
  *   so the jsrename is not additionally needed.  As with jsrename, this
  *   will cause the event device to be opened and closed, so if something
- *   else is filtering out the event device, it may not work.
+ *   else is filtering out the event device, it may not work.  If the
+ *   optional remappings parameter is given, it is interpreted like the
+ *   jscal -u/--set-mappings parameter:  a comma-separated list of numbers,
+ *   with the first being the number of axes, followed by axis event codes,
+ *   followed by the number of buttons, followed by button event codes.  The
+ *   number of axes or buttons may be zero to skip that remapping.  For
+ *   convenience, button codes can be specified in the same way as the
+ *   buttons command above (i.e., not just decimal numbers).  Remember
+ *   that this is applied after the event device remapping.  Without the
+ *   remappings parameter, axes and buttons are assigned in ascending code
+ *   order.  Thus, event device remapping can take care of reordering,
+ *   unless a game reads the G...MAP results and makes decisions based on
+ *   that.  This is also a convenient way to replace a "temporary" jscal
+ *   for a game.
  *
  * syn_drop
  *   When dropping events, rather than just removing them from the stream,
@@ -239,14 +250,19 @@
  * Crashing within gdb confuses gdb, and setting breakpoints doesn't work.
  * Note that you have to use -lpthread in order to have this use pthread's
  * open64 rather than libc's.  This code uses pthread code, anyway.  Code
- * that hard-codes use of errno var might now work quite right.
+ * that hard-codes use of the errno var might not work quite right.
  */
 
 /* Every intercept takes time, albeit usually unnoticabbly little */
 /* The only ones known to work are open and open64 */
-#define CAP_OPENAT  1  /* this is the syscall used by glibc, but nobody calls this */
-#define CAP_FOPEN   1  /* for c++; assumes use of read() rather than fread() */
-#define CAP_SYSCALL 1  /* for mono, I guess */
+#ifndef CAP_OPENAT
+#define CAP_OPENAT  0  /* this is the syscall used by glibc, but nobody calls this */
+#endif
+#ifndef CAP_FOPEN
+#define CAP_FOPEN   0  /* for c++; assumes use of read() rather than fread() */
+#endif
+#ifndef CAP_SYSCALL
+#define CAP_SYSCALL 0  /* for mono, I guess */
 /* note that altough I made changes to the asm to get the SYSCALL code to
  * compile on clang, I have not tested the compiled clang version at all */
 /* the sysall only intercepts open and openat, not openat2, read, ioctl, etc */
@@ -254,6 +270,7 @@
 /* not going to intercept them, for now. */
 /* the only other open is open_to_handle_at, which I don't want to deal with */
 /* direct syscalls bypassing libc entirely could work, but won't, ever */
+#endif
 /* In fact, I may remove all of the above given that nothing I have uses them */
 
 /* for RTLD_NEXT */
@@ -350,11 +367,13 @@ static struct evjrconf {
     int bt_low, nbt, nax; /* mapping array valid bounds */
     int max_ax, max_bt; /* mapping array sizes */
     int auto_ax, auto_bt; /* during parse: current auto-assigned inputs */
-    int filter_ax, filter_bt; /* flag:  pass-through unmapped? */
-    int filter_dev; /* flag:  filter non-matching devs completely? */
+    char filter_ax, filter_bt; /* flag:  pass-through unmapped? */
+    char filter_dev; /* flag:  filter non-matching devs completely? */
     char jsrename; /* rename js device associated with event device? */
     char jsremap; /* do full js remapping? */
     char syn_drop; /* use SYN_DROP instead of deleting drops? */
+    __u8 *jsaxmap; /* jscal -u-like remapping; 1st element is len */
+    __u16 *jsbtmap; /* jscal -u-like remapping; 1st element is len */
 } *conf;
 static int nconf = 0;
 
@@ -695,6 +714,17 @@ static void init(void)
 		abort_parse("no mem");
 	    memcpy(sec->ax_map, conf[i].ax_map, sec->max_ax * sizeof(*sec->ax_map));
 	    memcpy(sec->bt_map, conf[i].bt_map, sec->max_bt * sizeof(*sec->bt_map));
+#define cp_jsmap(t) do { \
+    if(sec->js##t##map) { \
+	int sz = (sec->js##t##map[0] + 1) * sizeof(sec->js##t##map[0]); \
+	sec->js##t##map = malloc(sz); \
+	if(!sec->js##t##map) \
+	    abort_parse("no mem"); \
+	memcpy(sec->js##t##map, conf[i].js##t##map, sz); \
+    } \
+} while(0)
+	    cp_jsmap(ax);
+	    cp_jsmap(bt);
 #define dupstr(s) do { \
     if(conf[i].s) { \
 	sec->s = strdup(conf[i].s); \
@@ -1138,9 +1168,52 @@ static void init(void)
 	    sec->filter_bt = -1;
 	    break;
 	  case KW_JSREMAP:
-	    if(*ln)
-		abort_parse("jsremap takes no parameter");
 	    sec->jsremap = 1;
+	    if(sec->jsaxmap) {
+		free(sec->jsaxmap);
+		sec->jsaxmap = NULL;
+	    }
+	    if(sec->jsbtmap) {
+		free(sec->jsbtmap);
+		sec->jsbtmap = NULL;
+	    }
+	    if(*ln) {
+		int nax, nbt;
+		if(!isdigit(*ln))
+		    abort_parse("js mappings should be ,-separated list of numbers");
+		nax = strtol(ln, (char **)&ln, 10);
+		if(*ln++ != ',')
+		    abort_parse("js mappings should be ,-separated list of numbers");
+		if(nax) {
+		    sec->jsaxmap = malloc((int)nax * sizeof(*sec->jsaxmap));
+		    if(!sec->jsaxmap)
+			abort_parse("no mem");
+		    sec->jsaxmap[0] = nax;
+		}
+		for(i = 0; i < nax; i++) {
+		    int ax = strtol(ln, (char **)&ln, 0);
+		    if(ax < 0 || ax > ABS_MAX || *ln++ != ',')
+			abort_parse("js mappings:  invalid axis");
+		    sec->jsaxmap[i + 1] = ax;
+		}
+		nbt = strtol(ln, (char **)&ln, 10);
+		if(nbt) {
+		    sec->jsbtmap = malloc((int)nbt * sizeof(*sec->jsbtmap));
+		    if(!sec->jsbtmap)
+			abort_parse("no mem");
+		    sec->jsbtmap[0] = nbt;
+		}
+		for(i = 0; i < nbt; i++) {
+		    if(*ln++ != ',')
+			abort_parse("js mappings should be ,-separated list of numbers");
+		    int bt = bnum(&ln);
+		    if(bt < 0)
+			abort_parse("js mappings:  invalid button");
+		    sec->jsbtmap[i + 1] = bt;
+		}
+		if(*ln)
+		    abort_parse("js mappings:  extra garbage at end");
+	    }
 	    break;
 	  case KW_SYN_DROP:
 	    if(*ln)
@@ -1246,6 +1319,10 @@ static void free_conf(struct evjrconf *sec)
 	free(sec->ax_map);
     if(sec->bt_map)
 	free(sec->bt_map);
+    if(sec->jsaxmap)
+	free(sec->jsaxmap);
+    if(sec->jsbtmap)
+	free(sec->jsbtmap);
 #define free_re(r) do { \
     if(sec->r##_str) { \
 	regfree(&sec->r); \
@@ -1608,13 +1685,23 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 			}
 			real_ioctl(fd, JSIOCGAXMAP, &cap->js_extra->in_ax_map);
 			real_ioctl(fd, JSIOCGBTNMAP, &cap->js_extra->in_btn_map);
+			memset(cap->js_extra->out_ax_map, 0xff, sizeof(cap->js_extra->out_ax_map));
+			memset(cap->js_extra->out_btn_map, 0xff, sizeof(cap->js_extra->out_btn_map));
 			int idx, i;
-			for(i = idx = 0; i < ABS_CNT; i++)
-			    if(ULISSET(cap->absout, i))
-				cap->js_extra->out_ax_map[i] = idx++;
-			for(i = BTN_MISC, idx = 0; i < KEY_MAX; i++)
-			    if(ULISSET(cap->keysout, i))
-				cap->js_extra->out_btn_map[i - BTN_MISC] = idx++;
+			if(cap->conf->jsaxmap)
+			    for(i = 0; i < cap->conf->jsaxmap[0]; i++)
+				cap->js_extra->out_ax_map[cap->conf->jsaxmap[i + 1]] = i;
+			else
+			    for(i = idx = 0; i < ABS_CNT; i++)
+				if(ULISSET(cap->absout, i))
+				    cap->js_extra->out_ax_map[i] = idx++;
+			if(cap->conf->jsbtmap)
+			    for(i = 0; i < cap->conf->jsbtmap[0]; i++)
+				cap->js_extra->out_ax_map[cap->conf->jsbtmap[i + 1] - BTN_MISC] = i;
+			else
+			    for(i = BTN_MISC, idx = 0; i < KEY_MAX; i++)
+				if(ULISSET(cap->keysout, i))
+				    cap->js_extra->out_btn_map[i - BTN_MISC] = idx++;
 		    }
 		    fprintf(logf, "[%s/%d] %s %s\n",
 			    fn, fd,
@@ -1802,6 +1889,8 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 }
 #endif
 
+/* Common code for multiple nearly identical close calls */
+/* Basically just disable intercept */
 static void ev_close(int fd)
 {
     pthread_mutex_lock(&lock);
@@ -1893,7 +1982,7 @@ int fclose(FILE *f)
 
 /* this is where most of the translation takes place:  modify read events */
 /* note that I do not intercept other forms of read as no known program uses them */
-/* e.g. readv, pread, preadv, aio_read, fread, fscanf, getc/fgetc, fgets */
+/* e.g. readv, pread, preadv, aio_read, fread, fscanf, getc/fgetc, fgets, syscall */
 static void process_ev_read(struct input_event *ev, const struct evjrconf *sec,
 			    struct evfdcap *cap, int *_mod, int *_drop)
 {
@@ -2086,9 +2175,20 @@ ssize_t read(int fd, void *buf, size_t count)
 		ev.code = cap->js_extra->in_ax_map[jev.number];
 	    }
 	    process_ev_read(&ev, sec, cap, &mod, &drop);
+	    int newnum = 0;
+	    if(!drop) {
+		/* js may also shift and drop numbers */
+		if(ev.type == EV_KEY) {
+		    if(ev.code < BTN_MISC ||
+		       (newnum = cap->js_extra->out_btn_map[ev.code - BTN_MISC]) == 0xffff)
+			drop = 1;
+		} else if((newnum = cap->js_extra->out_ax_map[ev.code]) == 0xff)
+		    drop = 1;
+		if(newnum != jev.number)
+		    mod = 1;
+	    }
 	    if(drop) {
 		/* JS offers no SYN_DROPPED, so just drop entirely */
-		mod = 0;
 		ret -= sizeof(jev);
 		if(nread > sizeof(jev)) {
 		    memmove(buf, buf + sizeof(jev), nread - sizeof(jev));
@@ -2098,17 +2198,7 @@ ssize_t read(int fd, void *buf, size_t count)
 		    cap->excess_read = 0;
 		    return read(fd, buf, count);
 		}
-	    }
-	    /* js may also shift numbers */
-	    int newnum;
-	    if(ev.type == EV_KEY)
-		/* FIXME:  error if < BTN_MISC */
-		newnum = cap->js_extra->out_btn_map[ev.code - BTN_MISC];
-	    else
-		newnum = cap->js_extra->out_ax_map[ev.code];
-	    if(newnum != jev.number)
-		mod = 1;
-	    if(mod) {
+	    } else if(mod) {
 		jev.type = (jev.type & JS_EVENT_INIT) |
 		    (ev.type == EV_KEY ? JS_EVENT_BUTTON : JS_EVENT_AXIS);
 		/* FIXME:  value probably needs adjusting for axes */
@@ -2268,38 +2358,53 @@ int ioctl(int fd, unsigned long request, ...)
 	    cpstr("JGNAME", sec->repl_name);
 	    return len;
 
+	  /**** all of the below only activate for jsremap ****/
 	  /* the following are computed instead of stored for now */
 	  case _IOC_NR(JSIOCGAXES):
-	    for(i = 0; i < ABS_CNT; i++)
-		if(ULISSET(cap->absout, i))
-		    idx++;
+	    if(sec->jsaxmap)
+		idx = sec->jsaxmap[0];
+	    else
+		for(i = 0; i < ABS_CNT; i++)
+		    if(ULISSET(cap->absout, i))
+			idx++;
 	    cpmem("GAXES", idx);
 	    return 0;
 	  case _IOC_NR(JSIOCGBUTTONS):
-	      for(i = BTN_MISC; i < KEY_MAX; i++)
-		  if(ULISSET(cap->keysout, i))
-		      idx++;
+	    if(sec->jsbtmap)
+		idx = sec->jsbtmap[0];
+	    else
+		for(i = BTN_MISC; i < KEY_MAX; i++)
+		    if(ULISSET(cap->keysout, i))
+			idx++;
 	    cpmem("GBUTTONS", idx);
 	    return 0;
 	  case _IOC_NR(JSIOCGAXMAP): /* set mapping not supported */
-	    for(i = 0; i < ABS_CNT; i++)
-		if(ULISSET(cap->absout, i)) {
-		    if(idx < _IOC_SIZE(request))
-			((__u8 *)argp)[idx] = i;
-		    idx++;
-		}
+	    if(sec->jsaxmap)
+		for(i = 0; i < sec->jsaxmap[0] && i < _IOC_SIZE(request); i++)
+		    ((__u8 *)argp)[i] = sec->jsaxmap[i + 1];
+	    else
+		for(i = 0; i < ABS_CNT; i++)
+		    if(ULISSET(cap->absout, i)) {
+			if(idx < _IOC_SIZE(request))
+			    ((__u8 *)argp)[idx] = i;
+			idx++;
+		    }
 	    fprintf(logf, "%d: altered JSIOCGAXMAP\n", fd);
 	    return 0;
 	  case _IOC_NR(JSIOCGBTNMAP): /* set mapping not supported */
-	    for(i = BTN_MISC; i < KEY_MAX; i++)
-		if(ULISSET(cap->keysout, i)) {
-		    if(idx < _IOC_SIZE(request) / 2)
-			((__u16 *)argp)[idx] = i;
-		    idx++;
-		}
+	    if(sec->jsbtmap)
+		for(i = 0; i < sec->jsbtmap[0] && i < _IOC_SIZE(request) / 2; i++)
+		    ((__u16 *)argp)[i] = sec->jsbtmap[i + 1];
+	    else
+		for(i = BTN_MISC; i < KEY_MAX; i++)
+		    if(ULISSET(cap->keysout, i)) {
+			if(idx < _IOC_SIZE(request) / 2)
+			    ((__u16 *)argp)[idx] = i;
+			idx++;
+		    }
 	    fprintf(logf, "%d: altered JSIOCGBTNMAP\n", fd);
-	    return 0;  /* FIXME:  -EINVAL if buttons out of range */
-	  /* set/get correction not supported */
+	    return 0;  /* FIXME:  -1/EINVAL if buttons out of range */
+	  /* set/get correction not supported; use rescale/event cal for that */
 	}
     }
     return real_ioctl(fd, request, argp);
