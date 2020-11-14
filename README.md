@@ -33,12 +33,14 @@ for my current limited Internet access to finish, and a way to check
 orphans and what would be downloaded while disconnected.  Look in the
 `lgogdownloader` subdirectory; it should be obvious which patch is
 which.  I may propose those upstream some day if I get things in
-order.  I also use one support script currently: `gog-checkpatch` was
+order.  I also use two support scripts currently: `gog-checkpatch` was
 written before the March 2017 great gog renaming, when version numbers
 could be easily compared, so it no longer really works.  Its purpose
 is to detect if I have to install a patch to the latest full download.
 Currently, only Dragon Age: Origins Ultimate is detected by the script
-(I used to have more, but don't remember which).
+(I used to have more, but don't remember which).  `chkorph` adds full
+download directory orphan checks to check-orphans.  That way, when I
+hide a game or gog changes the game ID/name, I notice it.
 
 nonet
 =====
@@ -145,7 +147,7 @@ things needed.
     issues with loading the preload into every command.
 
   - I save the game's main process ID in a known location, so that I
-    can kill a game using killgame.  This is bound to a global key using
+    can kill a game using `killgame`.  This is bound to a global key using
     `actkbd`; see below.
 
   - I save the game's name, if requested, so that a global key config
@@ -222,8 +224,10 @@ As a side note, if you're using FVWM, like me, a recent trend in Linux
 native games is to not go full-screen correctly any more.  Many games
 continue to display borders, and worse yet, some games not only do
 that, but also iconify themselves when they go full-screen (how does
-that even make sense?).  The solution is to add styling for each of
-these pesky games.  I use the following:
+that even make sense?  Probably due to not getting focus when it wants
+focus, and thus assuming it's no longer supposed to be displayed). 
+The solution is to add styling for each of these pesky games.  I use
+the following:
 
     Style FullScreen PositionPlacement, !Title, !Borders
     Style NoIconify UseStyle FullScreen, !Iconifiable
@@ -353,7 +357,7 @@ for Sound Blaster, and enable GUS emulation on 5.
 I currently use dosbox-SVN-4227 with the mt32 patch.  I could've sworn
 I had other patches as well (at least for glide and keyboard
 injection), but I haven't dealt with that in so long I've forgotten.
-In fact, I can't reinstall using the dosbox-9999 ebuld on gentoo any
+In fact, I can't reinstall using the dosbox-9999 ebuild on gentoo any
 more, so I should probably investigate why and fix/update it.
 
 Note that I have the GUS installation in `/usr/local/share/dosbox` (I've
@@ -421,7 +425,7 @@ the sound config program.
 
 There may be other things that need to be done, but only if the game
 is "special".  For example, Little Big Adventure 2 doesn't like being
-run for `C:\` in Linux, so I create a soft link from `.` to `LBA2` and
+run from `C:\` in Linux, so I create a soft link from `.` to `LBA2` and
 change paths in the config file to launch from `C:\LBA2` instead of
 `C:\`.
 
@@ -436,7 +440,7 @@ script goes in `/usr/local/bin`.  The desktop file is then modified to
 use my wrapper script instead of `start.sh` and get the icon from the
 new location.  For games that only have Windows installers, I just
 fill in a desktop file from scratch, using the icon extracted by
-`dos-gameprep.  The desktop file is then moved to
+`dos-gameprep`.  The desktop file is then moved to
 `/usr/local/share/applications`, owned by root:games.  A typical
 script looks like:
 
@@ -688,8 +692,8 @@ as the writable overlay.  `wine-gameprep` moves the root into place,
 and extracts an icon using ImageMagick's `convert`.  This icon is
 copied into the prefix game root so that even when it's not mounted
 it's in the same place.  Since I have a hard time knowing what version
-of a wine game is installed, I also copy the installers into the
-prefix.  In this caes, the installers are always symbolic links into
+of a wine game is installed, I also copy the installer links into the
+prefix.  In this case, the installers are always symbolic links into
 my download directory, so they don't take up any space, and I can tell
 by their listing color whether or not they are up-to-date (they are
 red if not present in my download directory, and cyan otherwise).
@@ -836,23 +840,39 @@ monitor, which just displays text output of a command repeatedly:
 `ds4-power`.  This displays the current charging status.
 
 I made my own uinput-based pad remapper for this, because my old
-`input-kbd` based evdev remappings don't work on the ds4 for some
-reason (but they did work on all my old controllers), and tracking
-down that reason seemed harder than just writing a uinput driver.
-However, as I started adding more features, I felt that an
-LD_PRELOAD-based driver would be more appropriate, so I decided to
-abandon it for now.  In fact, I found two alternatives that don't
-require that I actually maintain them myself: `MoltenGamePad` and
-`xboxdrv`.  Maybe some day I'll resume work on an LD_PRELOAD-based
+`input-kbd` based evdev remappings didn't work on the ds4 for some
+reason (but they did work on all my old controllers, and seem to work
+again now), and tracking down that reason seemed harder than just
+writing a uinput driver.  However, as I started adding more features, I
+felt that an LD_PRELOAD-based driver would be more appropriate, so I
+decided to abandon it for now.  In fact, I found two alternatives that
+don't require that I actually maintain them myself: `MoltenGamePad`
+and `xboxdrv`.  Maybe some day I'll resume work on an LD_PRELOAD-based
 remapper, but for now, I'm out of energy and either of these will
 probably do.
 
 Note that I have recently restarted an LD_PRELOAD-based remapper
 (although not exactly what I envisiaged when I wrote the line above).
 It's in this project as joy-remap.c, and the top documentation block
-describes its usage.  That's all I'll say about it for now, because it
-currently offers little to no advantage over the methods described
-below, and is largely untested.
+describes its usage.  I have replaced all of my uses of `xboxdrv` with
+this except for one (a Java-based game which mysteriously crashes with
+joy-remap.so, and, as usual, there's nobody I can ask about why it's
+broken, and the crash can't even be caught by gdb).  It's easy enough
+to configure and may be faster than any uinput-based solution since it
+doesn't go though an extra driver layer.  It's only real advantages
+are that it's temporary (only applies to the program it's preloaded
+into) and that it doesn't require root (which uinput doesn't, either,
+if configured via udev to be that way, but I don't want a user to be
+able to create arbitrary input devices).  It does nothing to prevent
+occasional disconnects mid-game like my ds4 does; that will require
+uinput.  Rather than use one of the below uinput drivers, I will
+probalby write a simplified one that does nothing but make devices
+persistent, since Linux apparently has no other way of doing it.  Then
+again, maybe I'll just live with it the way it is.  Maybe LD_PRELOAD
+wasn't the right path, after all, although it's the only way I'll ever
+make a remapper that can also do macros based on audiovisual changes
+in the program (part of my original vision, which, as I said, isn't
+even remotely there yet).
 
 [MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) seemed
 pretty nice on first look, but its only advantage over `xboxdrv` is
@@ -878,8 +898,8 @@ started a passed-in command and restored things when done, but I
 decided to instead run the entire script as root and call it once to
 set up and once to restore.  To set up, pass additional `xboxdrv`
 arguments (e.g. `--trigger-as-button`) to `mkxpad`.  To restore, pass
-only `-r`.  The device nodes are physically removed, and restored
-manually.  I'd prefer to use `udevadm trigger` to restore the device
+only `-r`.  The device nodes are physically removed on startup, and restored
+with `-r`.  I'd prefer to use `udevadm trigger` to restore the device
 nodes, but I've never gotten that to work.  Instead, I use `udevadm
 test` to try and fake it.  I originally just changed ownership to
 prevent reading, but AER, the game I originally started this remapping
@@ -887,13 +907,13 @@ mess for, crashes silently if it can't read an event device.  As a
 side note, `MoltenGamePad` "auto-removes" devices via permissions
 changes, as well, so it probably isn't compatible with AER, either.
 
-Lately my ds4's started to flake out, though.  It won't connect just
-by pressing the button; I have to set it to pairing mode and use a
+For a while, my ds4 was extremely flaky.  It wouldn't connect just
+by pressing the button; I had to set it to pairing mode and use a
 manual connect (assuming it's already been paired).  The new and
 improved bluez only logs info if run via systemd now, though (I think;
 I haven't looked at it long enough to tell), so I can't figure out
-what's wrong Pressing the reset button does nothing, at the very
-least.  For now, I use the `ds4-connect` script while the ds4 is in
+what's wrong.  Pressing the reset button does nothing, at the very
+least.  I used the `ds4-connect` script while the ds4 is in
 pairing mode to do the connection; it's better than nothing.  In the
 mean time, it's started working correctly again.  Why?  Who knows?
 Whom can I even ask about such things?  Most people couldn't even get
@@ -923,10 +943,10 @@ For the Amiga, I use `fs-uae`.  It works well enough without much
 hassle, although the documentation is on-line only and awful.  Much of
 my time getting things set up involved figuring out how to configure
 the damn thing.  At one point Gentoo just decided to drop GUI support
-(and therefore the ability to e.g. change floppies) for e-uae, so I
-switched immediately to fs-uae.  Years later, Gentoo finally switched
+(and therefore the ability to e.g. change floppies) for `e-uae`, so I
+switched immediately to `fs-uae`.  Years later, Gentoo finally switched
 as well.  Note that I'm just describing my standalone games; I also
-use UAE/fs-uae for emulating my old Amiga pretty much as I was using
+use UAE/`fs-uae` for emulating my old Amiga pretty much as I was using
 it back in the early 90s.
 
 I use the `fs-uae.conf` here as my base config for games.  Note that
@@ -1009,7 +1029,9 @@ experience using this, as the emulator only recently has become usable
 for me.  My main issue with it at the moment is that it crashes
 randomly, especially when it slows down; for now, the only "fix" is to
 press F1 (save state) frequently, and use `ps2-rec` to recover from
-the backup when it crashes while saving the state.
+the backup when it crashes while saving the state.  Then again, the
+GUI does provide an alternate way to load the backup, so I haven't run
+`ps2-rec` in a long time.
 
 Nintendo Handhelds
 ------------------

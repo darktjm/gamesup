@@ -1,0 +1,12 @@
+#!/bin/sh
+lgogdownloader --check-orphans | fgrep -v "No orphaned files"
+trap "rm -f /tmp/.ls$$" 0
+fgrep '"gamename"' ~/.cache/lgogdownloader/gamedetails.json | cut -d\" -f4 | sort -u >/tmp/.ls$$
+root="`sed -n -e 's/directory *= *//;T;p' ~/.config/lgogdownloader/config.cfg`"
+pat="`sed -n -e 's/^Rp \\(.*\\)/(\\1)/;T;p' ~/.config/lgogdownloader/ignorelist.txt 2>/dev/null | tr \\\\n \\|`"
+test -n "$pat" && pat="${pat%\|}"
+ls "$root" | while IFS= read -r x; do
+  test -n "$pat" && test -d "$root/$x" && echo "$x/" | egrep "$pat" >/dev/null && continue
+  test -n "$pat" && echo "$x" | egrep "$pat" >/dev/null && continue
+  grep "^$x\$" /tmp/.ls$$ >/dev/null || echo "$root"/"$x"
+done
