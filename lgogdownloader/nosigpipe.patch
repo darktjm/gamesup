@@ -1,6 +1,6 @@
-commit 00e62f8b22e9c3aa6b8ea6a8efbfe1fb2b3dcd0a
+commit 50b41cad7ff37a78604067776bafb918df125de5
 Author: Thomas J. Moore <darktjm@gmail.com>
-Date:   Fri Apr 17 17:03:34 2020 -0500
+Date:   Sun Nov 15 19:43:30 2020 -0600
 
     Suppress SIGPIPE during cache update
 
@@ -24,3 +24,4 @@ index 78be7a5..6ec0064 100644
      rhash_library_init();
  
      // Constants for option selection with include/exclude
+

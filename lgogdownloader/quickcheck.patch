@@ -1,27 +1,27 @@
-commit a1c3d055b759dfc6ac2b011e12a5deaa4f4e020a
+commit 00dc0c1af51c621dccd2fd89ef6d82ac26da2be0
 Author: Thomas J. Moore <darktjm@gmail.com>
-Date:   Tue Jun 9 21:48:49 2020 -0500
+Date:   Sun Nov 15 19:46:23 2020 -0600
 
-    Added two disconnected, cache-only quick checks:  check-orphans and
-      quick-download-check
+     Added two disconnected, cache-only quick checks:  check-orphans and
+       download-dry-run
 
 diff --git a/include/config.h b/include/config.h
-index fe8e29a..e8db478 100644
+index fe8e29a..e9d48f0 100644
 --- a/include/config.h
 +++ b/include/config.h
 @@ -210,6 +210,7 @@ class Config
          bool bResetConfig;
  
          bool bDownload;
-+	bool bQuickCheck;
++	bool bDryRun;
          bool bRepair;
          bool bUpdated;
          bool bList;
 diff --git a/include/downloader.h b/include/downloader.h
-index 6a3ee5e..4d75569 100644
+index ed9240b..0971833 100644
 --- a/include/downloader.h
 +++ b/include/downloader.h
-@@ -103,6 +103,7 @@ class Downloader
+@@ -98,6 +98,7 @@ class Downloader
          void clearUpdateNotifications();
          void repair();
          void download();
@@ -29,7 +29,7 @@ index 6a3ee5e..4d75569 100644
          void checkOrphans();
          void checkStatus();
          void updateCache();
-@@ -133,9 +134,9 @@ class Downloader
+@@ -128,9 +129,9 @@ class Downloader
          int saveGameDetailsCache();
          std::vector<gameDetails> getGameDetailsFromJsonNode(Json::Value root, const int& recursion_level = 0);
          static std::string getSerialsFromJSON(const Json::Value& json);
@@ -42,14 +42,14 @@ index 6a3ee5e..4d75569 100644
          static int progressCallbackForThread(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
          template <typename T> void printProgress(const ThreadSafeQueue<T>& download_queue);
 diff --git a/main.cpp b/main.cpp
-index 6ec0064..bbee0fd 100644
+index 6ec0064..b5dfdbf 100644
 --- a/main.cpp
 +++ b/main.cpp
 @@ -187,6 +187,7 @@ int main(int argc, char *argv[])
              ("list", bpo::value<bool>(&Globals::globalConfig.bList)->zero_tokens()->default_value(false), "List games")
              ("list-details", bpo::value<bool>(&Globals::globalConfig.bListDetails)->zero_tokens()->default_value(false), "List games with detailed info")
              ("download", bpo::value<bool>(&Globals::globalConfig.bDownload)->zero_tokens()->default_value(false), "Download")
-+	    ("quick-download-check", bpo::value<bool>(&Globals::globalConfig.bQuickCheck)->zero_tokens()->default_value(false), "Check what files would be downloaded based only on the cache")
++	    ("download-dry-run", bpo::value<bool>(&Globals::globalConfig.bDryRun)->zero_tokens()->default_value(false), "Check what files would be downloaded based only on the cache")
              ("repair", bpo::value<bool>(&Globals::globalConfig.bRepair)->zero_tokens()->default_value(false), "Repair downloaded files\nUse --repair --download to redownload files when filesizes don't match (possibly different version). Redownload will rename the old file (appends .old to filename)")
              ("game", bpo::value<std::string>(&Globals::globalConfig.sGameRegex)->default_value(""), "Set regular expression filter\nfor download/list/repair (Perl syntax)")
              ("create-xml", bpo::value<std::string>(&Globals::globalConfig.sXMLFile)->implicit_value("automatic"), "Create GOG XML for file\n\"automatic\" to enable automatic XML creation")
@@ -75,10 +75,10 @@ index 6ec0064..bbee0fd 100644
 +    // But only if necessary -- for now, disable if checking for orphans
 +    // and using cache and not also downloading (there are other conditions
 +    // where login still needed, but I'm tired of messing with it)
-+    // And also if doing a quick check using only cache
++    // And also if doing a download dry run using only cache
 +    if(!Globals::globalConfig.bUseCache ||
 +       ((Globals::globalConfig.sOrphanRegex.empty() || Globals::globalConfig.bDownload) &&
-+	   !Globals::globalConfig.bQuickCheck) /* ||
++	   !Globals::globalConfig.bDryRun) /* ||
 +       !downloader.loadGameDetailsCache() */) { // no way to check cache validity here
 +
 +	while (iLoginTries++ < Globals::globalConfig.iRetries && !bIsLoggedin)
@@ -111,11 +111,11 @@ index 6ec0064..bbee0fd 100644
 -        ssl_thread_cleanup();
 -        return 1;
 +    // don't init downloader just for orphan check from cache
-+    // or quick check
++    // or download dry run
 +    // this condition isn't really right; see above
 +    if(!Globals::globalConfig.bUseCache ||
 +       ((Globals::globalConfig.sOrphanRegex.empty() || Globals::globalConfig.bDownload) &&
-+	   !Globals::globalConfig.bQuickCheck) /* ||
++	   !Globals::globalConfig.bDryRun) /* ||
 +       !downloader.loadGameDetailsCache() */) { // no way to check cache validity here
 +	bool bInitOK = downloader.init();
 +	if (!bInitOK)
@@ -131,16 +131,16 @@ index 6ec0064..bbee0fd 100644
          downloader.repair();
      else if (Globals::globalConfig.bDownload) // Download games
          downloader.download();
-+    else if (Globals::globalConfig.bQuickCheck) // what would "download games" download?
++    else if (Globals::globalConfig.bDryRun) // what would "download games" download?
 +	downloader.downloadCacheCheck();
      else if (Globals::globalConfig.bListDetails || Globals::globalConfig.bList) // Detailed list of games/extras
          res = downloader.listGames();
      else if (!Globals::globalConfig.sOrphanRegex.empty()) // Check for orphaned files if regex for orphans is set
 diff --git a/src/downloader.cpp b/src/downloader.cpp
-index 3efea53..c08d5fe 100644
+index bc66cd1..1854039 100644
 --- a/src/downloader.cpp
 +++ b/src/downloader.cpp
-@@ -802,6 +802,107 @@ void Downloader::repair()
+@@ -779,6 +779,107 @@ void Downloader::repair()
      }
  }
  
@@ -248,7 +248,7 @@ index 3efea53..c08d5fe 100644
  void Downloader::download()
  {
      if (this->games.empty())
-@@ -2260,13 +2361,18 @@ void Downloader::updateCache()
+@@ -2218,13 +2319,18 @@ void Downloader::updateCache()
  }
  
  // Save serials to file
@@ -268,20 +268,28 @@ index 3efea53..c08d5fe 100644
      // Get directory from filepath
      boost::filesystem::path pathname = filepath;
      std::string directory = pathname.parent_path().string();
-@@ -2306,8 +2412,21 @@ void Downloader::saveSerials(const std::string& serials, const std::string& file
+@@ -2264,8 +2370,29 @@ void Downloader::saveSerials(const std::string& serials, const std::string& file
  }
  
  // Save changelog to file
 -void Downloader::saveChangelog(const std::string& changelog, const std::string& filepath)
 +void Downloader::saveChangelog(const std::string& changelog, const std::string& filepath, bool pretend)
  {
-+    try {
-+	std::string olog;
-+	boost::filesystem::load_string_file(filepath, olog);
-+	if (olog == changelog)
-+	    return;
++    // Check whether the changelog has changed
++    if (boost::filesystem::exists(filepath))
++    {
++        std::ifstream ifs(filepath);
++        if (ifs)
++        {
++            std::string existing_changelog((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
++            ifs.close();
++            if (changelog == existing_changelog)
++            {
++                // std::cout << "Changelog unchanged. Skipping: " << filepath << std::endl;
++                return;
++            }
++        }
 +    }
-+    catch (std::ios_base::failure& ex) {} // ignore missing file
 +
 +    if (pretend) {
 +        std::cout << "Saving changelog: " << filepath << std::endl;
@@ -291,17 +299,26 @@ index 3efea53..c08d5fe 100644
      // Get directory from filepath
      boost::filesystem::path pathname = filepath;
      std::string directory = pathname.parent_path().string();
-@@ -2331,13 +2450,6 @@ void Downloader::saveChangelog(const std::string& changelog, const std::string&
+@@ -2289,22 +2416,6 @@ void Downloader::saveChangelog(const std::string& changelog, const std::string&
          }
      }
  
--    try {
--	std::string olog;
--	boost::filesystem::load_string_file(filepath, olog);
--	if (olog == changelog)
--	    return;
+-    // Check whether the changelog has changed
+-    if (boost::filesystem::exists(filepath))
+-    {
+-        std::ifstream ifs(filepath);
+-        if (ifs)
+-        {
+-            std::string existing_changelog((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+-            ifs.close();
+-            if (changelog == existing_changelog)
+-            {
+-                std::cout << "Changelog unchanged. Skipping: " << filepath << std::endl;
+-                return;
+-            }
+-        }
 -    }
--    catch (std::ios_base::failure& ex) {} // ignore missing file
+-
      std::ofstream ofs(filepath);
      if (ofs)
      {

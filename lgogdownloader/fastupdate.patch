@@ -1,48 +1,15 @@
-commit ebcd1d009f0b11cd34e564e17c9c6935f44c0311
+commit 9ee03bfd23709baa77202534f8abe7e66bb160f6
 Author: Thomas J. Moore <darktjm@gmail.com>
-Date:   Sun Apr 19 21:05:09 2020 -0500
+Date:   Sun Nov 15 19:44:13 2020 -0600
 
-    Improve update-cache time by skipping DLC info on first pass and
-      not retrying 404 errors in galaxy API.  The former is taken care of in
-      the second pass anyway/as well, and I am unsure of the cause of the
-      former; probably DLCs that aren't owned.
+    Skip fetching DLC info during first pass of update-cache, as that info
+      is downloaded (again) during 2nd pass, anyway
 
-diff --git a/src/galaxyapi.cpp b/src/galaxyapi.cpp
-index f48d552..048f5aa 100644
---- a/src/galaxyapi.cpp
-+++ b/src/galaxyapi.cpp
-@@ -117,17 +117,25 @@ std::string galaxyAPI::getResponse(const std::string& url, const bool& zlib_deco
-     curl_easy_setopt(curlhandle, CURLOPT_NOPROGRESS, 1);
-     curl_easy_setopt(curlhandle, CURLOPT_WRITEFUNCTION, galaxyAPI::writeMemoryCallback);
-     curl_easy_setopt(curlhandle, CURLOPT_WRITEDATA, &memory);
-+    curl_easy_setopt(curlhandle, CURLOPT_FAILONERROR, 1);
- 
-     int retries = 0;
-     CURLcode result;
-     std::string response;
-     do
-     {
--        if (Globals::globalConfig.iWait > 0)
-+        if (retries && Globals::globalConfig.iWait > 0)
-             usleep(Globals::globalConfig.iWait); // Delay the request by specified time
-         result = curl_easy_perform(curlhandle);
-         response = memory.str();
-         memory.str(std::string());
-+	if (result == CURLE_HTTP_RETURNED_ERROR) {
-+	    long code;
-+	    curl_easy_getinfo(curlhandle, CURLINFO_RESPONSE_CODE, &code);
-+	    if (code == 404) // stubs for unowned files?
-+		break;
-+	    result = CURLE_OK; // old behavior was to ignore all errors
-+	}
-     }
-     while ((result != CURLE_OK) && response.empty() && (retries++ < Globals::globalConfig.iRetries));
- 
 diff --git a/src/website.cpp b/src/website.cpp
-index 2b6bc8f..9081bb4 100644
+index 5cdaf16..7cc7dab 100644
 --- a/src/website.cpp
 +++ b/src/website.cpp
-@@ -265,7 +265,7 @@ std::vector<gameItem> Website::getGames()
+@@ -228,7 +228,7 @@ std::vector<gameItem> Website::getGames()
                          }
                      }
  

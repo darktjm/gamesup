@@ -1,14 +1,14 @@
-commit 6c0065175f847fc517026abf1e04f0a7680c7d2c
+commit 235c27358c0ca04e35cc971d1150e3bd10d6c0f6
 Author: Thomas J. Moore <darktjm@gmail.com>
-Date:   Fri Apr 17 17:04:32 2020 -0500
+Date:   Sun Nov 15 19:42:24 2020 -0600
 
-    Don't ask gog to sort games, as that modifies "preferred" sort order
+    Don't ask gog to sort games, as that modifies the "preferred" sort order
 
 diff --git a/src/website.cpp b/src/website.cpp
-index a83fe44..2b6bc8f 100644
+index bc85639..5cdaf16 100644
 --- a/src/website.cpp
 +++ b/src/website.cpp
-@@ -132,7 +132,7 @@ std::vector<gameItem> Website::getGames()
+@@ -95,7 +95,7 @@ std::vector<gameItem> Website::getGames()
  
      do
      {
@@ -17,7 +17,7 @@ index a83fe44..2b6bc8f 100644
          std::istringstream json_stream(response);
  
          try {
-@@ -279,10 +279,7 @@ std::vector<gameItem> Website::getGames()
+@@ -242,10 +242,7 @@ std::vector<gameItem> Website::getGames()
      } while (!bAllPagesParsed);
      std::cerr << std::endl;
  
@@ -29,7 +29,7 @@ index a83fe44..2b6bc8f 100644
  
      return games;
  }
-@@ -621,7 +618,7 @@ std::vector<wishlistItem> Website::getWishlistItems()
+@@ -584,7 +581,7 @@ std::vector<wishlistItem> Website::getWishlistItems()
  
      do
      {
@@ -38,4 +38,3 @@ index a83fe44..2b6bc8f 100644
          std::istringstream response_stream(response);
  
          try {
-
