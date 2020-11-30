@@ -27,20 +27,20 @@ distro, alternate package sites, or google it to obtain it; I use
 either gentoo's version or the latest git depending on my mood.  Use
 it.  It's the only reasonable way to manage more than 5-10 games on
 gog.  I currently patch mine to not change the shelf search order when
-updating the cache, to ignore SIGPIPE during cache updates, to only
-write changelogs if they change, to make cache updates fast enough
-for my current limited Internet access to finish, and a way to check
-orphans and what would be downloaded while disconnected.  Look in the
-`lgogdownloader` subdirectory; it should be obvious which patch is
-which.  I may propose those upstream some day if I get things in
-order.  I also use two support scripts currently: `gog-checkpatch` was
-written before the March 2017 great gog renaming, when version numbers
-could be easily compared, so it no longer really works.  Its purpose
-is to detect if I have to install a patch to the latest full download.
-Currently, only Dragon Age: Origins Ultimate is detected by the script
-(I used to have more, but don't remember which).  `chkorph` adds full
-download directory orphan checks to check-orphans.  That way, when I
-hide a game or gog changes the game ID/name, I notice it.
+updating the cache, to ignore SIGPIPE during cache updates, to make
+cache updates fast enough for my current limited Internet access to
+finish, and a way to check orphans and what would be downloaded while
+disconnected.  Look in the `lgogdownloader` subdirectory; it should be
+obvious which patch is which.  I may propose those upstream some day
+if I get things in order.  I also use two support scripts currently:
+`gog-checkpatch` was written before the March 2017 great gog renaming,
+when version numbers could be easily compared, so it no longer really
+works.  Its purpose is to detect if I have to install a patch to the
+latest full download. Currently, only Dragon Age: Origins Ultimate is
+detected by the script (I used to have more, but don't remember
+which).  `chkorph` adds full download directory orphan checks to
+check-orphans.  That way, when I hide a game or gog changes the game
+ID/name, I notice it.
 
 nonet
 =====
@@ -334,6 +334,18 @@ of its saves as separate variable assignments in a config file.  It
 doesn't appear to be possible to even copy values from one to another
 to move slots around or create new slots, and editing a file is beyond
 the scope of this utility, anyway.
+
+hacks
+=====
+I was going to place my original Stars in Shadow hack in a separate
+project, but the devs added a similar fix in-game and I dropped it.
+From that hack was born a similar hack, ig2-hack.c, for Imperium
+Glactica II: Alliances.  I have decided to place that one here instead
+of creating a new project for it.  Both games used GLSL features not
+available in the version of GLSL advertised in the shaders.  Mesa is
+strict about this, so the sahders failed to compile on Mesa.  The hack
+simply edits the version before submitting to Mesa.  Compile and usage
+instructions are in the top comment block.
 
 dosbox
 ======
