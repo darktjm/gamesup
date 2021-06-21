@@ -7,3 +7,6 @@
 #  MULTILIB_CHOST_TOOLS is linked in wrong order, causing 32-bit lossage
 #  MULTILIB_WRAPPED_HEADERS step is skipped entirely
 COMPLETE_MULTILIB=no
+# older wine still uses common
+# but strip-flags then removes it.  What a pain.
+CFLAGS="-fcommon $CFLAGS"

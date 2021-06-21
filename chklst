@@ -67,4 +67,19 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
     # so mark for manual fixing
     pr $id "Installed version mismatch ($iver not $ver)" ver "'FIXV'.substr(' ${iver//\'/\'+\"\'\"+\'}',-36,36).'"
   fi
+  cmd="${cmd#\'}"
+  cmd="${cmd%\'}"
+  if [ -z "$cmd" ]; then
+    pr $id "no command assigned"
+  else
+    set -- $(find /usr/local/games/bin -name "$cmd")
+    case $# in
+      0) pr $id "cmd $cmd does not exist" ;;
+      1)
+        set -- $(find /usr/local/games/icons -name \*.desktop -exec grep -l "^Exec.*[=/]$cmd\$" {} \;)
+	test $# -eq 0 && pr $id "no icon"
+	;;
+      *) pr $id "more than one $cmd found" ;;
+   esac
+  fi
 done

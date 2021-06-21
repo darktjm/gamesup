@@ -21,7 +21,8 @@ Usage:
     -s2 use wine-2 (stable - 2.0.x)
     -s3 use wine-3 (stable - 3.0.x)
     -s4 use wine-4 (stable - 4.0.x)
-    -s5 use wine (stable - 5.0.x)
+    -s5 use wine-5 (stable - 5.0.x)
+    -s6 use wine (stable 6.0.x)
     -D  use winedbg/gdb
     -V <exe> use <exe> as wine; may not work right
 EOF
@@ -68,7 +69,8 @@ while :; do
      -s2) wp=wine-2 ;;
      -s3) wp=wine-3 ;;
      -s4) wp=wine-4 ;;
-     -s|-s5) wp=wine ;;
+     -s5) wp=wine-5 ;;
+     -s|-s6) wp=wine ;;
      -V) wp="$2" ; shift ;;
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;

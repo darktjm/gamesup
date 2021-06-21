@@ -4,7 +4,7 @@ dbase      gog_games
 comment    My GOG Games
 cdelim     ;
 syncable   0
-size       732 677
+size       732 673
 autoq      0
 help	'Here's some bloody help text.
 help	'Enjoy it.
@@ -85,6 +85,7 @@ column     5
 label      Install Size (K)
 lfont      0
 gray       (_sn_uninstalled)
+range      0 9007199254740991
 ifont      0
 
 item
@@ -147,6 +148,7 @@ column     6
 label      Downld Size
 lfont      0
 maxlen     32
+range      0 9007199254740991
 ifont      0
 
 item
@@ -180,17 +182,49 @@ lfont      0
 ifont      0
 
 item
-type       Note
-name       dlc
+type       Reference
+name       bought
 pos        12 192
-size       340 112
-mid        80 24
+size       340 28
+mid        56 8
 column     9
+timewidget 2
+label      Bought
+lfont      0
+ifont      0
+fk_db      gog_purchases.gf
+nfkey      3
+fkey       title
+_fk_key    1
+_fk_disp   1
+fkey       date
+_fk_disp   1
+fkey       price
+_fk_disp   1
+
+item
+type       Referers
+name       dlc
+pos        12 228
+size       340 76
+mid        80 0
+sumwid     55
+sumcol     5
+column     1
 search     1
 label      DLC
 lfont      0
-maxlen     999
 ifont      0
+fk_db      gog_dlc.gf
+nfkey      4
+fkey       title
+_fk_disp   1
+fkey       dlsize
+_fk_disp   1
+fkey       type
+_fk_disp   1
+fkey       game
+_fk_key    1
 
 item
 type       Note
@@ -328,8 +362,36 @@ ifont      0
 
 item
 type       Input
-name       wine_ver
+name       config_loc
 pos        12 540
+size       692 28
+mid        132 24
+column     14
+search     1
+label      Config Location
+lfont      0
+dcombo     1
+maxlen     128
+ifont      0
+
+item
+type       Input
+name       save_loc
+pos        12 572
+size       692 28
+mid        132 24
+column     15
+search     1
+label      Save Location
+lfont      0
+dcombo     1
+maxlen     128
+ifont      0
+
+item
+type       Input
+name       wine_ver
+pos        12 604
 size       316 28
 mid        104 24
 column     13
@@ -344,7 +406,7 @@ ifont      0
 item
 type       Flag
 name       ws_dxvk
-pos        328 540
+pos        328 604
 size       120 28
 mid        108 28
 column     28
@@ -358,7 +420,7 @@ ifont      0
 item
 type       Flag
 name       ws_dx11_disable
-pos        448 540
+pos        448 604
 size       136 28
 mid        108 28
 column     29
@@ -372,7 +434,7 @@ ifont      0
 item
 type       Flag
 name       ws_64bit
-pos        584 540
+pos        584 604
 size       120 28
 mid        108 28
 column     30
@@ -386,7 +448,7 @@ ifont      0
 item
 type       Flag
 name       ws_g9
-pos        328 572
+pos        328 636
 size       120 28
 mid        108 28
 column     34
@@ -400,7 +462,7 @@ ifont      0
 item
 type       Flag
 name       ws_nogallium9
-pos        448 572
+pos        448 636
 size       136 28
 mid        108 28
 column     40
@@ -414,7 +476,7 @@ ifont      0
 item
 type       Flag
 name       ws_dotnet
-pos        584 572
+pos        584 636
 size       120 28
 mid        108 28
 column     41
@@ -423,34 +485,4 @@ code       1
 label      .net/mono
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-ifont      0
-
-item
-type       Input
-name       config_loc
-pos        72 604
-size       632 28
-mid        132 24
-column     14
-search     1
-label      Config Location
-lfont      0
-invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-dcombo     1
-maxlen     128
-ifont      0
-
-item
-type       Input
-name       save_loc
-pos        72 635
-size       632 28
-mid        132 24
-column     15
-search     1
-label      Save Location
-lfont      0
-invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-dcombo     1
-maxlen     128
 ifont      0

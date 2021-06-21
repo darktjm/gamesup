@@ -17,7 +17,7 @@ if [ -z "$game" -o ! -d "$groot/$game" ]; then
    # who knows how much other crap is now broken thanks to this "feature"
    l="$LANG"
    export LANG=C
-   for x in "$groot"/[A-Z]*; do
+   for x in "$groot"/[A-Z0-9]*; do
      case "${x##*/}" in
        Program*) ;;
        # checking for dir enables leaving LAVFilters & such around
