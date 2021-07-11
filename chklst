@@ -1,7 +1,11 @@
 #!/bin/sh
 
+# usage: [-t] [id ...]
+# -t -> generate template to update db
+# id -> only check given id(s) instead of entire installed base
+
 tmpl=
-test "x$1" = x-t && tmpl=y
+test "x$1" = x-t && tmpl=y && shift
 
 pr() {
   echo "$1: $2"
@@ -15,11 +19,38 @@ pr() {
   fi
 }
 
-grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while read id ver sz isz cmd dir; do
+prd() {
+  echo "$1: DLC $2 $3"
+  if [ -n "$tmpl" -a -n "$4" ]; then
+    echo -n "\\{FOREACH @gog_dlc {_id=='$2'}}\{"
+    case "$5" in
+      \'*) echo -n "_$4=$5'" ;;
+      *)   echo -n "(_$4=$5)" ;;
+    esac
+    echo '}\{END}'
+  fi
+}
+
+srch=
+for x; do
+  test -n "$srch" && srch="$srch||"
+  test -z "$srch" && srch="&&("
+  srch="$srch{_id==\"$x\"}"
+done
+test -n "$srch" && srch="$srch)"
+dlc=()
+grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id}'"$srch)" | while read id ver sz isz cmd dir; do
+  if [ "$cmd" = DLC ]; then
+    ver="${ver#\'}"
+    ver="${ver%\'}"
+    dlc=("${dlc[@]}" "$id" "$isz" 0 "$ver" "")
+    continue
+  fi
   dir="${dir#\'}"
   dir="${dir%\'}"
   if [ -z "$dir" ]; then
     pr $id "no dir"
+    dlc=()
     continue
   fi
   rd=
@@ -29,7 +60,7 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
      break
   done
   test -z "$rd" && test -f /usr/local/games/inf/"$dir" && rd=/usr/local/games/inf
-  test -z "$rd" && pr $id "not installed in \"$dir\"" && continue
+  test -z "$rd" && pr $id "not installed in \"$dir\"" && dlc=() && continue
   case "$rd" in
      */inf/*) asz="$(du -s "$rd/$dir"* | (sz=0; while read a b; do sz=$((sz+a)); done; echo $sz))" ;;
      *) asz=$(du -s "$rd" | cut -d\	 -f1) ;;
@@ -37,6 +68,7 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
   test "$asz" -eq "$sz" || pr $id "Install Size(K) should be $asz, not $sz" inst_size $asz
   asz=0
   iver=
+  ndlc=${#dlc[@]}
   ver="${ver#\'}"
   ver="${ver%\'}"
   for x in "$rd"/* "$rd"/*/*; do
@@ -45,6 +77,28 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
       /mnt/usb3f/gog/"$id"/*) ;;
       *) continue ;;
     esac
+    test -f "$x" || continue # always wrong version
+    i=0; while [ $i -lt $ndlc ]; do
+      case "${x##*/}" in
+	"${dlc[$i]}"*|setup_"${dlc[$i]}"*|gog_"${dlc[$i]}"*)
+	  if [ -z "${dlc[$((i+4))]}" ]; then
+	    case "$x" in
+	      *.bin) dver="${x%-*.*}" ;;
+	      *)     dver="${x%.*}" ;;
+	    esac
+	    dver="${dver##*/}"
+	    dver="${dver#gog_}"
+	    dver="${dver#setup_}"
+	    dver="${dver#${dlc[$i]}}"
+	    dlc[$((i+4))]="$dver"
+	  fi
+	  dlc[$((i+2))]=$((dlc[$((i+2))]+$(stat -Lc %s "$x")))
+	  break
+	  ;;
+      esac
+      i=$((i+5))
+    done
+    test $i -lt $ndlc && continue
     if [ -z "$iver" ]; then
       case "$x" in
         *.bin) iver="${x%-*.*}" ;;
@@ -55,7 +109,6 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
       iver="${iver#setup_}"
       iver="${iver#$id}"
     fi
-    test -f "$x" || continue # always wrong version
     asz=$((asz+$(stat -Lc %s "$x")))
   done
   var=setup_size
@@ -76,10 +129,31 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id})' | while
     case $# in
       0) pr $id "cmd $cmd does not exist" ;;
       1)
-        set -- $(find /usr/local/games/icons -name \*.desktop -exec grep -l "^Exec.*[=/]$cmd\$" {} \;)
+        set -- $(find /usr/local/games/icons -name \*.desktop -exec egrep -l "^Exec.*[=/]$cmd( .*)?\$" {} \;)
 	test $# -eq 0 && pr $id "no icon"
 	;;
       *) pr $id "more than one $cmd found" ;;
    esac
   fi
+  i=0; while [ $i -lt $ndlc ]; do
+    did="${dlc[$i]}"
+    nver="${dlc[$((i+4))]}"
+    if [ -z "$nver" ]; then
+      prd $id "$did" "not found"
+      i=$((i+5))
+      continue
+    fi
+    var=dlsize
+    isz=${dlc[$((i+1))]}
+    asz=${dlc[$((i+2))]}
+    test $asz -eq 0 && var=
+    test $asz -eq "$isz" || prd $id "$did" "Downld Size should be $asz, not $isz" "$var" $asz
+    over="${dlc[$((i+3))]}"
+    if [ "x${nver%_$over}" = "x$nver" ]; then
+      nver="${nver#_}"
+      prd $id "$did" "Installed version mismatch ($nver not $over)" ver "'FIXV'.substr(' ${nver//\'/\'+\"\'\"+\'}',-36,36).'"
+    fi
+    i=$((i+5))
+  done
+  dlc=()
 done

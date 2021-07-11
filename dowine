@@ -290,7 +290,7 @@ fi
 
 case "$1" in
   "") : ;;
-  winetricks|*/winetricks) env WINE="$wp" WINESERVER="wineserver$wpver" "$@" ;;
+  winetricks|*/winetricks) env WINE="$wp" WINESERVER="wineserver$wpver" "$@"; ret=$? ;;
   *) rm -f reg.[0-9]*.diff # ignore old diffs; probably not worth reading
      $wp regedit -E 'c:\'reg.$$
      if [ -f wine-keys.exe ]; then
@@ -303,7 +303,7 @@ case "$1" in
      test wine-wait = "$prg" -a "${wp%-[0-9]*}" != "$wp" && set -- -e "$wpver"-"$winever" "$@"
      nonet env LD_PRELOAD="$LD_PRELOAD" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" WINEDEBUG="$wdb" $prg "$@" & pid=$!
      trap "kill $pid $pidk" TERM
-     wait $pid
+     wait $pid; ret=$?
      test -n "$pidk" && kill $pidk
      $wp regedit -E 'c:\'reg.$$.new
      diff -au "$d/reg.$$" "$d/reg.$$.new" >"$d/reg.$$.diff"
@@ -313,3 +313,4 @@ esac
 
 wineserver$wpver -k
 fusermount -u "$WINEPREFIX"
+exit $ret

@@ -1,0 +1,59 @@
+\{FILE $HOME."/.config/menus/applications-merged/gog_games.menu"}
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+<Menu>
+  <Name>Applications</Name>
+  <Menu>
+    <Name>Games</Name>
+    <Exclude><Category>X-Broken</Category></Exclude>
+\{d="X-Broken";l=""}\{FOREACH -cat (len(_cat)>0)}
+\{IF ({_cat!=l})}
+\{"close opened menus";""
+}\{FOREACH [+c {m="";gsub(l,";","|")}}
+\{m.=c.";";
+""}\{IF ({m!=substr(_cat,0,#m)})}
+   </Menu>
+\{ENDIF}
+\{END}
+\{"open new menus";""}
+\{FOREACH [+c {m="";gsub(_cat,";","|")}}
+\{m.=c.";";
+""}\{IF ({m!=substr(l,0,#m)})}
+    <Exclude>
+      <Category>\{c}</Category>
+    </Exclude>
+    <Menu>
+      <Name>\{
+      n=gsub(
+	      c=~"^[xX]-" ? sub(c,"^[Xx]-",""):
+        	            gsub(c,"([^A-Z])([A-Z][^A-Z])","\1 \2")
+	, "_", " ")
+      }</Name>
+      <!-- XFCE ignores Name tags and uses parent's tag.  -->
+      <!-- To correct, Directory entries must be used -->
+      <Directory>\{c}.directory</Directory>\{d=d|+esc(c."|".n);""}
+      <Include>
+      	<And>
+	  <All/>
+\{FOREACH [+s {gsub(m,";","|")}}
+          <Category>\{s}</Category>
+\{END}
+	</And>
+      </Include>
+\{ENDIF}
+\{END}\{l=_cat;
+""}\{ENDIF}
+\{END}
+\{"close final menus";""}
+\{FOREACH [+c {gsub(l,";","|")}}
+  </Menu>
+\{END}
+  </Menu> <!-- End Games -->
+</Menu> <!-- End Applications -->
+\{"Generate .directory files needed for correct naming.  No support for comments or icons.";
+""}\{FOREACH [+c {d}}\{FILE $HOME."/.local/share/desktop-directories/".c[0].".directory"}
+[Desktop Entry]
+Version=1.0
+Type=Directory
+Name=\{sub(c[1]," Game$","")}
+\{END}

@@ -4,7 +4,7 @@ dbase      gog_games
 comment    My GOG Games
 cdelim     ;
 syncable   0
-size       732 673
+size       1068 492
 autoq      0
 help	'Here's some bloody help text.
 help	'Enjoy it.
@@ -31,6 +31,27 @@ search     1
 label      Name
 lfont      0
 ifont      0
+
+item
+type       Reference
+name       bought
+pos        716 12
+size       340 28
+mid        56 8
+column     9
+timewidget 2
+label      Bought
+lfont      0
+ifont      0
+fk_db      gog_purchases
+nfkey      3
+fkey       title
+_fk_key    1
+_fk_disp   1
+fkey       pdate
+_fk_disp   1
+fkey       price
+_fk_disp   1
 
 item
 type       Input
@@ -139,6 +160,19 @@ maxlen     40
 ifont      0
 
 item
+type       Note
+name       todo
+pos        716 40
+size       340 112
+mid        80 24
+column     10
+search     1
+label      TODO
+lfont      0
+maxlen     4096
+ifont      0
+
+item
 type       Number
 name       setup_size
 pos        12 156
@@ -182,93 +216,50 @@ lfont      0
 ifont      0
 
 item
-type       Reference
-name       bought
+type       Input
+name       config_loc
 pos        12 192
-size       340 28
-mid        56 8
-column     9
-timewidget 2
-label      Bought
-lfont      0
-ifont      0
-fk_db      gog_purchases.gf
-nfkey      3
-fkey       title
-_fk_key    1
-_fk_disp   1
-fkey       date
-_fk_disp   1
-fkey       price
-_fk_disp   1
-
-item
-type       Referers
-name       dlc
-pos        12 228
-size       340 76
-mid        80 0
-sumwid     55
-sumcol     5
-column     1
+size       692 28
+mid        132 24
+column     14
 search     1
-label      DLC
+label      Config Location
 lfont      0
-ifont      0
-fk_db      gog_dlc.gf
-nfkey      4
-fkey       title
-_fk_disp   1
-fkey       dlsize
-_fk_disp   1
-fkey       type
-_fk_disp   1
-fkey       game
-_fk_key    1
-
-item
-type       Note
-name       todo
-pos        356 192
-size       348 112
-mid        80 24
-column     10
-search     1
-label      TODO
-lfont      0
-maxlen     4096
+dcombo     1
+maxlen     128
 ifont      0
 
 item
-type       Note
-name       inst_notes
-pos        12 312
-size       340 112
-mid        80 24
-column     11
+type       Input
+name       save_loc
+pos        12 224
+size       692 28
+mid        132 24
+column     15
 search     1
-label      Install Notes
+label      Save Location
 lfont      0
-maxlen     999
+dcombo     1
+maxlen     128
 ifont      0
 
 item
 type       Note
 name       game_notes
-pos        356 312
-size       348 112
+pos        716 152
+size       340 112
 mid        80 24
 column     12
 search     1
 label      Game Notes
 lfont      0
-maxlen     999
+maxlen     1500
 ifont      0
 
 item
 type       Flags
 name       
-pos        12 428
+pos        12 256
 size       692 108
 mid        108 28
 column     0
@@ -362,36 +353,8 @@ ifont      0
 
 item
 type       Input
-name       config_loc
-pos        12 540
-size       692 28
-mid        132 24
-column     14
-search     1
-label      Config Location
-lfont      0
-dcombo     1
-maxlen     128
-ifont      0
-
-item
-type       Input
-name       save_loc
-pos        12 572
-size       692 28
-mid        132 24
-column     15
-search     1
-label      Save Location
-lfont      0
-dcombo     1
-maxlen     128
-ifont      0
-
-item
-type       Input
 name       wine_ver
-pos        12 604
+pos        12 372
 size       316 28
 mid        104 24
 column     13
@@ -406,7 +369,7 @@ ifont      0
 item
 type       Flag
 name       ws_dxvk
-pos        328 604
+pos        12 404
 size       120 28
 mid        108 28
 column     28
@@ -420,7 +383,7 @@ ifont      0
 item
 type       Flag
 name       ws_dx11_disable
-pos        448 604
+pos        132 404
 size       136 28
 mid        108 28
 column     29
@@ -434,7 +397,7 @@ ifont      0
 item
 type       Flag
 name       ws_64bit
-pos        584 604
+pos        268 404
 size       120 28
 mid        108 28
 column     30
@@ -448,7 +411,7 @@ ifont      0
 item
 type       Flag
 name       ws_g9
-pos        328 636
+pos        12 436
 size       120 28
 mid        108 28
 column     34
@@ -462,7 +425,7 @@ ifont      0
 item
 type       Flag
 name       ws_nogallium9
-pos        448 636
+pos        132 436
 size       136 28
 mid        108 28
 column     40
@@ -476,7 +439,7 @@ ifont      0
 item
 type       Flag
 name       ws_dotnet
-pos        584 636
+pos        268 436
 size       120 28
 mid        108 28
 column     41
@@ -486,3 +449,40 @@ label      .net/mono
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
 ifont      0
+
+item
+type       Note
+name       inst_notes
+pos        392 364
+size       312 120
+mid        80 24
+column     11
+search     1
+label      Install Notes
+lfont      0
+maxlen     4096
+ifont      0
+
+item
+type       Referers
+name       dlc
+pos        716 264
+size       340 220
+mid        80 24
+sumwid     55
+sumcol     5
+column     1
+search     1
+label      DLC
+lfont      0
+ifont      0
+fk_db      gog_dlc
+nfkey      4
+fkey       title
+_fk_disp   1
+fkey       dlsize
+_fk_disp   1
+fkey       type
+_fk_disp   1
+fkey       game
+_fk_key    1

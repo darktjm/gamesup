@@ -16,10 +16,9 @@ sumwid     40
 sumcol     2
 column     0
 search     1
-defsort    1
 label      Title
 lfont      0
-ifont      1
+ifont      0
 
 item
 type       Input
@@ -29,6 +28,7 @@ size       260 28
 mid        68 28
 column     4
 search     1
+defsort    1
 timewidget 2
 label      Full ID
 lfont      0
@@ -64,7 +64,7 @@ timewidget 2
 label      Game
 lfont      0
 ifont      0
-fk_db      gog_games.gf
+fk_db      gog_games
 nfkey      2
 fkey       id
 _fk_key    1
@@ -98,14 +98,14 @@ timewidget 2
 label      Bought
 lfont      0
 ifont      0
-fk_db      gog_purchases.gf
+fk_db      gog_purchases
 fk_header  1
 fk_search  1
 nfkey      3
 fkey       title
 _fk_key    1
 _fk_disp   1
-fkey       date
+fkey       pdate
 _fk_disp   1
 fkey       price
 _fk_disp   1

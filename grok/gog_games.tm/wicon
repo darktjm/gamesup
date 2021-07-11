@@ -1,0 +1,12 @@
+\{FOREACH}
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=\{_name}
+Comment=\{_name} (wine)
+Exec=bin/\{_cmd}
+Icon=/home/darktjm/games/wine/\{_cmd}/\{_dir}/ICON
+Path=/home/darktjm
+StartupNotify=false
+Categories=Game;\{_cat}
+\{END}
