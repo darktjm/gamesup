@@ -23,6 +23,10 @@ Currently \{i} unusable Wine-only games:\{(l=0);""}
 \{IF (l + len(_cmd) > 73)}\{(l=0);""}
    \{ENDIF}\{(l += 1 + len(_cmd));_cmd} \{END}
 
+  [note: in my recent game retest, I skipped 5 or so games and just marked
+   them broken for now, to be processed later]
+  [note: I am way behind in retesting again especially given wine-5.x]
+
 \{(i=0);""}\{FOREACH (!_sn_broken && _sn_linuxbroken && {_cmdtype == "Windows"})}
 \{(i++);""}\{END}
 Currently \{i} unusable Linux games: (at least barely usable in wine)\{(l=0);""}

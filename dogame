@@ -11,6 +11,7 @@ dounm=
 isdir=
 joy=
 xpad=()
+hdir=
 while :; do
   case "$1" in
     -d) isdir=y; shift ;;  # -d - 1st arg is dir, 2nd is cmd
@@ -32,6 +33,23 @@ while :; do
 	   xpad=("${xpad[@]}" "$1"); shift
 	done
 	shift
+	;;
+    -h) shift # fucking Windows devs putting crap in visible $HOME dirs
+        hdir="$1"; shift   # -h <d> <l> - remap $HOME to .local/share/<d>
+	ldir="$1"; shift   #              linking dir in <l> to .
+	hdir="${HOME}/.local/share/${hdir}"
+	mkdir -p "$hdir"
+	for x in .config .local .mono; do
+	  test -h "$hdir"/$x || ln -s ../../../$x "$hdir"/$x
+	done
+	while [ -n "$ldir" ]; do
+	  x="${ldir%%/*}"
+	  case "$ldir" in
+	    */*) ldir="${ldir#*/}" ;;
+	    *)   ldir=
+	  esac
+	  test -h "$hdir/$x" || ln -s . "$hdir/$x"
+	done
 	;;
     *) break ;;
   esac
@@ -109,11 +127,13 @@ xset -dpms
 
 test -n "$xpad" && "${xpad[@]}"
 
+test -n "$hdir" && export HOME="$hdir"
 if [ -n "$LD_LIBRARY_PATH$ldp" ]; then
   nonet env LD_LIBRARY_PATH="$LD_LIBRARY_PATH" LD_PRELOAD="$ldp" "$cmd" "$@" & pid=$!
 else
   nonet "$cmd" "$@" & pid=$!
 fi
+test -n "$hdir" && export HOME="${hdir%/.local/share/*}"
 echo $pid >/tmp/.last-game
 # save cmd for save-game hack
 test $$ = "${save_game%%:*}" && echo "${save_game#*:}" >>/tmp/.last-game

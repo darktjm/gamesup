@@ -1,3 +1,6 @@
-\{FOREACH}
-\{_id} \{esc(_ver,'\ ')} \{_inst_size} \{_setup_size} \{_cmd} \{esc(_dir,'\ ')}
+\{FOREACH}\{"Following intended for use with shell's 'read' cmd";
+""}\{"";I=_id;""}\{FOREACH @gog_dlc -_id ({_game==I}&&{_type!='G'})}
+\{_id} '\{esc(_ver,'\ ')}' 0 \{_dlsize} DLC
+\{END}
+\{"";I=_id} '\{esc(_ver,'\ ')}' \{_inst_size} \{_setup_size} '\{_cmd}' '\{_cat}' '\{esc(_dir,'\ ')}'
 \{END}

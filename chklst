@@ -39,7 +39,7 @@ for x; do
 done
 test -n "$srch" && srch="$srch)"
 dlc=()
-grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id}'"$srch)" | while read id ver sz isz cmd dir; do
+grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id}'"$srch)" | while read id ver sz isz cmd cat dir; do
   if [ "$cmd" = DLC ]; then
     ver="${ver#\'}"
     ver="${ver%\'}"
@@ -131,6 +131,15 @@ grok -x gog_games list '(!_sn_uninstalled&&!#_hidden&&!{"_tjm" in _id}'"$srch)" 
       1)
         set -- $(find /usr/local/games/icons -name \*.desktop -exec egrep -l "^Exec.*[=/]$cmd( .*)?\$" {} \;)
 	test $# -eq 0 && pr $id "no icon"
+	if [ -z "${cat//\'}" ]; then
+	  pr $id "no icon category"
+	else
+	  for x; do
+	    icat=$(grep '^Categories=' "$x")
+	    test "$icat" = "Categories=Game;${cat//\'}" && continue
+	    pr $id "icon $x has category '${icat#Categories=}' instead of 'Game;${cat//\'}'"
+	  done
+	fi
 	;;
       *) pr $id "more than one $cmd found" ;;
    esac

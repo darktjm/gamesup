@@ -3,7 +3,12 @@ test -n "$1" || exit 1
 cd "$1" || exit 1
 for x in goggame-*.ico gfw_high.ico; do
    test -f "$x" || continue
+   gid=$(fgrep rootGameId "${x%.ico}.info" 2>/dev/null)
+   gid="${gid%\"*}"
+   gid="${gid##*\"}"
+   test -n "$gid" -a "$x" != goggame-${gid}.ico -a -f goggame-${gid}.ico && continue
    convert "$x" "${x%.ico}.png"
+   break
 done
 # older games had 256x256 always, but some newer ones have 2x 128x128 instead
 # so just pick a 128x128 if no 256x256 exists (they're both the same)

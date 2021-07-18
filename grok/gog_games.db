@@ -29,7 +29,7 @@ wine-nine-standalone: v0.8 no longer loads in wine-4 or wine-5\
 ;Japanese voices only\; battle voices have no subtitles\
 Can export to gow0\
 God, what a grind.  I'm not sure I want to finish this.\
-;Stable 5.0.3;game dir: Agarest.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War;;;;;;;;;;;;;;;;;;;1;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
+;Stable 5.0.5;game dir: Agarest.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War;;;;;;;;;;;;;1;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
 agarest_generations_of_war_2;Agarest:  Generations of War 2;Agarest - Generations of War 2;gow2;Windows;6828230;6990115440;1.0_(20458);;Agarest:  Generations of War 2;Play w/o compile in background:  is it slow?\
 Remap with dogame -x\
 ;needs for videos & in-game mu/usr/share/doc/gallium-nine-standalone-0.8/README.rst.bz2sic: quartz amstream devenum wmp9\
@@ -55,7 +55,7 @@ O = X\
 T = Y\
 The start/back keys are swapped with L2/R2 and other oddities\
 Maybe it's possible to mess with manual config?\
-;Stable 5.0.3;game dir: Agarest2.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War 2;;;;;;;;;;;;;;;;;;;1;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
+;Stable 5.0.5;game dir: Agarest2.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War 2;;;;;;;;;;;;;1;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
 agarest_generations_of_war_zero;Agarest:  Generations of War Zero;Agarest - Generations of War Zero;gow0;Windows;5292194;5320415825;1.0_(20459);;Agarest:  Generations of War Zero;Remap with dogame -x\
 ;needs for videos & in-game music: quartz amstream devenum wmp9\
 * w/o: beep and frreeze w/ ActiveMovie window with gstreamer (used to give logo before death)\
@@ -81,7 +81,7 @@ O = X\
 T = Y\
 The start/back keys are swapped with L2/R2 and other oddities\
 Maybe it's possible to mess with manual config?\
-;Stable 5.0.3;game dir: AgarestZero.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War Zero;;;;;;;;;;;;;;;;;;;1;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
+;Stable 5.0.5;game dir: AgarestZero.ini;user dir: My Documents/My Games/Ghostlight Ltd/Agarest - Generations of War Zero;;;;;;;;;;;;;1;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
 age_of_wonders;Age of Wonders;Age of Wonders;aow;Windows;310968;194681768;1.36.0053_(22161);;Age of Wonders;;      prefs:  Allow Resolution Switching\; 1280x720 (1920x1080 too small)\
     Also creates datatype to associate AOW maps with editor\
 *   intro movie is black (sound only) w/o iv32 codec (from iv5setup.exe)\
@@ -97,7 +97,9 @@ age_of_wonders_2_the_wizards_throne;Age of Wonders 2:  The Wizard's Throne;Age o
 *      given Direct3D doesn't seem to do much, just disable it\
     used to need manual resize w/ wmctrl after startup\
 ;-s -> Setup app\
--e -> Editor;Stable 6.0.1;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;; 5.07.21;;
+-e -> Editor\
+Use space instead of esc to quit movie, or game may exit as well\
+;Stable 6.0.1;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;; 5.07.21;;
 age_of_wonders_3;Age of Wonders III Deluxe Edition;Age of Wonders III;aow3;Windows;4144580;2418810794;1.802_fix_(28713);;Age of Wonders 3 Deluxe Edition;Document mods\
 ;dlc "deluxe_edition_upgrade" aka dragons_throne_scernario\
 \
@@ -122,19 +124,21 @@ age_of_wonders_shadow_magic;Age of Wonders:  Shadow Magic;Age of Wonders - Shado
     Had Black ground and otherwise corrupted gfx w/ direct3d enabled\
     "Use Direct3D" option used to cause crash on startup\
     used to need manual resize w/ wmctrl after startup\
+sometimes doesn't play movie properly (iconified?)\
 ;-s -> Setup app\
 -e -> Editor\
-;Stable 4.0.3;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;; 2.03.20;;
+Use space instead of esc to quit movie, or game may exit as well\
+;Stable 6.0.1;registry: Software\\Triumph Studios\\Age of Wonders Shadow Magic;game dir: Save;;;;1;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;12.07.21;;
 alqadim_the_genies_curse;Al-Qadim:  The Genie's Curse;;;DOS;0;12483069;2.1.0.3;WONTPLAY:  DOS action game\; not for me;Al-Qadim:  The Genie's Curse;;need to link drivers into main dir to make sound config work\
 mt32 music\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;ActionGame\;;;;;;
 albion;Albion;Albion;albion;DOS;144997;95805824;1.38_(28043);;Albion;check out "native" non-DOS ports (apparently still closed-source, though)\
 http://albion-hra.wz.cz/?page=clanek4\
 https://pyra-handheld.com/boards/threads/albion.64477/page-6#post-1395095\
 ;No manual (got from missingdocs site)\
 mt32 music\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 2.03.20;;
-amnesia_the_dark_descent;Amnesia:   The Dark Descent;;;Linux;0;1368076038;2.0.0.3;WONTPLAY:  survival horror.  Owned once, but no longer interested;Amnesia:  The Dark Descent;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;SETUP.INI;SAVES;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 2.03.20;;
+amnesia_the_dark_descent;Amnesia:   The Dark Descent;;;Linux;0;1374004520;1_41_a_40599;WONTPLAY:  survival horror.  Owned once, but no longer interested;Amnesia:  The Dark Descent;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;X-Action\;;;;;;
 an_elder_scrolls_legend_battlespire_game;An Elder Scrolls Legend:  Battlespire;Battlespire;battlespire;DOS;0;641102752;1.5_(28043);;An Elder Scrolls Legend:  Battlespire;;haven't tried networking\
 Uninstalled\; too actiony (not bad enough to hide, I guess)\
 ;;;;;;;;;;;;;;;;1;;;;;;;0;;;;;RolePlaying\;X-ARPG\;;;;;;
@@ -142,18 +146,22 @@ anachronox;Anachronox;;;Windows;0;1069242312;1.02_(22258);WONTPLAY:  ATB combat 
     Used to lead to complete 3D hw failure occasionally, but seems OK now\
       radeon 0000:01:05.0: GPU lockup CP stall for more than 10000msec\
 Have widescreen patch (add/ANOX.7z)\; works OK (select high-res mode in options)\
-;;Stable 3.0;game dir: anoxdata/SAVE;game dir: anoxdata/SAVE;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;Stable 3.0;game dir: anoxdata/SAVE;game dir: anoxdata/SAVE;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
 annas_quest;Anna's Quest;Annas Quest;aq;Linux;1216201;1130942440;1_1_0214_27877;;Anna's Quest;finish uninstalling (ensure backup present)\
 ;extra: setup_annas_quest_bonus_2.0.0.1.exe\
    innoextracted bonus into prologue dir\
 ;-p -> prologue\; must click in house before keys work\
-Completed\; no desire to get all achievements;;;;;;;;1;;;;;;;;;;;;;;0;;1;1;;AdventureGame\;;;; 2.03.20;;
-anomaly_2;Anomaly 2;Anomaly 2;anom2;Linux;2467857;2500896519;2.0.0.3;;Anomaly 2;;Dies on startup.\
+Completed\; no desire to get all achievements;;~/.local/share/Daedalic Entertainment GmbH/Anna's Quest/config.ini;~/.local/share/Daedalic Entertainment GmbH/Anna's Quest/Savegames;;;;;1;;;;;;;;;;;;;;0;;1;1;;AdventureGame\;;;; 2.03.20;;
+anomaly_2;Anomaly 2;Anomaly 2;anom2;Linux;2467857;2500896519;2.0.0.3;;Anomaly 2;Try making controller more like xbox\; maybe that will work\
+Find config & save loc\
+;Dies on startup.\
 fixed by anom-hack:\
 https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
 Should probably support controller, but doesn't.  Not even with xboxdrv.\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;; 2.03.20;;
-anomaly_korea;Anomaly Korea;Anomaly Korea;anomk;Linux;488378;494467993;2.0.0.3;;Anomaly Korea;;Game gets to menu after logos/intro video, but starting game hangs with 100% cpu and spinning wait icon\
+anomaly_korea;Anomaly Korea;Anomaly Korea;anomk;Linux;488378;494467993;2.0.0.3;;Anomaly Korea;Try making controller more like xbox\; maybe that will work\
+Find config & save loc\
+;Game gets to menu after logos/intro video, but starting game hangs with 100% cpu and spinning wait icon\
 fixed by anom-hack:\
 https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
 \
@@ -164,11 +172,15 @@ Preheated stream conflict. Serious performance degradation occured! Expected: te
 \
 No controller support, even though it probably should.\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;; 2.03.20;;
-anomaly_warzone_earth;Anomaly Warzone Earth;Anomaly Warzone Earth;anom;Linux;436340;437917359;2.0.0.3;;Anomaly Warzone Earth;;With de-iconification, it displays logos and intro video and then permanent 100% CPU with spinning wait icon\
+anomaly_warzone_earth;Anomaly Warzone Earth;Anomaly Warzone Earth;anom;Linux;436340;437917359;2.0.0.3;;Anomaly Warzone Earth;Try making controller more like xbox\; maybe that will work\
+Find config & save loc\
+;With de-iconification, it displays logos and intro video and then permanent 100% CPU with spinning wait icon\
 fixed by anom-hack:\
 https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;; 2.03.20;;
-anomaly_warzone_earth_mobile_campaign;Anomaly Warzone Earth Mobile Campaign;Anomaly Warzone Earth Mobile Campaign;anommc;Linux;263769;266250952;2.0.0.3;;Anomaly Warzone Earth Mobile Campaign;;Just gives spinning wait icon and 100% CPU on startup\
+anomaly_warzone_earth_mobile_campaign;Anomaly Warzone Earth Mobile Campaign;Anomaly Warzone Earth Mobile Campaign;anommc;Linux;263769;266250952;2.0.0.3;;Anomaly Warzone Earth Mobile Campaign;Try making controller more like xbox\; maybe that will work\
+Find config & save loc\
+;Just gives spinning wait icon and 100% CPU on startup\
 fixed by anom-hack:\
 https://www.gog.com/forum/anomaly_series/anomaly_warzone_earch_stuck_at_loading/post2\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;; 2.03.20;;
@@ -177,48 +189,44 @@ another_world_20th_anniversary_edition;Another World 20th Anniversary Edition;An
     removed amd64 dir so system libraries are used instead\
     includes 15th ann. edition (win only)\; not installed/tested\
 ;Controller config is weird (sometimes fails)\
-;;;;;;;;1;;;;;;;1;;;;;;;0;;;;1;AdventureGame\;X-Action\;;;;;;
+;;~/.local/share/DotEMU/Another World/AnotherWorldUserDef.xml;~/.local/share/DotEMU/Another World/progression.dat;;;;;1;;;;;;;1;;;;;;;0;;;;1;AdventureGame\;X-Action\;;;;;;
 anvil_of_dawn;Anvil of Dawn;Anvil of Dawn;anvd;DOS;565756;372244416;2.0.0.4;;Anvil of Dawn;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 2.03.20;;
 aragami;Aragami;Aragami;aragami;Linux;7626137;3097545564;en_01_09_20943;;Aragami;Classify better based on gameplay\
 Fix controller mapping\
-;DLC version is en_gog_1_21278\
-\
-Game totally craps out with controller plugged in:\
+;Game totally craps out with controller plugged in:\
   Confused by touchpad and motion devices\
   Wrong mapping\; assumes xbox pad (use -J xpad\\$)\
      weird symbols I don' teven know what button is supposed to be pressed\
   Not sure if vibration even works...\
-;;;;;;;;;;;;;;1;;;;;;;;;0;;1;;1;ActionGame\;;;; 2.03.20;;
+;;;~/.config/unity3d/Lince Works/Aragami/prefs,settings.cfg;~/.config/unity3d/Lince Works/Aragami/saveData.dat;;;;;;;;;;1;;;;;;;;;0;;1;;1;ActionGame\;X-Stealth\;;;; 2.03.20;;
 arcanum_of_steamworks_and_magick_obscura;Arcanum:  Of Steamworks and Magick Obscura;Arcanum;arcanum;Windows;1169411;1168304088;1.0.7.4_hotfix_(24155);;Arcanum:  Of Steamworks and Magick Obscura;Test editor (not included?)\
 Look for mods\
 ;    no graphics with 2.0.2\
 *   playable, but bad graphic lag, esp. vertically (#23676) w/o -doublebuffer\
     now it's back to bad, even with -doublebuffer\; requires -no3d\
     now it's back to OK, so no -no3d needed\
-;;Stable 4.0.3;game dir: arcanum.cfg;game dir: modules/Arcanum/Save;;;;1;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 2.03.20;;
+;;Stable 6.0.1;game dir: arcanum.cfg;game dir: modules/Arcanum/Save;;;;1;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;12.07.21;;
 armikrog;Armikrog.;Armikrog;armikrog;Linux;2811960;1531253340;2.5.0.6;;Armikrog - Deluxe Edition;Fix OS cursor not blanking?  Used to work.\
-;DLC is extras only\
-\
-  - Options menu item freezes game\
+;  - Options menu item freezes game\
   - Starting new game, skipping movie freezes game\
 Both fixed by LANG=C\
   - OS cursor doesn't blank\
 \
 Moved ScreenSelector.so to the side to remove resultion setting dialog at start\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;; 2.03.20;;
+;;;~/.config/unity3d/PencilTestStudios/Armikrog/prefs;~/.config/unity3d/PencilTestStudios/Armikrog/SaveGame.dat,AutoSaveGame.dat;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;; 2.03.20;;
 atlantic_fleet;Atlantic Fleet;Atlantic Fleet;atlfl;Windows;370134;149545976;1.02_(17216);;Atlantic Fleet;Figure out how to skip resolution setting dialog (no ScreenSelector.dll or whatever)\
 \
-;;;Stable 4.0.3;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/options.dat;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/rnc.dat (and maybe others);;;;;;;;;;;;;1;;;;;;0;;;;;StrategyGame\;;;; 2.03.20;;
-avadon_2_the_corruption;Avadon 2:  The Corruption;Avadon 2;avadon2;Windows;175941;168388544;1.0.1_(20651);;Avadon 2:  The Corruption;;;;Stable 4.0.3;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games/Avadon2Settings.dat;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 3.03.20;;
-avadon_the_black_fortress;Avadon:  The Black Fortress;Avadon;avadon;Windows;123949;116371840;1.0_(20651);;Avadon:  The Black Fortress;;;;Stable 4.0.3;user dir: My Documents/Spiderweb Software/Avadon Saved Games/AvadonSettings.dat;user dir: My Documents/Spiderweb Software/Avadon Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 3.03.20;;
+;;;Stable 6.0.1;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/options.dat;user dir: AppData/LocalLow/Killerfish Games/Atlantic Fleet/rnc.dat (and maybe others);;;;;;;;;;;;;1;;;;;;0;;;;;StrategyGame\;;;; 2.03.20;;
+avadon_2_the_corruption;Avadon 2:  The Corruption;Avadon 2;avadon2;Windows;175941;168388544;1.0.1_(20651);;Avadon 2:  The Corruption;;;;Stable 6.0.1;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games/Avadon2Settings.dat;user dir: My Documents/Spiderweb Software/Avadon 2 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 3.03.20;;
+avadon_the_black_fortress;Avadon:  The Black Fortress;Avadon;avadon;Windows;123949;116371840;1.0_(20651);;Avadon:  The Black Fortress;;;;Stable 6.0.1;user dir: My Documents/Spiderweb Software/Avadon Saved Games/AvadonSettings.dat;user dir: My Documents/Spiderweb Software/Avadon Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 3.03.20;;
 avernum;Avernum;Avernum;av1;Windows;29376;16828104;2.1.0.4;;Avernum:  The Complete Saga;;*   anims appear to have trouble playing (just final frame\; rest is black)\
-;;Stable 4.0.3;game dir: Data/Avernum.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+;;Stable 6.0.1;game dir: Data/Avernum.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
 avernum_2;Avernum 2;Avernum 2;av2;Windows;39460;18647984;2.1.0.4;;Avernum:  The Complete Saga;;*   anims appear to have trouble playing (just final frame\; rest is black)\
-;;Stable 4.0.3;game dir: Data/Avernum2.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
-avernum_3;Avernum 3;Avernum 3;av3;Windows;44969;20387952;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 4.0.3;game dir: Data/Avernum3.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
-avernum_4;Avernum 4;Avernum 4;av4;Windows;66764;26404600;2.1.0.5;;Avernum:  The Complete Saga;;;;Stable 4.0.3;game dir: Data/Avernum4Settings.dat;game dir: Data/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
-avernum_5;Avernum 5;Avernum 5;av5;Windows;95684;35509096;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 4.0.3;user dir: My Documents/Avernum 5 Saved Games/Avernum5Settings.dat;user dir: My Documents/Avernum 5 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
-avernum_6;Avernum 6;Avernum 6;av6;Windows;109933;44542664;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 4.0.3;user dir: My Documents/Avernum 6 Saved Games/Avernum6Settings.dat;user dir: My Documents/Avernum 6 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+;;Stable 6.0.1;game dir: Data/Avernum2.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+avernum_3;Avernum 3;Avernum 3;av3;Windows;44969;20387952;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 6.0.1;game dir: Data/Avernum3.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+avernum_4;Avernum 4;Avernum 4;av4;Windows;66764;26404600;2.1.0.5;;Avernum:  The Complete Saga;;;;Stable 6.0.1;game dir: Data/Avernum4Settings.dat;game dir: Data/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+avernum_5;Avernum 5;Avernum 5;av5;Windows;95684;35509096;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 6.0.1;user dir: My Documents/Avernum 5 Saved Games/Avernum5Settings.dat;user dir: My Documents/Avernum 5 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
+avernum_6;Avernum 6;Avernum 6;av6;Windows;109933;44542664;2.1.0.4;;Avernum:  The Complete Saga;;DX version crashes on startup if it can't set res;;Stable 6.0.1;user dir: My Documents/Spiderweb Software/Avernum 6 Saved Games/Avernum6Settings.dat;user dir: My Documents/Spiderweb Software/Avernum 6 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;; 4.03.20;;
 baldurs_gate_2_complete;Baldur's Gate 2 Complete;Baldur's Gate 2;bg2;Windows;2729863;2456961235;2.0.0.12;;Baldur's Gate 2 Complete;Fix graphic weirdness:\
   Install ddrawfix after all? (seems to have no effect)\
   Use 4:3 resolution? (seems to have no effect)\
@@ -256,29 +264,30 @@ ie = infinity explorer ?\
 sk = Shadow Keeper ?\
 ;-e -> NearInfinity editor (currently broken)\
 \
-;Stable 4.0.3;game dir: baldur.ini;game dir: Saves;;;;;1;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;; 4.03.20;;
+;Stable 6.0.1;game dir: baldur.ini;game dir: Saves;;;1;;1;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;; 4.03.20;;
 baldurs_gate_the_original_saga;Baldur's Gate:  The Original Saga;Baldur's Gate;bg1;Windows;2601774;1907001072;2.0.0.20;;Baldur's Gate:  The Original Saga;Reinstall\; probably needed to fix issues; No longer directly for sale on GOG\; must buy EE\
    better when using bg2 engine, via bgtutu\
 Uninstalled ddrawfix.\
 Note: turn off CSMT or there will be stuttery/slow graphics and kb/mouse response\
 Now it doesn't start up for some reason.  Probably needs reinstall.\
 ;-c -> configuration (mostly kb shortcuts)\
-;Stable 4.0.1;game dir:  Baldur.ini;game dir: SAVE;;;1;;1;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;;;;
+;Stable 6.0.1;game dir:  Baldur.ini;game dir: SAVE;;;1;;1;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;;;;
 balrum;Balrum;Balrum;balrum;Linux;286079;188853851;1_6_hotfix_4_25793;;Balrum;;*   needs writable config.xml debug.txt and others\; use unionfs\
 *   loses "fullscreen" config (maybe due to no save?)\
 *     also loses resolution setting on updates\
-;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;RolePlaying\;;;;;;
-banished;Banished;;;Linux;0;128477224;1.0.7_(14938);WONTPLAY:  city builder/rts - not my kind of game;Banished;;*  requires xact_jun2010 for sound\
+;;;game dir:  config.xml;game dir: files/saves;;;;;;;;;;;;;;;;;;;0;;1;1;;RolePlaying\;;;;13.07.21;;
+banished;Banished;;;Windows;0;128477224;64_1.0.7_(14938);WONTPLAY:  city builder/rts - not my kind of game;Banished;;*  requires xact_jun2010 for sound\
   only docs are in-game on-line help and tutorial\
 \
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;X-Realtime;;;;;
 bastard;Legends of Eisenwald:  Bastard;Bastard;bast;Windows;2669081;1410145888;1.01_(20913);;Bastard;Fix sound issues?\
 ;Launcher is unskippable\
 Launcher eventually crashes after starting game\; just hit OK and continue\
 Badly stuttering music and some slowness even on new machine with fast CPU\
-3D sound option seems to have no effect;;Stable 4.0.1;game dir: Options_Game.ini, Options_MapEdit.ini;user dir: Local Settings/Application Data/Bastard;;;;;;;;;;;;;;;;;1;1;1;;;;;RolePlaying\;;;;;;
-battle_chasers_nightwar;Battle Chasers:  Nightwar;Battle Chasers Nightwar;bcn;Windows;4169218;3855956015;v.24037_(25202);;Battle Chasers:  Nightwar;\
-;Black/blank movies, but skippable.  intro: BC_Data/StreamingAssets/Video/2d-intro-1080.mp4\
+3D sound option seems to have no effect;;Stable 6.0.1;game dir: Options_Game.ini, Options_MapEdit.ini;user dir: Local Settings/Application Data/Bastard;;;;;;;;;;;;;;;;;1;1;1;;;;;RolePlaying\;;;;13.07.21;;
+battle_chasers_nightwar;Battle Chasers:  Nightwar;Battle Chasers Nightwar;bcn;Windows;4169218;3855956015;v.24037_(25202);;Battle Chasers:  Nightwar;dxvk-d3d9?\
+\
+;Black/blank movies, but skippable.  intro: BC_Data/StreamingAssets/Video/2d-intro-1080.mp4 2.05.20\
    Installing LAVFilters (manual regsvr32 on the .ax files) shows movie, but crashes after movie\
       quartz == worse:  crashes immediately\
       devenum+quartz == worse\; LAVFilter's won't register and so back to black\
@@ -291,10 +300,12 @@ battle_chasers_nightwar;Battle Chasers:  Nightwar;Battle Chasers Nightwar;bcn;Wi
 Supposedly a Linux version right around the corner, for over a year now\
 64-bit binaries, but installer isn't 64-bit restricted\
 Way too dark if Graphics quality set to High.\
-D3D init error if gallium-9 enabled;Uses save-slots.sh:  -r [name] or -s [name]\
+D3D init error if gallium-9 enabled\
+Note: stable-6.0.1 now plays movies perfectly.\
+;Uses save-slots.sh:  -r [name] or -s [name]\
 Game is almost unplayable w/ kb+mouse\; controller is required for best experience\
 Game save in dungeon followed by resume kicks you out of dungeon.\
-;Stable 4.0.1;user dir: AppData/LocalLow/Airship Syndicate/BattleChasersNightwar/user/BCSettings.txt;user dir: AppData/LocalLow/Airship Syndicate/BattleChasersNightwar/user/saves;;;;;;;;1;1;;;;;;1;;;;0;;;;1;RolePlaying\;;1;;;;
+;Stable 6.0.1;user dir: AppData/LocalLow/Airship Syndicate/BattleChasersNightwar/user/BCSettings.txt;user dir: AppData/LocalLow/Airship Syndicate/BattleChasersNightwar/user/saves;;;;;;;;;1;;;;;;1;;;;0;;;;1;RolePlaying\;;1;;13.07.21;;
 battle_isle;Battle Isle;Battle Isle;bi;DOS;41582;41587336;1.0_(28043);;Battle Isle Platinum (Includes Incubation);Try replacing with Amiga version;    Actually 3 games: plain, desert (-d), moon (-m)\
     Converted GOG DOS menu into 3 separate config files\
 ;-d -> Desert\
@@ -302,7 +313,7 @@ battle_isle;Battle Isle;Battle Isle;bi;DOS;41582;41587336;1.0_(28043);;Battle Is
 \
 3 icons\
 for fvwm-crystal, -d and -m icons must be made manually\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
 battle_isle_2;Battle Isle 2;Battle Isle 2;bi2;DOS;587366;498346952;1.0_(28043);;Battle Isle Platinum (Includes Incubation);Try replacing with Amiga version\
 ;    Actually 2 games: plain, TItan's Legacy (-t)\
     Converted GOG DOS menu into 2 separate config files\
@@ -310,45 +321,42 @@ mt32 music\
 ;-t -> TItan's Legacy\
 \
 2 icons\
-for fvwm-crystal, -t icon must be made manually;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+for fvwm-crystal, -t icon must be made manually;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
 battle_isle_3;Battle Isle 3;Battle Isle 3;bi3;Windows;1092879;481085408;2.2.0.20;;Battle Isle Platinum (Includes Incubation);Try replacing with Amiga version (probably doesn't exist)\
 ;*   "There is an undetectable error when ..." if no iv32 codecs (see aow)\
-;;Stable 4.0.1;windows system dir: SDI.ini;game dir: SDI/SAV;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+;;Stable 6.0.1;windows system dir: SDI.ini;game dir: SDI/SAV;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
 incubation;Battle Isle 4:  Incubation;Battle Isle Incubation;bi4;Windows;289169;195777120;2.2.0.20;;Battle Isle Platinum (Includes Incubation);Get config & save location\
 ;    with edtior (-e)\; mostly untested\
 *   manual only gives monster list\; no actual manual\; had to download:\
 *     http://www.replacementdocs.com/download.php?view.7053\
 *   no testing of network, instant action, or pbm\
 ;-e -> Editor\
-;Stable 3.0;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;Stable 3.0;game dir:  Work/Options;game dir:  Work/Saves;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
 historyline_19141918;Battle Isle:  History Line 1914-1918;Battle Isle Historyline 1914-1918;bihl;DOS;14443;21865376;1.0_(28043);;Battle Isle Platinum (Includes Incubation);Try replacing with Amiga version\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
 battle_realms_winter_of_the_wolf;Battle Realms + Winter of the Wolf;;;Windows;0;524043632;2.0.0.9;WONTPLAY:  RTS - not my kind of game;Battle Realms + Winter of the Wolf;;[note: worked perfectly first time, but last time it failed]\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 battle_worlds_kronos;Battle Worlds:  Kronos;Battle Worlds Kronos;bwkronos;Linux;1278418;857183220;2.1.0.6;;Battle Worlds:  Kronos;;*   Hangs if not cd'd into game dir on startup\
-*   Saves games in ~/Documents/Battle Worlds\
+*   Saves games in ~/Documents\
 *   Hangs on exit (? sometimes?)\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
-battletech_game;BATTLETECH;BATTLETECH;bt;Linux;34979512;14903033350;1_9_1_686r_36568;;BATTLETECH - Digital Deluxe Edition;Buy Season Pass\
-get more hdd space\; in mean time, uninstall\
-;digital_deluxe_content DLC is extras only.  Windows installer, but duplicated by zip file extras.\
+;;;~/Documents/BattleWorldsKronos/Profiles;~/Documents/BattleWorldsKronos/Savegames;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
+battletech_game;BATTLETECH;BATTLETECH;bt;Linux;34979512;14903033350;1_9_1_686r_36568;;BATTLETECH - Digital Deluxe Edition;;digital_deluxe_content DLC is extras only.  Windows installer, but duplicated by zip file extras.\
 \
 Requires writable dir or hang when other teams' turn\
-\
-;;;;;;;;;;;;;;;;;;;;;;;0;;1;;;StrategyGame\;;;;;;
+;;;~/.config/unity3d/Harebrained Schemes/BATTLETECH/{S0,C0}/*.sav;~/.config/unity3d/Harebrained Schemes/BATTLETECH/C0/SGS1/*.sav;;;;;;;;;;;;;;;;;;;0;;1;;;StrategyGame\;;;;13.07.21;;
 battlevoid_harbinger;Battlevoid: Harbinger;Battlevoid Harbinger;harbinger;Linux;121776;99375441;2_0_6_24182;;Battlevoid:  Harbinger;Figure out category:  Simulation?\
 ;    Actually just a java game w/ bundled jre (duplicated full game jar)\
       deleted 32-bit dir to save a little space\
     Java error on startup due to lack of net, but harmless\
 *   requires writable files in exe dir - use unionfs\
-;;;;;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;;;;
-beneath_a_steel_sky;Beneath a Steel Sky;;;ScummVM;0;0;;WONTPLAY_FREE:  free via non-gog means\; already played & finished;Beneath a Steel Sky;;Gog-supplied files appear to be only extras;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;Note: RTwP;;game dir:  settings.xml;game dir:  save;;;;;;;;;;;;;;;;;;;0;;1;1;;ActionGame\;;;;13.07.21;;
+beneath_a_steel_sky;Beneath a Steel Sky;;;ScummVM;0;105864419;en_gog_2_20150;WONTPLAY_FREE:  free via non-gog means\; already played & finished;Beneath a Steel Sky;;Gog-supplied files appear to be only extras;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 betrayal_in_antara;Betrayal in Antara;Betrayal in Antara;bia;Windows;1574042;927141168;2.1.0.19;;Betrayal at Krondor Pack;;    (no config?  or windows/SIERRA.INI?)\
-;;Stable 4.0.1;windows system dir: SIERRA.ini;user dir: Application Data/Sierra/Betrayal in Antara/;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;;;
+;;Stable 6.0.1;windows system dir: SIERRA.ini;user dir: Application Data/Sierra/Betrayal in Antara/;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;13.07.21;;
 betrayal_at_krondor_copy3;Betrayal at Krondor;Betrayal at Krondor;bak;DOS;149575;114992104;2.1.0.19;;Betrayal at Krondor Pack;;*   slightly screwy sound?;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
-beyond_divinity;Beyond Divinity;Beyond Divinity;bdivinity;Windows;1564894;1177090256;1.4.9_(23028);;Beyond Divinity;Update\
-;*   doesn't work w/ gallium-d3d9 "Not enough texture memory"\
+beyond_divinity;Beyond Divinity;Beyond Divinity;bdivinity;Windows;1564894;1177090256;1.4.9_(23028);;Beyond Divinity;;*   doesn't work w/ gallium-d3d9 "Not enough texture memory"\
 *   doesn't display movies unless 1024x768 or 640x480 (sound only)\
+      actually, wine-6.0.1 displays all movies all the time\
     mostly doesn't compensate for high/non-4:3 resolutions anyway\
 *   installing missing indio4.2 codec causes game to occupy 640x480\
 *     (not sure why complaining about missing indio4.2 anyway, since all movies appear to be mpeg-1)\
@@ -358,9 +366,9 @@ beyond_divinity;Beyond Divinity;Beyond Divinity;bdivinity;Windows;1564894;117709
     configure res & global opts w/ external program (-c)\
 \
 4.0 didn't want to play movies, until I switched to 3.0 and back again.  Some registry screwyness?\
-;-c -> Configuration app;Stable 4.0.1;game root: init.cfg, keylist.txt, config.div, etc.;game dir: savegames;;;;;;;;1;;;;;;;;;;;0;;;;;RolePlaying\;X-ARPG\;;1;;;;
+;-c -> Configuration app;Stable 6.0.1;game root: init.cfg, keylist.txt, config.div, etc.;game dir: SaveGames;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-ARPG\;;1;;13.07.21;;
 beyond_zork_the_coconut_of_quendor;Beyond Zork - The Coconut of Quendor;Beyond Zork;zorkb;ScummVM;4531;13766408;1.0_(28043);;The Zork Anthology;;Should have been Infocom, but doesn't work in zoom (map bad, no load image) (works in frotz-dos and scummvm)\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;13.07.21;;
 bioforge;BioFORGE;Bioforge;biof;DOS;167797;107736520;2.1.0.14;;Bioforge;Remove or improve language setup\
 Make sound config permanent\
 ;;-s -> Settings\
@@ -368,23 +376,41 @@ Make sound config permanent\
 ;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;X-Action\;;;;;;
 bionic_dues;Bionic Dues;Bionic Dues;biod;Linux;306750;244106263;2.0.0.6;;Bionic Dues;;*   needs writable RuntimeData dir\
     no manual or documentation whatsoever (except incomplete wiki)\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
-blackguards_2;Blackguards 2;Blackguards 2;blg2;Windows;10559468;4593154450;2.2.0.5;;Blackguards 2;;;;Stable 4.0.1;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards 2/*;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards 2/Save;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;;;
+When resolution changes, change <game dir>/RuntimeData/settings.dat\
+   otherwise mouse aiming is off\
+;;;game dir:  RuntimeData/*.dat;game dir:  RuntimeData/Save;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;13.07.21;;
+blackguards_2;Blackguards 2;Blackguards 2;blg2;Windows;10559468;4593154450;2.2.0.5;;Blackguards 2;;;;Stable 6.0.1;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards 2/*;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards 2/Save;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;13.07.21;;
 blackguards_special_edition;Blackguards Special Edition;Blackguards Special Edition;blg;Windows;19547528;5762556844;1.6_(12204);;Blackguards Special Edition;;    rarely crashes w/ gc error (probably does this on Windows, too)\
-;;Stable 4.0.1;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards/*;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards/Save;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;;;
-episode_3_blackwell_convergence;Blackwell Convergence;Blackwell Convergence;bw3;AGS;329251;184344018;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+;;Stable 6.0.1;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards/*;user dir: AppData/Local/Daedalic Entertainment GmbH/Blackguards/Save;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;;;;13.07.21;;
+episode_3_blackwell_convergence;Blackwell Convergence;Blackwell Convergence;bw3;ScummVM;329251;184344018;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+Figure out if I can still use old AGS saves w/ scummvm\
 ;  uses Gentoo ags\; remove acsetup.cfg for full-screen\
+\
+Now uses scummvm-ags\
 ;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
-episode_4_blackwell_deception;Blackwell Deception;Blackwell Deception;bw4;AGS;607572;345237948;2.0.0.3;;Blackwell Bundle;Finished\; uninstall\
+episode_4_blackwell_deception;Blackwell Deception;Blackwell Deception;bw4;ScummVM;607572;345237948;2.0.0.3;;Blackwell Bundle;Finished\; uninstall\
+Figure out if I can still use old AGS saves w/ scummvm\
 ;  uses Gentoo ags\; remove acsetup.cfg for full-screen\
+\
+Now uses scummvm-ags\
 ;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
-episode_1_the_blackwell_legacy;Blackwell Legacy, The;Blackwell Legacy;bw1;AGS;265855;215538582;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+episode_1_the_blackwell_legacy;Blackwell Legacy, The;Blackwell Legacy;bw1;ScummVM;265855;215538582;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+Figure out if I can still use old AGS saves w/ scummvm\
 ;  uses Gentoo ags\; remove acsetup.cfg for full-screen\
+\
+Now uses scummvm-ags\; for some reason, I had to move to /tmp and run once before it started working\
+   I mean, it now works in read-only root dir as well\
+     "Not an AGS main game file or unsupported format."\
 ;Using ", The" so it appears w/ other Blackwell games;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
-episode_2_blackwell_unbound;Blackwell Unbound;Blackwell Unbound;bw2;AGS;215619;169217290;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+episode_2_blackwell_unbound;Blackwell Unbound;Blackwell Unbound;bw2;ScummVM;215619;169217290;2.0.0.2;;Blackwell Bundle;Finished\; uninstall\
+Figure out if I can still use old AGS saves w/ scummvm\
 ;  uses Gentoo ags\; remove acsetup.cfg for full-screen\
+\
+Now uses scummvm-ags\; for some reason, I had to move to /tmp and run once before it started working\
+   I mean, it now works in read-only root dir as well\
+     "Not an AGS main game file or unsupported format."\
 ;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
-blades_of_avernum;Blades of Avernum;Blades of Avernum;avb;Windows;52678;22404328;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 4.0.1;game dir: Data/BladesofAvernumData.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
+blades_of_avernum;Blades of Avernum;Blades of Avernum;avb;Windows;52678;22404328;2.1.0.4;;Avernum:  The Complete Saga;;;;Stable 6.0.1;game dir: Data/BladesofAvernumData.dat;game dir: *.sav;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
 bloodnet_cd_version;Bloodnet CD Version;Bloodnet;bn;DOS;393547;263917280;2.0.0.7;;BloodNet;More testing\
 Amiga version?\
 Choose:  FDD or CD;  Worse sound than FDD version\; probably needs love\
@@ -396,8 +422,7 @@ bloodnet_fdd_version;Bloodnet FDD Version;Bloodnet FDD;bnf;DOS;9557;11257300;2.0
 Amiga version?\
 Choose:  FDD or CD;;Same engine as cot5r, so probably clunky RTwP combat\
 ;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
-bloodrayne;BloodRayne;BloodRayne;rayne;Windows;1642581;909367992;gog-1_(17893);;BloodRayne;hide\
-;    needs writable system/rayne.ini\
+bloodrayne;BloodRayne;;;Windows;0;909367992;gog-1_(17893);OBSOLETE:  BloodRayne Terminal Cut;BloodRayne;;    needs writable system/rayne.ini\
 *   disable cutscene.exe, or crash w/ "could not find input pin"\
       (in-engine cutscenes still work, though)\
 *   opengl driver doesn't seem to work at all\
@@ -407,8 +432,8 @@ Controller support is a bit screwy:\
   right stick needs remapping to trigger axes\
   refer to "button #n"\; your guess is as good as mine\
 probably need to look into doing it in wine instead of indrv\
-;;Stable 4.0;game dir: system/raine.ini system/RENDER.INI;game dir: savegame;;;;;;;;1;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
-bloodrayne_2;BloodRayne 2;BloodRayne 2;rayne2;Windows;4486061;2193686277;1.0_(19403);;BloodRayne 2;hide;    used to play logo video & nothing else if gstreamer not disabled\
+;;;game dir: system/raine.ini system/RENDER.INI;game dir: savegame;;;;;;;;1;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
+bloodrayne_2;BloodRayne 2;;;Windows;0;2193686277;1.0_(19403);OBSOLETE:  BloodRayne 2 Terminal Cut;BloodRayne 2;;    used to play logo video & nothing else if gstreamer not disabled\
     game sort of playable, but has issues...\
 *   menu is both small/ul and full-sized/center at same time\
 *   requires editing binary to allow 1920x1080, because gui always pops up\
@@ -418,15 +443,15 @@ bloodrayne_2;BloodRayne 2;BloodRayne 2;rayne2;Windows;4486061;2193686277;1.0_(19
 *  menu uses circle for yes and square for cancel\
 *  menu now shows top half only on first screen\
 instructions use button numbers\; which is which is guesswork\
-;;Stable 4.0;game dir: system/rayne.ini;game dir: savegame?;;;;;;;;;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
+;;;game dir: system/rayne.ini;game dir: savegame?;;;;;;;;;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
 bloodrayne_betrayal;BloodRayne:  Betrayal;Bloodrayne Betrayal;rayneb;Windows;1027211;725964472;gog-2_(16593);;BloodRayne:  Betrayal;;    probably needs a controller to play properly (way too many cmd keys)\
-;;Stable 4.0;user dir: Application Data/Wayforward Technologies/BloodRayne/engine.ini;user dir: Application Data/Wayforward Technologies/BloodRayne/save*;;;;;;;;;1;;;;;;;;;;1;;;;1;ActionGame\;;;;;;
-braveland;Braveland;Braveland;brl;Linux;307108;233228255;en_1_4_0_19_18418;;Braveland;Properly uninstall\
-;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
-braveland_pirate;Braveland Pirate;Braveland Pirate;brlp;Linux;598148;406844333;en_1_1_1_10_19675;;Braveland Pirate;Properly uninstall\
-;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
-braveland_wizard;Braveland Wizard;Braveland Wizard;brlw;Linux;434820;320652044;en_1_1_4_14_19675;;Braveland Wizard;Properly uninstall\
-;Latest version changed how optional fights work\; finished without that;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+;;Stable 6.0.1;user dir: Application Data/Wayforward Technologies/BloodRayne/engine.ini;user dir: Application Data/Wayforward Technologies/BloodRayne/save*;;;;;;;;;1;;;;;;;;;;1;;;;1;ActionGame\;;;;13.07.21;;
+braveland;Braveland;Braveland;brl;Linux;307108;233228255;en_1_4_0_19_18418;;Braveland;Finished\; Properly uninstall\
+;;;;~/.config/unity3d/Tortuga Team/Braveland/prefs;~/.config/unity3d/Tortuga Team/Braveland/0-2-Save.dat, Achievements.dat;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
+braveland_pirate;Braveland Pirate;Braveland Pirate;brlp;Linux;598148;406844333;en_1_1_1_10_19675;;Braveland Pirate;finished\; Properly uninstall\
+;;;;~/.config/unity3d/Tortuga Team/Braveland Pirate/prefs;~/.config/unity3d/Tortuga Team/Braveland Pirate/0-2-Save.dat, Achievements.dat;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+braveland_wizard;Braveland Wizard;Braveland Wizard;brlw;Linux;434820;320652044;en_1_1_4_14_19675;;Braveland Wizard;finished\; Properly uninstall\
+;Latest version changed how optional fights work\; finished without that;;;~/.config/unity3d/Tortuga Team/Braveland Wizard/prefs;~/.config/unity3d/Tortuga Team/Braveland Wizard/0-2-Save.dat, Achievements.dat;;;;;1;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
 breach_and_clear;Breach & Clear;Breach Clear;bac;Linux;2354295;1096189422;2.0.0.3;;Breach & Clear;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
 breach_clear_deadline;Breach & Clear DEADline;Breach and Clear DEADline;bacd;Linux;2233417;1071582611;2.5.0.10;;Breach & Clear:  DEADline Rebirth;;Needs xboxdrv for controller to work, and device name must be "Microsoft X-Box 360 pad".\
   (other names probably work, but I won't test them all)\
@@ -473,7 +498,7 @@ challenge_of_the_five_realms;Challenge of the Five Realms;Challenge of the Five 
 ;-f -> face editor\
 \
 Combat is clunky RTwP, I guess.\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
 chaos_reborn;Chaos Reborn;Chaos Reborn;chaos;Linux;1633973;722053583;en_1_13_3_23004;;Chaos Reborn;;*   Now needs to now be in windowed mode, or graphics are garbage\
       can still make window same size as screen, but requres FUllScreen style\
 When updating, unity3d may update, causing issues like the above, or other issues, so beware!\
@@ -489,7 +514,7 @@ or:\
 *   Could not initialize Direct3D graphics\
 error initializing graphics (beep and reset many times, then fail)\
   - d3dx9 does nothing\
-;;Development 4.12.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;Development 4.12.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
 conquest_of_the_new_world;Conquest of the New World;Conquest of the New World;cnw;DOS;106334;89373320;1.00_(28043);;Conquest of the New World;Maybe simulation?;    multiplayer untested, of course\
 had stuttery sound?\
 ;Mostly turn-based\
@@ -537,7 +562,7 @@ Uses jscal to set input mapping\; may need adjustment with different stick\
   Needed adjustment when kernel switched ds4 default keys\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;1;RolePlaying\;X-ARPG\;;;;;;
 crusader_kings_complete;Crusader Kings Complete;;;Windows;0;175913720;2.1.0.2;WONTPLAY:  mostly real-time\; requires way too much investment - not my kind of game;Crusader Kings Complete;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-crystals_of_arborea;Crystals of Arborea;;;DOS;0;14491056;2.1.0.24;WONTPLAY:  Too primitive, undocumented, not really ishar;Ishar Compilation;;  apparently no sound at all\
+crystals_of_arborea;Crystals of Arborea;;;DOS;0;13138784;1.0_(28043);WONTPLAY:  Too primitive, undocumented, not really ishar;Ishar Compilation;;  apparently no sound at all\
   probably better to use Amiga version\
     but Amiga version is floppy0-bound/unplayable\
     Amiga version has very little sound as well\
@@ -546,7 +571,7 @@ note:  this is basically "Ishar 0"\
 dd_stronghold_kingdom_simulator;D&D Stronghold:  Kingdom Simulator;;;DOS;0;8192259;2.0.0.2;WONTPLAY:  Real-time city builder - not my kind of game;D&D Stronghold:  Kingdom Simulator;Uninstall;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 dark_sun_shattered_lands;Dark Sun:  Shattered Lands;Dark Sun Shattered Lands;dssl;DOS;20382;15073180;2.0.0.2;;Dungeons & Dragons:  Dark Sun Series;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
 dark_sun_wake_of_the_ravager;Dark Sun:  Wake of the Ravager;Dark Sun Wake of the Ravager;dswr;DOS;276878;201180359;2.0.0.1;;Dungeons & Dragons:  Dark Sun Series;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
-darkest_dungeon;Darkest Dungeon;;;Linux;0;20109586;en_23964_22024;WONTPLAY:  Punishes me for playing\; wants me to buy endless DLC;Darkest Dungeon®;;*   No sound unless all other users of alsa killed first.\
+darkest_dungeon;Darkest Dungeon;;;Linux;0;1897198497;24839_28859;WONTPLAY:  Punishes me for playing\; wants me to buy endless DLC;Darkest Dungeon®;;*   No sound unless all other users of alsa killed first.\
 --skipfeflowintro -> skip intro videos, maybe\
 ;-s/-r -> save/restore save files:\
 # I should probably just use a custom script for this\
@@ -687,7 +712,7 @@ divinity_2_developers_cut;Divinity 2:  Developer's Cut;Divinity 2 DC;divinity2;W
       Install using winetricks physx\
   For movies (incl skill demos):  rmgstream+winetrcks quartz amstream devenum wmp9\
 ;;Stable 4.0.1;user dir: Local Settings/Application Data/Divinity 2/Profile;user dir: Local Settings/Application Data/Divinity 2/Savegames;;;;;;;;;;;;;;;;;;;1;;;;;RolePlaying\;X-ARPG\;;;;;;
-divinity_original_sin;Divinity:  Original Sin Classic;;;Windows;0;6799699130;2.14.0.26;OBSOLETE:  Divinity:  Original Sin Enhanced Edition;Divinity:  Original Sin - Enhanced Edition;;Editor (Divinity Engine) version is 2.8.0.14\
+divinity_original_sin;Divinity:  Original Sin Classic;;;Windows;0;6896963721;1.0.252.0_(18997);OBSOLETE:  Divinity:  Original Sin Enhanced Edition;Divinity:  Original Sin - Enhanced Edition;;Editor (Divinity Engine) version is 2.8.0.14\
 Enhanced Edition now works in Linux, so use it.\
 ;;;;;;;;1;;;;;;;;;;;;;;;0;;;;;;;;;;
 divinity_original_sin_enhanced_edition;Divinity:  Original Sin Enhanced Edition;Divinity Original Sin Enhanced Edition;divos;Linux;10205668;10027711900;en_2_0_119_430_ch_17075;;Divinity:  Original Sin - Enhanced Edition;Document install size/locations of Windows version\
@@ -744,7 +769,7 @@ champions_of_krynn;Dragonlance 1:  Champions of Krynn;Champions of Krynn;dl1cok;
 Amiga notes:\
   install size: 2636\
   color mangling in portraits if not 68020 (may need further refinement)\
-;-A -> play Amiga version;;;;;1;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;-A -> play Amiga version;;;;;1;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
 death_knights_of_krynn;Dragonlance II:  Death Knights of Krynn;Death Knights of Krynn;dl2dkok;DOS;16544;21401334;2.0.0.1;;Dungeons & Dragons:  Krynn Series;Look into Gold Box Companion\
 ;    opl sound, ega gfx\; use Amiga version\
 \
@@ -1143,7 +1168,7 @@ Note: 4.13-staging doesn't fix, and neither does d3dx9 or removing g9 or quartz 
 -e -> Altarian Prophecy map editor\
 -s -> Altarian Prophecy scenario editor\
 -c -> Altarian Prophecy campaign editor\
-;Stable 4.0.1;;;;;1;;;;;;;;;;;;;;;;1;;;;;AdventureGame\;;;;;;
+;Stable 4.0.1;;;;;1;;;;;;;;;;;;;;;;1;;;;;StrategyGame\;;;;;;
 galactic_civilizations_ii_ultimate_edition;Galactic Civilizations II:  Ultimate Edition;Galactic Civilizations II;gciv2;Windows;2213495;2097662576;2.1.0.3;;Galactic Civilizations II:  Ultimate Edition;;*   Many artifiacts in text (clipped text, vertical bar artifacts)\
 ;;Stable 4.0.1;user dir: My Documents/My Games/GalCiv2/Prefs.ini;user dir: My Documents/My Games/GalCiv2/*.sav,, *.raceconfig;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
 gateway_to_the_savage_frontier;Gateway to the Savage Frontier;Gateway to the Savage Frontier;sfg;DOS;23655;28664858;2.0.0.2;;Forgotten Realms:  The Archives - Collection Two;Look into Gold Box Companion\
@@ -1151,8 +1176,11 @@ gateway_to_the_savage_frontier;Gateway to the Savage Frontier;Gateway to the Sav
        then again, Amiga version no better, sadly\
 ;-A -> Amiga version\
 ;;;;;1;;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;;;;;;
-gemini_rue;Gemini Rue;Gemini Rue;gemini;AGS;282897;249382505;2.0.0.3;;Gemini Rue;Finished\; uninstall\
+gemini_rue;Gemini Rue;Gemini Rue;gemini;ScummVM;282897;249382505;2.0.0.3;;Gemini Rue;Finished\; uninstall\
+Figure out if I can still use old AGS saves w/ scummvm\
 ;* No sound - must be run w/ Gentoo ags to enable sound and old acsetup.cfg must be removed\
+\
+Now uses scummvm-ags\
 ;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 geneforge_1;Geneforge;Geneforge;gf1;Windows;47712;16853848;1.0.1g_(21278);;Geneforge Saga;;;;Stable 4.0.1;My Documents/Spiderweb Software/Geneforge Saved Games/GFPrefs.dat;My Documents/Spiderweb Software/Geneforge Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 geneforge_2;Geneforge 2;Geneforge 2;gf2;Windows;57580;20061424;1.0.2g_(21279);;Geneforge Saga;;;;Stable 4.0.1;user dir: My Documents/Spiderweb Software/Geneforge 2 Saved Games/GFP2refs.dat;user dir: My Documents/Spiderweb Software/Geneforge 2 Saved Games/Save*;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -1169,7 +1197,7 @@ giants_citizen_kabuto;Giants:  Citizen Kabuto;Giants - Citizen Kabuto;gck;Window
     Used to require no wm support/virt 1024x768 desktop or graphics offset\
 *   For a while, died w/ "Zero length vector" crap (still gets Zero length vector messages, but game runs OK)\
 ;;Stable 4.0.1;Game dir:  DEADLOCK.PRF;game dir: savegame/Player/mission.sav;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;X-Action\;;;;;;
-gone_home;Gone Home;;;Linux;0;1939473909;en_version_4_20677;WONTPLAY:  boring, pain in the ass to control;Gone Home;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+gone_home;Gone Home;;;Linux;0;1936862464;2020_01_28_35744;WONTPLAY:  boring, pain in the ass to control;Gone Home;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 gothic;Gothic;Gothic;gothic;Windows;1141394;942809116;1.08k_hotfix_(26654);;Gothic;possible censorship:  blood, nudity, inextremo concert (all fixes are dead links)\
 ;    requires writable system/GOTHIC.INI VDFS.DMP\
     requires manual editing of GOTHIC.INI to get proper full-screen resolution\
@@ -1408,7 +1436,7 @@ Look up known glitches\
     Note: deleted NoMouth.dat & SCREAM install dir and put cd in main dir\
     Note: also removed drivers dir\
     Note: dos version may be less glitchy, but not installed\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 icewind_dale_complete;Icewind Dale Complete;Icewind Dale Complete;iwd;Windows;2074329;1636444688;2.0.0.11;;Icewind Dale Complete;Get config & save locations\
 Reinstall to ensure all pieces present and latest version actually installed\
 Test (skipped due to difficulty last time)\
@@ -1441,12 +1469,12 @@ indiana_jones_and_the_emperors_tomb;Indiana Jones and the Emperor's Tomb;Indiana
 *   requires limiting to 1 cpu or way, way too fast\
     requires manual edit of GameData/indy/vars.cfg for resolution (only 4:3)\
 *     but movies and stills are still tiny\
-;;Stable 3.0;game dir: GameData/indy/*.cfg;game dir: GameData/indy/saves;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;Stable 3.0;game dir: GameData/indy/*.cfg;game dir: GameData/indy/saves;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 indiana_jones_and_the_fate_of_atlantis;Indiana Jones®  and the Fate of Atlantis™;Indiana Jones and the Fate of Atlantis;atlantis;ScummVM;299923;251379310;en_gog_2_20145;;Indiana Jones® and the Fate of Atlantis™;;    use w/ native ScummVM instead of packaged version\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 indiana_jones_and_the_infernal_machine;Indiana Jones and the Infernal Machine;Infernal Machine;infm;Windows;899228;593819544;1.2_(23840);;Indiana Jones® and the Infernal Machine™;Install\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-indiana_jones_and_the_last_crusade;Indiana Jones and the Last Crusade;Indiana Jones and The Last Crusade;lastcr;ScummVM;5056;39568581;en_gog_2_20145;;Indiana Jones® and the Last Crusade™;Probably needs an icon;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+indiana_jones_and_the_last_crusade;Indiana Jones and the Last Crusade;Indiana Jones and The Last Crusade;lastcr;ScummVM;5056;39568581;en_gog_2_20145;;Indiana Jones® and the Last Crusade™;Probably needs an icon;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 infinifactory;Infinifactory;Infinifactory;inffac;Linux;1634066;761249315;11_14_2020_43258;;Infinifactory;Recreate EXE;Now crashes on startup\
 ;  simple 3d construction puzzles - finished except for optimization, and will not play any more\
 ;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -1488,7 +1516,7 @@ julia_among_the_stars;J.U.L.I.A. Among the Stars;J U L I A Among the Stars;julia
   Includes "Untold" puzzle game "dlc"\
 Hangs on exit now\
 ;-u -> Untold\
-;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 jade_empire_special_edition;Jade Empire:  Special Edition;Jade Empire;je;Windows;7208754;6611903706;1.00_(15538);;Jade Empire:  Special Edition;Document mods elsewhere\
 ;*   no text when using gallium-d3d9\
     a few mods installed already:\
@@ -1512,7 +1540,7 @@ jagged_alliance_2_unfinished_business;Jagged Alliance 2:  Unfinished Business;JA
 ;Stable 3.0;game dir: Campaign.ini, Ja2.ini;game dir: SavedGames;;;;;;;;;;;;;;;;1;;;0;;;;;;;;;;
 jagged_alliance_deadly_games;Jagged Alliance:  Deadly Games;Jagged Alliance - DG;jadg;DOS;693852;471171720;1.13_(28044);;Jagged Alliance:  Deadly Games;;;-s -> settings\
 ;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-kerbal_space_program;Kerbal Space Program;;;Linux;0;923509794;en_1_4_5_02243_22594;WONTPLAY:  more about flying than building, so I don't want to play;Kerbal Space Program;Finish uninstalling\
+kerbal_space_program;Kerbal Space Program;;;Linux;0;2071437768;1_12_1_03142_48164;WONTPLAY:  more about flying than building, so I don't want to play;Kerbal Space Program;Finish uninstalling\
 ;* needs a crapload of writable files\; use unionfs\
   separate launcher (-l)\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -1552,22 +1580,22 @@ Retest with newer wines\
 kings_quest;King's Quest;Kings Quest;kq1;ScummVM;6249;25221216;2.0f_(20239);;King's Quest 1+2+3;See if this works with non-DOS assets\
 ;using DOS assets\; maybe there's something better\
 Was kq, but conflicts with kqlives, so renamed to kq1\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 kings_quest_2_romancing_the_throne;King's Quest 2:  Romancing the Throne;Kings Quest 2;kq2;ScummVM;6390;24917624;2.1_(20239);;King's Quest 1+2+3;See if this works with non-DOS assets\
 ;using DOS assets\; maybe there's something better\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 kings_quest_3_to_heir_is_human;King's Quest 3:  To Heir Is Human;Kings Quest 3;kq3;ScummVM;6672;25498240;2.14_(20239);;King's Quest 1+2+3;See if this works with non-DOS assets\
 ;using DOS assets\; maybe there's something better\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 kings_quest_4_the_perils_of_rosella;King's Quest 4:  The Perils of Rosella;Kings Quest 4;kq4;ScummVM;11889;29409384;1.0_(20239);;King's Quest 4+5+6;See if this works with non-DOS assets\
 ;using DOS assets\; maybe there's something better\
 ;Uses manual-based copy protection\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-kings_quest_5_absence_makes_the_heart_go_yonder;King's Quest 5:  Absence Makes the Heart Go Yonder;Kings Quest 5;kq5;ScummVM;122132;88717104;1.000.052_(20239);;King's Quest 4+5+6;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-kings_quest_6_heir_today_gone_tomorrow;King's Quest 6:  Heir Today, Gone Tomorrow;Kings Quest 6;kq6;ScummVM;467609;303268496;1.034_(20239);;King's Quest 4+5+6;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+kings_quest_5_absence_makes_the_heart_go_yonder;King's Quest 5:  Absence Makes the Heart Go Yonder;Kings Quest 5;kq5;ScummVM;122132;88717104;1.000.052_(20239);;King's Quest 4+5+6;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+kings_quest_6_heir_today_gone_tomorrow;King's Quest 6:  Heir Today, Gone Tomorrow;Kings Quest 6;kq6;ScummVM;467609;303268496;1.034_(20239);;King's Quest 4+5+6;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 kings_quest_7_the_princeless_bride;King's Quest 7:  The Princeless Bride;Kings Quest 7;kq7;ScummVM;505165;349888520;2.00b_(20239);;King's Quest 7+8;;*  for dosbox:  manually editing MT32 driver into RESOURCE.CFG sort of works:\
 *   constant tone w/ mt32\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 kings_quest_8_mask_of_eternity;King's Quest 8:  The Mask of Eternity;Kings Quest 8;kq8;Windows;1271463;500639264;2.1.0.26;;King's Quest 7+8;;    config also in registry: Software\\Zeus Software\\nGlide\
 *   requires a patch (e.g. kqmoefix or KQMaskSetup) just to get started\
       [using kqmoefix aka kq8fix\; needs cd mount hack to start]\
@@ -1604,10 +1632,7 @@ lands_of_lore_3;Lands of Lore III;Lands of Lore 3;lol3;Windows;3174659;215640807
   Video_Texture_Cache=Large\
   Video_Texture_Resolution=High\
 ;;Stable 3.0;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-last_federation_the;Last Federation (The);;;Linux;0;572281099;2.5.0.7;WONTPLAY:  Combat is too chaotic and all actions require combat (chaotic meaning "turn-based bullet;The Last Federation Collection;Fix DLC IDs;betrayed_hope DLC 2.0.0.2\
-lost_technologies DLC 2.0.0.1\
-\
-* Font issues at 1366x768\
+last_federation_the;Last Federation (The);;;Linux;0;411535612;2.5.0.7;WONTPLAY:  Combat is too chaotic and all actions require combat (chaotic meaning "turn-based bullet;The Last Federation Collection;;* Font issues at 1366x768\
 * Requires multiple global-writable dirs for save games etc.\
 *   supposedly dir is configurable, but configuration disallowed\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -1714,14 +1739,14 @@ Includes extra levels (from where?)\
 loom;Loom;Loom;loom;ScummVM;295472;281714165;en_gog_2_20099;;LOOM™;Recreate exe, icon\
 Update may be necessary, then re-uninstall\
 ;;Don't care about higher difficulty levels\
-;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 lords_of_xulima;Lords of Xulima;Lords of Xulima;xulima;Linux;1955264;1491009883;2.3.0.9;;Lords of Xulima - Deluxe Edition;;DLC version  2.2.0.5 (copy of extras\; not installed)\
 \
    could remove foreign pdfs for space as well, but too much trouble\
 *   crashes on attempted startup (getting screen size?) w/o system glib\
 *   Writes local files to ~/My Games/Lords of Xulima and can't override this by setting $HOME\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-lure_of_the_temptress;Lure of the Temptress;;;ScummVM;0;0;;WONTPLAY_FREE:  free via non-gog means\; already played & finished;Lure of the Temptress;;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+lure_of_the_temptress;Lure of the Temptress;;;ScummVM;0;44091463;en_gog_2_20099;WONTPLAY_FREE:  free via non-gog means\; already played & finished;Lure of the Temptress;;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 max;M.A.X.;MAX;max;DOS;385283;320641824;1.04_(21516);;M.A.X + M.A.X. 2;;    haven't tried networking\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 max_2;M.A.X. 2;M.A.X. 2;max2;Windows;565680;363541408;2.1.0.9;;M.A.X + M.A.X. 2;;*   Screen Init Failed -> apply 1-byte patch (from appdb): byte 0x69D2F: 5->0\
@@ -1758,7 +1783,7 @@ master_of_orion_2;Master of Orion 2;Master of Orion 2;moo2;DOS;332885;187179637;
 memoria;Memoria;Memoria;memoria;Windows;8988048;9000272995;1.2.3.0341_(18923);;Memoria;Recreate exe, icon\
 ;;sequel to satinav\
 don't care about alternate solutions/achievements\
-;Stable 3.0;user dir: Local Settings/Application Data/Daedalic Entertainment/Memoria/config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/Memoria/Savegames;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;Stable 3.0;user dir: Local Settings/Application Data/Daedalic Entertainment/Memoria/config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/Memoria/Savegames;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 menzoberranzan;Menzoberranzan;Menzoberranzan;menzo;DOS;399113;308586446;2.0.0.4;;Forgotten Realms:  The Archives - Collection Three;Replay or uninstall\
 ;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
 metalheart_replicant_rampage_tjm;MetalHeart:  Replicant Rampage;Metalheart;mh;Windows;2361420;987376822;1.3;;;Move installer (MetalHeart-1.3.7z) to gog/add\
@@ -1893,8 +1918,7 @@ outcast;Outcast;Outcast;outc;Windows;1153364;1289525680;18970_(19502);;Outcast 1
   -> 1562068 install size\
 ;Includes outcast classic 2.0.0.13 (1425535056 bytes)\
 Installed in "Outcast Classic" in same game dir;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-outlaws_a_handful_of_missions;Outlaws + A Handful of Missions;;;Windows;0;535364064;2.0_hotfix_(18728);WONTPLAY:  Pure FPS;Outlaws + A Handful of Missions;Finish uninstalling any remaining pieces\
-;Separate config program olcfg.exe\
+outlaws_a_handful_of_missions;Outlaws + A Handful of Missions;;;Windows;0;535364064;2.0_hotfix_(18728);WONTPLAY:  Pure FPS;Outlaws + A Handful of Missions;;Separate config program olcfg.exe\
 Game is olwin.exe\
 \
 ;;Stable 3.0;system registry: Software\\LucasArts Entertainment Company\\Outlaws;game dir: Saves;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -1919,23 +1943,23 @@ pinball_dreams_deluxe;Pinball Dreams Deluxe;Pinball Dreams Deluxe;pb_dr;DOS;7807
       Ignition - Steel Wheel - Beat Box - Nightmare\
     Dreams Deluxe:\
       Neptune - Safari - Revenge of the Robot Warriors - Stall Turn\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pinball_fantasies_deluxe;Pinball Fantasies Deluxe;Pinball Fantasies Deluxe;pb_fant;DOS;31700;32496566;2.0.0.5;;Pinball Gold Pack;Obtain and try AGA Amiga version\
 ;    (maybe AGA better?)\
 ;    Fantasies:\
       Party Land - Speed Devils - Billion Dollar Gameshow - Stones & Bones\
     Mania:\
       Tarantula - Jailbreak - Kick-Off - Jackpot\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pinball_illusions;Pinball Illusions;Pinball Illusions;pb_ill;DOS;136674;143815966;2.0.0.4;;Pinball Gold Pack;Obtain and try AGA Amiga version\
 ;    (maybe AGA better?)\
 *   dosbox goes nuts returning to menu\; needs to restart\
 ;    Law 'n Justice - Babewatch - Extreme Sports - The Vikings\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pinball_world;Pinball World;Pinball World;pinw;DOS;49498;35989179;2.0.0.3;;Pinball World;Rename to pb_w to match other games by this publisher\
 See if there is an Amiga/AGA version that may be better\
 ;    (maybe AGA better?)\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pirates;Pirates!;;;DOS;0;6033857;2.0.0.9;WONTPLAY: Oh god, the horrors!  CGA, speaker.;Pirates! Gold Plus;Install Amiga version, or just skip to Gold\
 ;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
 pirates_gold;Pirates!  Gold;Pirates Gold;pirg;DOS;27958;24325764;2.0.0.9;;Pirates! Gold Plus;Replace with AGA Amiga version\
@@ -1957,7 +1981,7 @@ Locate and install windescreen patch again\
 *   slow as molasses w/ CSMT\
     [Note: "Linux" version is just win ver packaged with Wine]\
 ;;Stable 3.0;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-planetfall;Planetfall;Planetfall;Planetfall;Infocom;9620;14592400;37.85_(28044);;The Zork Anthology;;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+planetfall;Planetfall;Planetfall;Planetfall;Infocom;9620;14592400;37.85_(28044);;The Zork Anthology;;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 populous;Populous;Populous;pop;DOS;8770;16838840;1.0_(28044);;Populous™;Finish install: exe, icon, notes\
 Get Amiga version working (with Promised Lands?)\
 ;;Includes Promised Lands\
@@ -1970,16 +1994,18 @@ populous_the_beginning;Populous:  The Beginning;Populous 3;poptb;Windows;398915;
 ;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 predynastic_egypt;Predynastic Egypt;Predynastic Egypt;prede;Linux;773546;310086486;1_0_11_45998;;Predynastic Egypt;Install\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-primordia;Primordia;Primordia;primordia;AGS;1464511;1142909515;2.0.0.2;;Primordia;Recreate EXE\
+primordia;Primordia;Primordia;primordia;ScummVM;1464511;1142909515;2.0.0.2;;Primordia;Figure out if I can still use old AGS saves w/ scummvm\
 ;* Creates a log file (agsgame.log) in game dir\; soft linkable to /dev/null\
+\
+Now uses scummvm-ags\
 ;could try other tactics but not interested.\
-;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 pro_pinball_big_race_usa;Pro Pinball -- Big Race USA;Pro Pinball - Big Race USA;ppb-bru;Windows;586498;407046080;1.0_(19163);;Pro Pinball Big Race USA;retest w/o full CPU load in bg;  had way too fast menus and broken sound\; seems ok now\
-broken in 4.0.1 (can't start table)\; using dev;;Development 4.12.1;game dir:  game.dat?;game dir:  wgame.cfg;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+broken in 4.0.1 (can't start table)\; using dev;;Development 4.12.1;game dir:  game.dat?;game dir:  wgame.cfg;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pro_pinball_fantastic_journey;Pro Pinball -- Fantastic Journey;Pro Pinball - Fantastic Journey;ppb-fj;Windows;629294;501806504;1.0_(19164);;Pro Pinball Fantastic Journey;Retest w/o full CPU load in bg;  had way too fast menus and broken sound\; seems OK now\
-broken in 4.0.1 (can't start table)\; using dev;;Development 4.12.1;game dir:  game.dat?;game dir:  wgame.cfg;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+broken in 4.0.1 (can't start table)\; using dev;;Development 4.12.1;game dir:  game.dat?;game dir:  wgame.cfg;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 pro_pinball_timeshock;Pro Pinball -- Timeshock;Pro Pinball - Timeshock;ppb-ts;DOS;665210;604508224;2.0.0.4;;Pro Pinball Timeshock;;needs manual edit of CD TOC for \\->/ and captialization\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
 prodigy_tactics;Prodigy Tactics;Prodigy Tactics;prod;Windows;6778052;3217383720;update_6_(31499);;Prodigy Tactics;Track down sound issues\
 Figure out how to use dx9 or vulkan (calig's cmd line options do nothing)\
 ;Game requirements claims dx9 support, but hard-linked to dx11 libraries\
@@ -1999,22 +2025,27 @@ lang selector?;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 pure_pinball_2;Pure Pinball 2.0 REDUX;Pure Pinball 2.0;ppin;Windows;702180;244306392;2.0_(19118);;Pure Pinball 2 REDUX;Retest/Fix\
 Document config/save locations\
 ;crash on startup (d3dx9 and movie tricks do nothing)\
-;;Stable 4.0.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;;;;;;
-quest_for_glory_vga_remake;Quest for Glory (VGA Remake);Quest for Glory (VGA);qfg;ScummVM;17517;25323856;2.00_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-quest_for_glory_2;Quest for Glory II;Quest for Glory 2;qfg2;ScummVM;11030;19883488;1.102_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-quest_for_glory_3;Quest for Glory III;Quest for Glory 3;qfg3;ScummVM;13916;21355176;1.1_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;Stable 4.0.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;ArcadeGame\;;;;;;
+quest_for_glory_vga_remake;Quest for Glory (VGA Remake);Quest for Glory (VGA);qfg;ScummVM;17517;25323856;2.00_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+quest_for_glory_2;Quest for Glory II;Quest for Glory 2;qfg2;ScummVM;11030;19883488;1.102_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+quest_for_glory_3;Quest for Glory III;Quest for Glory 3;qfg3;ScummVM;13916;21355176;1.1_(28045);;Quest for Glory 1-5;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 quest_for_glory_4;Quest for Glory IV;Quest for Glory 4;qfg4;ScummVM;540246;473815072;1.0_(28045);;Quest for Glory 1-5;;    SCI, but not supported by scummvm\
     [but will be supported\; not well enough in 2.0.0]\
-;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 quest_for_glory_5;Quest for Glory V;Quest for Glory 5;qfg5;Windows;995585;651898888;2.1.0.34;;Quest for Glory 1-5;;*   movies are not scaled to full screen size, but still viewable\
-;;Stable 3.0;game dir: WData/QFG5.PRF;game dir: Saved Games, DATA/Autosave.QG5;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-quest_for_infamy;Quest for Infamy;Quest For Infamy;qfi;AGS;1839439;1635019049;2.2.0.6;;Quest for Infamy;;*   crashes on new game w/o writable PlayTime.dat in game dir (use unionfs)\
+;;Stable 3.0;game dir: WData/QFG5.PRF;game dir: Saved Games, DATA/Autosave.QG5;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+quest_for_infamy;Quest for Infamy;Quest For Infamy;qfi;ScummVM;1839439;1635019049;2.2.0.6;;Quest for Infamy;;*   crashes on new game w/o writable PlayTime.dat in game dir (use unionfs)\
 *   320x200 centered w/o some sort of "filter" to expand gfx\
     includes ags config editor (-c)\
 *   included binary has no sound\
 *   gentoo-ags gives flickering char icons during speech\
-;-c -> AGS Config Editor\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+\
+*  Linux version not supported by in-dev scummvm ags support (15 Jun 2021)\; using Windows version instead.\
+   The game data is missing, is of unsupported format or corrupt\
+     File: 'agsgame.dat'\
+;Old AGS version:\
+-c -> AGS Config Editor\
+;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 rage_of_mages;Rage of Mages;Rage of Mages;rom;Windows;601105;521459776;2.1.0.3;;Rage of Mages;;;;Stable 3.0;stored in saved game;game dir: *.sav, famehall.dat;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 rage_of_mages_ii_necromancer;Rage of Mages II:  Necromancer;Rage of Mages II;rom2;Windows;504783;478877256;2.0.0.5;;Rage of Mages II:  Necromancer;;;;Stable 3.0;stored in saved game;game dir: *.sav, famehall.dat;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 ravenloft_stone_prophet;Ravenloft:  Stone Prophet;Ravenloft Stone Prophet;rlspro;DOS;461360;330973889;2.0.0.2;;Dungeons & Dragons:  Ravenloft Series;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -2031,7 +2062,7 @@ rebel_galaxy;Rebel Galaxy;Rebel Galaxy;rebg;Windows;2333506;2468944973;1.08(hoti
     Only works when OpenGL renderer selected\
  ;-c -> Config program\
 ;Stable 3.0;user dir: My Games/Double Damage Games/RebelGalaxy/*.{dat,txt};save in user dir: My Games/Double Damage Games/RebelGalaxy/savegame_dat.zbs;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-regalia_of_men_and_monarchs;Regalia:  Of Men and Monarchs;;;Linux;0;0;1_07_14534;OBSOLETE:  Regalia:  Of Men and Monarchs - Royal Edition;Regalia:  Of Men and Monarchs;Redownload installer\
+regalia_of_men_and_monarchs;Regalia:  Of Men and Monarchs;;;Linux;0;1590811223;1_07_14534;OBSOLETE:  Regalia:  Of Men and Monarchs - Royal Edition;Regalia:  Of Men and Monarchs;Redownload installer\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 regalia_royal_edition;Regalia:  Of Men and Monarchs - Royal Edition;Regalia Royal Edition;regalia;Linux;5320848;1773581770;en_8_05_2018_21348;;Regalia - Royal Edition;;Moved ScreenSelector.so to the side to remove resultion setting dialog at start\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -2043,8 +2074,10 @@ renowned_explorers;Renowned Explorers:  International Society;Renowned Explorers
 *   "Start Encounter" button never disappears (only its text) sometimes\
 *   Old saves no longer work (infinite load time)\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-resonance;Resonance;Resonance;resonance;AGS;1091080;501492358;2.0.0.2;;Resonance;;;could try other tactics, but not interested\
-;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+resonance;Resonance;Resonance;resonance;ScummVM;1091080;501492358;2.0.0.2;;Resonance;Figure out if I can still use old AGS saves w/ scummvm\
+;Now uses scummvm-ags\
+;could try other tactics, but not interested\
+;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 return_of_the_incredible_machine_contraptions;Return of the Incredible Machine:  Contraptions;Return of TIM;timc;Windows;245355;181123080;2.1.0.21;;The Incredible Machine Mega Pack;Add snapshots to "save" solutions, and probably replay for old solutions\
 \
 ;*   doesn't save solutions, just a flag of done/not done\
@@ -2062,7 +2095,7 @@ return_to_zork;Return to Zork;Return To Zork;rtz;ScummVM;367235;198946424;1.1_(2
         copy *.pvm c:\
      - link/copy music files:\
       cd Music\; i=1\; for x in *.ogg\; do ln -s Music/$x ../track${i}.ogg\; i=$((i+1))\; done\
-;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 rezrog;Rezrog;Rezrog;rezrog;Linux;1875795;448330499;1_1_1_27826;;Rezrog;Probably just rid myself of this\
 ;*   needs writable dir or will hang X at 79% of load time\
 *   my god, it's full of bugs, and only 1 save slot at that.;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
@@ -2096,8 +2129,8 @@ Collect config & save location\
 *   dies silently on startup (-w just makes it take longer)\
 ;1 .. 6 -> Select episode\
 should have 6 icons\
-;Development 3.15;;;;;1;;;;;;;;;;;;;;;;0;;;;;;;;;;
-sam_max_hit_the_road;Sam & Max Hit the Road;Sam and Max Hit the Road;sammax;ScummVM;301962;258750073;en_gog_2_20100;;Sam & Max Hit the Road;Rename to smhtr to match Telltale games?;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;Development 3.15;;;;;1;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+sam_max_hit_the_road;Sam & Max Hit the Road;Sam and Max Hit the Road;sammax;ScummVM;301962;258750073;en_gog_2_20100;;Sam & Max Hit the Road;Rename to smhtr to match Telltale games?;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 sam_max_save_the_world;Sam & Max Save the World;Sam and Max 1;smstw;Windows;813106;489228496;2.0.0.25;;Sam & Max Save the World;Retest/Fix\
 Collect config & save location\
 ;    note: 5 episodes are separate binaries (parm 1: 1..5)\
@@ -2105,13 +2138,13 @@ Collect config & save location\
 *   dies silently on startup (-w just makes it take longer)\
 ;1 .. 5 -> Select episode\
 should have 5 icons\
-;Development 3.15;;;;;1;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;Development 3.15;;;;;1;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 sam_max_the_devils_playhouse;Sam & Max:  The Devil's Playhouse;Sam and Max 3;smtdp;Windows;2173036;2099586368;2.0.0.9;;Sam & Max:  The Devil's Playhouse;Collect save location\
 ;    note: 5 episodes are separate binaries (parm 1: 1..5)\
     [haven't gotten far enough to save]\
 *   shader compile errors on startup\; need d3dx9\
 ;1 .. 5 -> Select episode\
-;Stable 3.0;user dir: My Documents/Telltell Games/<dir name>/prefs.prop;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;Stable 3.0;user dir: My Documents/Telltell Games/<dir name>/prefs.prop;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 satellite_reign;Satellite Reign;Satellite Reign;satr;Linux;1353950;686116485;2.8.0.10;;Satellite Reign;;all DLC are extras only\
 \
 was broken, but now not.  Not sure what changed.\
@@ -2139,9 +2172,8 @@ septerra_core_legacy_of_the_creator;Septerra Core:  Legacy of the Creator;Septer
 ;;Stable 3.0;in saves(?);game dir: savedata;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 serpent_in_the_staglands;Serpent in the Staglands;Serpent in the Staglands;serp;Linux;1566962;221717793;2.13.0.18;;Serpent in the Staglands;;   loses config sometimes?\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-seven_the_days_long_gone_demo;Seven:  The Days Long Gone Demo;;;Windows;0;1506875456;64_1.0_(18065);DEMO:  Slow, action-y, low docs;Seven:  The Days Long Gone Demo [Demo];;;;;;;;;;;;;;;;1;;;;;;;;;0;;;;;;;;;;
-shadow_tactics_demo;Shadow Tactics:  Blades of the Shogun Demo;;;Linux;0;1966807443;en_1_4_4_d_14915;DEMO;Shadow Tactics:  Blades of the Shogun Demo [Demo];;;Seems OK\; added to wishlist at low priority\
-;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+seven_the_days_long_gone_demo;Seven:  The Days Long Gone Demo;;;Windows;0;1491345304;2.0_(64bit)_(25577);DEMO:  Slow, action-y, low docs;Seven:  The Days Long Gone Demo [Demo];;;;;;;;;;;;;;;;1;;;;;;;;;0;;;;;;;;;;
+shadow_tactics_demo;Shadow Tactics:  Blades of the Shogun Demo;;;Linux;0;1966807443;en_1_4_4_d_14915;DEMO;Shadow Tactics:  Blades of the Shogun Demo [Demo];;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 shadow_watch;Shadow Watch;Shadow Watch;sw;Windows;679021;435597040;2.0.0.2;;Shadow Watch;;   requires writable save/*.sav\
 ;;Stable 3.0;game dir: cfg/prefs.txt;game dir: save;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 shadowhand;Shadowhand;Shadowhand;shand;Windows;281678;269785720;1.09_(21948);;Shadowhand;Finish installing: collect config & save locations\; create icon\
@@ -2266,7 +2298,7 @@ Maybe update Windows version (gamespecific)\
       used to play some movies w/ quartz, but not any more\
       no amount of devenum+amstream+wmp9+etc. helps\
 ;;Stable 3.0;game dir: SAVEGAME/SILVER.OPT;game dir: SAVEGAME/*.SAV;;;;;;;;1;;;;;;;;;;;0;;1;1;;;;;;;
-sir_you_are_being_hunted;Sir, You Are Being Hunted;;;Linux;0;0;;WONTPLAY:  basically fps (not my kind of game);Sir, You Are Being Hunted;Download installer, at least to document\
+sir_you_are_being_hunted;Sir, You Are Being Hunted;;;Linux;0;538159787;2.3.0.6;WONTPLAY:  basically fps (not my kind of game);Sir, You Are Being Hunted;Download installer, at least to document\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 skyshines_bedlam;Skyshine's BEDLAM Redux!;Skyshines BEDLAM;bedlam;Windows;2741526;2734205097;2.0.0.2;;Skyshine's BEDLAM Deluxe Edition;Got tired of it\; maybe hide/uninstall\
 ;DLC is extras only\
@@ -2305,17 +2337,17 @@ space_empires_iv_deluxe;Space Empires IV Deluxe;Space Empires 4 Deluxe;se4;Windo
     doesn't really stretch well\; needs to be played at 1024x768;-e -> Editor\
 ;Stable 3.0;game dir: data/Settings.txt;game dir: savegame;;;;1;;;;;;;;;;;;;1;;0;;;;;;;;;;
 space_quest_2_vohauls_revenge;Space Quest II:  Vohaul's Revenge;Space Quest 2;sq2;ScummVM;9980;28225200;2.0f_(20240);;Space Quest 1+2+3;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_quest_3_the_pirates_of_pestulon;Space Quest III:  The Pirates of Pestulon;Space Quest 3;sq3;ScummVM;8286;26300520;1.018_(20240);;Space Quest 1+2+3;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_quest_4_roger_wilco_and_the_time_rippers;Space Quest IV:  Roger Wilco and the Time Rippers;Space Quest 4;sq4;ScummVM;179836;113472800;1.0_(20240);;Space Quest 4+5+6;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_quest_5_the_next_mutation;Space Quest V:  The Next Mutation;Space Quest 5;sq5;ScummVM;18421;72318736;1.04_(20240);;Space Quest 4+5+6;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_quest_6_roger_wilco_in_the_spinal_frontier;Space Quest VI:  Roger Wilco in the Spinal Frontier;Space Quest 6;sq6;ScummVM;625172;538040144;1.0_(20240);;Space Quest 4+5+6;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_quest_1_the_sarien_encounter;Space Quest:  The Sarien Encounter;Space Quest;sq;ScummVM;5766;23884072;2.2_(20240);;Space Quest 1+2+3;Finish install:  add icon\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 space_rangers_hd_a_war_apart;Space Rangers HD:  A War Apart;Space Rangers HD A War Apart;spra;Windows;2704946;2834717356;2.1.2424_(46378);;Space Rangers HD:  A War Apart;Finish install: icon, config & save locations, notes\
 ;Now does nothing.  gallium-9 gives black screen at least.\
 No amount of movie playing magic fixes it.\
@@ -2484,7 +2516,7 @@ system_shock_2;System Shock 2;System Shock 2;ss2;Windows;533998;526468872;2.48_(
 ;;Stable 3.0;game dir: cam.cfg;game dir: save_*;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 tales_from_the_borderlands;Tales from the Borderlands;Tales from the Borderlands;tbord;Windows;8683622;8440758718;20171128_(16743);;Tales from the Borderlands;;   completed\; uninstalled (don't feel like replaying w/ different choices)\
    also don't feel like testing "new" versions since last testing (2.3.0.4)\
-;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;Mostly quicktime events;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 tangledeep;Tangledeep;Tangledeep;tangd;Linux;809972;347580614;1_4i_2_45967;;Tangledeep;;*   Another broken unity3d game: needs to run in "windowed borderles" mode\
 *     actually, that appears to no longer be an option - toggling fs\
 *     seems to be ok, though (then again, even that may no longer be needed)\
@@ -2492,11 +2524,12 @@ tangledeep;Tangledeep;Tangledeep;tangd;Linux;809972;347580614;1_4i_2_45967;;Tang
 \
 soundtrack dlcs are extras only\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;1;;;;;;;;
-technobabylon;Technobabylon;Technobabylon;technobabylon;AGS;1337321;1028781368;2.0.0.3;;Technobabylon:  Deluxe Edition;Uninstall properly;DLC is extras only\
+technobabylon;Technobabylon;Technobabylon;technobabylon;ScummVM;1337321;1028781368;2.0.0.3;;Technobabylon:  Deluxe Edition;Uninstall properly\
+Figure out if I can still use old AGS saves w/ scummvm\
+;Now uses scummvm-ags\
 ;could try other tactics but not interested.\
-;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
-teenagent;Teenagent;;;ScummVM;0;0;;WONTPLAY_FREE:  Typical hunt-and-click\; not interested;Teenagent;Download installer?\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+teenagent;Teenagent;;;ScummVM;0;19323376;1.0_(15595);WONTPLAY_FREE:  Typical hunt-and-click\; not interested;Teenagent;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 tempest;Tempest;Tempest;temp;Windows;792958;451648960;1.5.0_(48177);;Tempest;Finish install: icon, notes, save/config locations\
 Test with controller\
 ;soundtrack DLC is extras only\
@@ -2536,16 +2569,18 @@ Note:  Remasterd & Resnarkled patch supposedly fixes Linux issues, but not avail
 bt2 -> Amiga Bard's Tale 2\
 bt3 -> Amiga Bard's Tale 3\
 ;Vanilla 4.11;;;;;;;1;;;;;;;;;;;;;;0;;;;1;;;;;;
-the_blackwell_epiphany;The Blackwell Epiphany;Blackwell Epiphany;bw5;AGS;838179;636157996;2.0.0.2;;Blackwell Epiphany;Recreate EXE, icon\
+the_blackwell_epiphany;The Blackwell Epiphany;Blackwell Epiphany;bw5;ScummVM;838179;636157996;2.0.0.2;;Blackwell Epiphany;Figure out if I can still use old AGS saves w/ scummvm\
 ;remove acsetup.cfg for full-screen\
-;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+\
+Now uses scummvm-ags\
+;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_book_of_unwritten_tales;The Book of Unwritten Tales;The Book of Unwritten Tales;bout;Windows;5450903;3976644877;2.0.0.4;;The Book of Unwritten Tales;Finish installing:  EXE, icon, notes, config & save locations, testing\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_book_of_unwritten_tales_2;The Book of Unwritten Tales 2;The Book of Unwritten Tales 2;bout2;Linux;23174630;5019458891;2.0.0.2;;The Book of Unwritten Tales 2 Almanac Edition;Finish installing:  EXE, icon, notes\
 Find out what launcher does;Can't use launcher, but game starts up fine.\
-  launcher needs gstreamer-0.10;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+  launcher needs gstreamer-0.10;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_book_of_unwritten_tales_critter_chronicles;The Book of Unwritten Tales:  The Critter Chronicles;The Book of Unwritten Tales - Critter Chronicles;boutcc;Windows;2706841;1800025872;2.1.0.10;;The Book of Unwritten Tales:  The Critter Chronicles;Finish installing:  EXE, icon, notes, config & save locations, testing\
-;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_chronicles_of_riddick_assault_on_dark_athena;The Chronicles of Riddick:  Assault on Dark Athena;The Chronicles of Riddick - Assault on Dark Athena;cr;Windows;10833732;6172605694;2.0.0.10;;The Chronicles of Riddick:  Assault on Dark Athena;;No longer for sale on GOG\
 Also includes Escape from Butcher Bay\
 *   OpenGL game, but crashes on startup due to GLSL error\; fixed w/ patch\
@@ -2553,9 +2588,9 @@ Also includes Escape from Butcher Bay\
 the_dark_eye_chains_of_satinav;The Dark Eye:  Chains of Satinav;The Dark Eye - Chains of Satinav;satinav;Windows;5431622;4909609225;2.0.0.4;;The Dark Eye:  Chains of Satinav;Reinstall and uninstall properly\
 ;  has some sort of config editor that needs .net, but appears unnecessary\
 ;don't care about alternate solutions/achievements\
-;Stable 3.0;user dir: Local Settings/Application Data/Daedalic Entertainment/Satinav/config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/Satinav/Savegames;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;Stable 3.0;user dir: Local Settings/Application Data/Daedalic Entertainment/Satinav/config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/Satinav/Savegames;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_dig;The Dig;The Dig;tdig;ScummVM;657939;566922170;2_20100;;The Dig®;Recreate exe, icon\
-;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_elder_scrolls_adventures_redguard_game;The Elder Scrolls Adventures:  Redguard;Redguard;redguard;DOS;1090895;926370632;2.0.0.5;;The Elder Scrolls Adventures:  Redguard;;Uses glide\
 *   glide emu is slow and somewhat unreliable (stuttery sound as a result)\
 ;;;;;;;;;;;;;;1;;;;;;;;;0;;;;;;;;;;
@@ -2578,9 +2613,9 @@ the_even_more_incredible_machine;The Even More Incredible Machine;The Even More 
 ;    seems inferior to tim3/timc, but has different puzzles\
     like the others, doesn't have any way of "saving"\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-the_incredible_adventures_of_van_helsing_complete_pack;The Incredible Adventures of Van Helsing -- Complete Pack;;;Windows;0;10213432020;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-the_incredible_adventures_of_van_helsing_ii_complete_pack;The Incredible Adventures of Van Helsing II -- Complete Pack;;;Windows;0;13085283853;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-the_incredible_adventures_of_van_helsing_iii;The Incredible Adventures of Van Helsing III;;;Windows;0;10933459189;2.0.0.1;OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_complete_pack;The Incredible Adventures of Van Helsing -- Complete Pack;;;Windows;0;9693855110;1.4.2c_(16809);OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_ii_complete_pack;The Incredible Adventures of Van Helsing II -- Complete Pack;;;Windows;0;12396648542;1.3.4b_(16810);OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+the_incredible_adventures_of_van_helsing_iii;The Incredible Adventures of Van Helsing III;;;Windows;0;10394571849;1.06b_(1667);OBSOLETE:  The Incredible Adventures of Van Helsing Final Cut;The Incredible Adventures of Van Helsing:  Final Cut;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 the_incredible_adventures_of_van_helsing_final_cut_game;The Incredible Adventures of Van Helsing:  Final Cut;The Incredible Adventures of Van Helsing - Final Cut;vh;Windows;57454183;19417687122;1.1.0b_(b)_(23988);;The Incredible Adventures of Van Helsing:  Final Cut;Update\
 ;    takes for bloody ever to start up (compiling shaders?)\
     has 64-bit binaries, but dx only\; using GL instead\
@@ -2621,9 +2656,9 @@ Finish lohtocs so game can be transferred\
 the_longest_journey;The Longest Journey;The Longest Journey;tlj;Windows;1872055;1733191345;142_lang_update_(24607);;The Longest Journey;Update\
 scummvm?;    set full-screen mode in preferences.ini manually\
 *   starting in full-screen mode causes videos to fail sometimes\
-*   have to kill\; quit pops up invisible dialog;;Stable 3.0;game dir: preferences.ini;game dir: Save;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+*   have to kill\; quit pops up invisible dialog;;Stable 3.0;game dir: preferences.ini;game dir: Save;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 the_secret_of_monkey_island_special_edition;The Secret of Monkey Island:  Special Edition;Monkey Island 1 SE;mi;Windows;2229636;1412207823;1.0_(18587);;The Secret of Monkey Island™:  Special Edition;;   takes for bloody ever to install due to .net weirdness\
-;;Stable 3.0;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/Settings.ini;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/savegame.*;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;Stable 3.0;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/Settings.ini;user dir: Application Data/LucasArts/The Secret of Monkey Island Special Edition/savegame.*;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 summoner;The Summoner;The Summoner;summoner;Windows;1470005;780297176;2.0.0.5;;Summoner;Collect config & save locations\
 Recheck with recent wine\
 Create controller config\
@@ -2736,7 +2771,7 @@ Gather save location\
 *   if videos play (ffdshow + native crap), game iconifies\
 *     sometimes\; and sometimes it just dies miserably\
 *     [note: can't get videos to play any more];;Development 3.15;registry: Software\\Core Design\\TombRaiderAngelOfDarkness;;;;1;;;;;1;;;;;;;;;;;0;;;;;;;;;;
-toonstruck;Toonstruck;Toonstruck;toonstruck;ScummVM;987055;964578415;en_gog_2_20292;;Toonstruck;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+toonstruck;Toonstruck;Toonstruck;toonstruck;ScummVM;987055;964578415;en_gog_2_20292;;Toonstruck;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 torchlight;Torchlight;Torchlight;torch;Windows;446761;441477232;1.15(a)_(23675);;Torchlight;Fix editor (try with mono again\; try with more patience/electricity)\
 ;*   nasty flashies with gallium-d3d9\
 *   editor refuses to start w/ mono, but works w/ dotnet30\
@@ -2826,7 +2861,7 @@ also, activate subtitles\
 ;Development 3.18;registry: Software\\Reality Pump\\TwoWorlds2;user dir: Saved Games/Two Worlds II;;;1;;;;;;;;;;1;;;;;;0;;;;;;;;;;
 tyranny_game;Tyranny;Tyranny;tyranny;Linux;14862182;8423636850;v1_2_1_160_v2_25169;;Tyranny - Standard Edition;;commander_edition_bonus is extras only (effing ringtones)\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-tyrian_2000;Tyrian 2000;;;DOS;0;0;;WONTPLAY_FREE:  action game, not my thing;Tyrian 2000;Download installer?\
+tyrian_2000;Tyrian 2000;;;DOS;0;19005816;3.0_(28045);WONTPLAY_FREE:  action game, not my thing;Tyrian 2000;Download installer?\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 ultima_2;Ultima II:  The Revenge of the Enchantress;Ultima 2;u2;DOS;4493;12363328;1.0_cs_(28045);;Ultima™ 1+2+3;See if (superior) C64 version exists\
 Install user upgrade patch\
@@ -2834,8 +2869,8 @@ Install user upgrade patch\
 ultima_3;Ultima III:  Exodus;Ultima 3;u3;DOS;11424;20706560;1.0_cs_(28045);;Ultima™ 1+2+3;See if (superior) C64/Amiga version exists\
 Install user upgrade patch\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-ultima_4;Ultima IV:  Quest of the Avatar;;;Linux;0;17364072;2.1.0.46;OBSOLETE:  xu4 + ultima_iv;Ultima™ 4:  Quest of the Avatar;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-ultima_iv;Ultima IV:  Quest of the Avatar;Ultima 4;;ScummVM;0;12548400;1.0_cs_(28045);OBSOLETE:  xu4;Ultima™ 4+5+6;Uninstall and maybe hide in favor of xu4 (u4 already points to it)\
+ultima_4;Ultima IV:  Quest of the Avatar;;;Linux;0;13726160;1.0_cs_(28045);OBSOLETE:  xu4 + ultima_iv;Ultima™ 4:  Quest of the Avatar;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+ultima_iv;Ultima IV:  Quest of the Avatar;;;Linux;0;12548400;1.0_cs_(28045);OBSOLETE:  xu4;Ultima™ 4+5+6;Uninstall and maybe hide in favor of xu4 (u4 already points to it)\
 At least move game dir out if xu4 doesn't need it\
 See if (superior) Amiga version exists\
 Use scummvm?  (uses inferior dos gfx);;;;;;1;;;;;;;;;;1;;;;;;;;0;;;;;;;;;;
@@ -3033,19 +3068,19 @@ xanadu_next;Xanadu Next;Xanadu Next;xnext;Windows;1081187;766696264;24.11.2016_(
 ;Bad movie\; wmp9 doesn't fix?  Reinstall?;;Stable 4.0.1;;;;;1;;;;;1;;;;;;;;;;;0;;;;;ActionGame\;;;;;;
 xenonauts;Xenonauts;Xenonauts;xenon;Linux;2688143;2444144422;en_1_65_21328;;Xenonauts;icon?\
 check out source;;;;;;;;;;;;;;;;1;;;;;;;;0;;;;;;;;;;
-zak_mckracken_and_the_alien_mindbenders;Zak McKracken and the Alien Mindbenders;Zak McKracken and the Alien Mindbenders;zakam;ScummVM;101552;136547306;en_gog_2_20099;;Zak McKracken and the Alien Mindbenders;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-zork_ii_the_wizard_of_frobozz;Zork II:  The Wizard of Frobozz;Zork2;Zork2;Infocom;9620;15311720;48.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-zork_iii_the_dungeon_master;Zork III:  The Dungeon Master;Zork3;Zork3;Infocom;9620;14854176;17.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+zak_mckracken_and_the_alien_mindbenders;Zak McKracken and the Alien Mindbenders;Zak McKracken and the Alien Mindbenders;zakam;ScummVM;101552;136547306;en_gog_2_20099;;Zak McKracken and the Alien Mindbenders;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+zork_ii_the_wizard_of_frobozz;Zork II:  The Wizard of Frobozz;Zork2;Zork2;Infocom;9620;15311720;48.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+zork_iii_the_dungeon_master;Zork III:  The Dungeon Master;Zork3;Zork3;Infocom;9620;14854176;17.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 zork_nemesis_the_forbidden_lands;Zork Nemesis:  The Forbidden Lands;Zork Nemesis;znemesis;ScummVM;1705417;1242169864;1.0_(28046);;Zork Nemesis:  The Forbidden Lands;Recreate EXE, icon\
 Reinstall and uninstall properly\
 ;  requires only linking libertine fonts\
-;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 zork_zero_the_revenge_of_megaboz;Zork Zero:  The Revenge of Megaboz;Zork0;Zork0;Infocom;9620;13897288;1.0_(28046);;The Zork Anthology;;   required blb file from ifarchive.org\
- ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 zork_grand_inquisitor;Zork:  Grand Inquisitor;Zork Grand Inquisitor;zgi;ScummVM;2491310;2180655912;1.0_dvd_(20293);;Zork:  Grand Inquisitor;Recheck regarding supposed issues with DVD version\
 ;  requires only linking libertine fonts or freefonts (must be ttf, not otf)\
-;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;;;
-zork_the_great_underground_empire;Zork:  The Great Underground Empire;Zork1;Zork1;Infocom;9620;13847648;.88.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
+zork_the_great_underground_empire;Zork:  The Great Underground Empire;Zork1;Zork1;Infocom;9620;13847648;.88.84_(28046);;The Zork Anthology;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 7_billion_humans;7 Billion Humans;7 Billion Humans;7bh;Linux;155802;154686841;1_0_32487_23774;;7 Billion Humans;Finished\; uninstall?\
 60 short challenge for all lights\
 Extra challenges?  Way too many, really.\
@@ -3075,11 +3110,11 @@ external config utility is .NET\
 ;-c -> run external config util\
 ;Stable 6.0.1;user dir: Local Settings/Application Data/Daedalic Entertainment/A New Beginning - Final Cut/Config.ini;user dir: Local Settings/Application Data/Daedalic Entertainment/A New Beginning - Final Cut/Savegames;;;;;1;;;1;;;;;1;;1;;;;0;;;;;AdventureGame\;;;; 5.07.21;;
 bioshock_2_remastered_game;BioShock 2 Remastered;BioShock 2 Remastered;bios2r;Windows;20524745;14117900974;1.0.122864_(25813);;BioShock™ 2 Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
-;;;Stable 4.0.1;user dir: Applicaiton Data/BioshockHD/Bioshock2/*.ini;user dir: My Documents/BioshockHD/Bioshock2/SaveGames;;;;;;;;;1;;;;1;;;;;;0;;;;1;ActionGame\;;;;;;
+;;;Stable 6.0.1;user dir: Applicaiton Data/BioshockHD/Bioshock2/*.ini;user dir: My Documents/BioshockHD/Bioshock2/SaveGames;;;;;;;;;1;;;;1;;;;;;0;;;;1;ActionGame\;;;;13.07.21;;
 bioshock_remastered_game;BioShock Remastered;BioShock Remastered;biosr;Windows;21451330;15749671106;1.0.122872_(25715);;BioShock™ Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
 ;May need performance adjustments (choppy in places)\
 Vibration?\
-;;Stable 4.0.1;user dir: Applicaiton Data/BioshockHD/Bioshock/*.ini;user dir: My Documents/BioshockHD/Bioshock/SaveGames;;;;;;;;;;;;;1;;;;;;0;;;;1;ActionGame\;;;;;;
+;;Stable 6.0.1;user dir: Applicaiton Data/BioshockHD/Bioshock/*.ini;user dir: My Documents/BioshockHD/Bioshock/SaveGames;;;;;;;;;;;;;1;;;;;;0;;;;1;ActionGame\;;;;13.07.21;;
 divinity_original_sin_2;Divinity:  Original Sin 2 - Definitive Edition;Divinity - Original Sin 2;divos2;Windows;61510422;50889967418;3.6.69.4648(a)_(46471);;Divinity:  Original Sin 2 - Divine Edition;Install extra "DOS2_Editor_DefEd" when there is more space;divine_ascension DLC is apparently extras only\
    note: some extras were broken\; gog just deleted the broken ones instead of trying to get fixed versions\
 \
@@ -3136,7 +3171,7 @@ Just sucks up CPU for way too long.  Maybe I need patience?\
   Gives a few error messages\; maybe I should read them\
   Wine-5.12 crashes early on, as does 5.11-staging\
 ;;;;;;;1;;;;;;;;;;;;1;;;;0;;;;;;;;21.07.20;;
-return_to_mysterious_island;Return to Mysterious Island;Return to Mysterious Island;rtmi;Windows;1433809;1351071336;2.1.0.17;;Return to Mysterious Island;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+return_to_mysterious_island;Return to Mysterious Island;Return to Mysterious Island;rtmi;Windows;1433809;1351071336;2.1.0.17;;Return to Mysterious Island;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 sanctuaryrpg_black_edition;Sanctuary RPG:  Black Edition;Sanctuary RPG - Black Edition;sanct;Windows;137947;120241240;2.18.0.19;;Sanctuary RPG:  Black Edition;Install\
 ;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 skyhill;SKYHILL;SKYHILL;skyhill;Linux;1227119;220705244;2.0.0.2;;SKYHILL;icon\
@@ -3189,7 +3224,7 @@ Now requires exclusive sound (fmod)\; no idea if freq fixes it (it no longer fix
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;1;AdventureGame\;;;;;;
 randals_monday_base_game;Randal's Monday;Randal's Monday;ranm;Windows;8334936;3554312809;2.1.0.4;;Randal's Monday;Finished\; uninstall\
 Retry w/ controller & document issues;Controller unusable\; disable if present\
-;;Stable 4.0.3;;;;;;;1;;;;;;;;;;;;;;0;;;;1;;;;23.07.20;;
+;;Stable 4.0.3;;;;;;;1;;;;;;;;;;;;;;0;;;;1;AdventureGame\;;;;23.07.20;;
 atom_rpg_postapocalyptic_indie_game;ATOM RPG;ATOM RPG Post apocalyptic indie game;atom;Linux;7902304;4518779132;1_179_fix_48331;;ATOM RPG:  Post-apocalyptic Indie Game;;Move ScreenSelector.so to the side to avoid startup dialog\
 controller support is screwy\
   symbols can be set to ps4, but docs still use xbox button names\
@@ -3199,14 +3234,15 @@ controller support is screwy\
   r2/l2 as trigger causes constant zoom\
   constant motion on map (supposedly left stick)\
   right stick motion too fast\
-;;;;;;;;;;;;;;;;;;;;;;;0;;1;;1;RolePlaying\;;;; 2.03.20;;
-bioshock;BioShock;BioShock;bios;Windows;5526423;4138617407;1.1_(25450);;BioShock™ Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
+;;;~/.config/unity3d/AtomTeam/Atom/prefs;~/.config/unity3d/AtomTeam/Atom/Save*;;;;;;;;;;;;;;;;;;;0;;1;;1;RolePlaying\;;;; 2.03.20;;
+bioshock;BioShock;;;Windows;0;4138617407;1.1_(25450);OBSOLETE:  BioShock Remastered;BioShock™ Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
 At the very least delete this as it doesn't even support a controller\
 ;Crash on exit\
-;;Stable 4.0.1;user dir: Applicaiton Data/Bioshock/*.ini;user dir: My Documents/Bioshock/SaveGames;;;;;;;;;;;;;1;;;;;;0;;;;;ActionGame\;;;;;;
-bioshock_2;BioShock 2;BioShock 2;bios2;Windows;9619992;9370527174;1.5.0.019_(25143);;BioShock™ 2 Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
+;May need manual window focus\
+;Stable 6.0.1;user dir: Applicaiton Data/Bioshock/*.ini;user dir: My Documents/Bioshock/SaveGames;;;;;;;;;;;;;1;;;;;;0;;;;;ActionGame\;;;;13.07.21;;
+bioshock_2;BioShock 2;;;Windows;0;9370527174;1.5.0.019_(25143);OBSOLETE:  BioShock 2 Remastered;BioShock™ 2 Remastered;Hide\; this is a pure FPS.  Worse than System Shock.  Why did I even buy it?\
 At the very least delete this as it doesn't seem better than the remaster\
-;;;Stable 4.0.1;user dir: Applicaiton Data/Bioshock2Steam/*.ini;user dir: My Documents/Bioshock2/SaveGames;;;;;;;;;1;;;;1;;;;;;0;;;;1;ActionGame\;;;;;;
+;;;Stable 6.0.1;user dir: Applicaiton Data/Bioshock2Steam/*.ini;user dir: My Documents/Bioshock2/SaveGames;;;;;;;;;1;;;;1;;;;;;0;;;;1;ActionGame\;;;;13.07.21;;
 xcom_enemy_unknown_complete_pack;XCOM:  Enemy Unkown Complete Pack;XCOM Enemy Unknown;xcomeu;Windows;19462757;19912511106;401776_(19762);;XCOM:  Enemy Unknown Complete Pack;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 age_of_civilizations_ii;Age of Civilizations II;Age of Civilizations II;aoc2;Linux;395046;231638128;1.0453_ela_(64bit)_(27717);;Age of Civilizations II;;Can be run directly using java -jar AoC2.jar.\
 The EXE is just a copy of the jar, and can be deleted along with the jre directory.\
@@ -3274,7 +3310,7 @@ warlords_battlecry;Warlords Battlecry;Warlords Battlecry;wbc;Windows;783074;4419
 warlords_battlecry_2;Warlords Battlecry II;Warlords Battlecry 2;wbc2;Windows;905442;618224424;1.04_(30487);;Warlords Battlecry 2;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 warlords_battlecry_3;Warlords Battlecry III;Warlords Battlecry 3;wbc3;Windows;929414;646513600;1.03_(19139);;Warlords Battlecry 3;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 beyond_good_and_evil;Beyond Good & Evil;Beyond Good and Evil;bge;Windows;2159970;1518968232;2.1.0.9;;Beyond Good & Evil™;Fix voice stutter.  No subtitles so they are needed.\
-;settings app dies with gallium-d3d9\
+May need more controller config;settings app dies with gallium-d3d9\
   I'm guessing app does as well, so leaving it off.\
 No controller support!  This was a console game, so that sucks.\
 & in icon name must be manually doubled for fvwm, or just converted to "and"\
@@ -3282,10 +3318,10 @@ WIdescreen patch from https://www.gog.com/forum/beyond_good_and_evil/widescreen_
    needs native d3dx9\
 (or try http://www.wsgf.org/dr/beyond-good-evil)\
 sound issues?  voices stop after a bit.  Native dsound or Native Win7 dsound seems to fix for some people\
-\
+  fixed in stable-6.0.1?\
 ;-s -> global settings (must be run once/first)\
 Using autohotkey for controller support\
-;Stable 4.0.1;registry: Software\\Ubisoft\\Beyond Good & Evil\\SettingsAPplicaiton.INI\\;game dir: slot*.sav;;;1;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;X-Action\;;1;;;;
+;Stable 6.0.1;registry: Software\\Ubisoft\\Beyond Good & Evil\\SettingsAPplicaiton.INI\\;game dir: slot*.sav;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;X-Action\;;1;;13.07.21;;
 serment_contract_with_a_devil;Serment - Contract with a Devil;Serment Contract with a Devil;serm;Linux;1053267;976214528;1_3_43265;;Serment - Contract with a Devil;Update adds more pics\; extract them\
 Reevaluate "slow" after update (but with new hardware <sigh>)\
 \
@@ -3325,16 +3361,16 @@ EasyTutu:\
 http://www.pocketplane.net/mambo/index.php?option=com_content&task=blogcategory&id=143&Itemid=98\
 https://www.usoutpost31.com/easytutu/\
 ;bg on bg2 engine\
-;Stable 4.0.3;;;;;1;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;;;;
-masquerada_songs_and_shadows;Masquerada:  Songs and Shadows;Masquerada - Songs and Shadows;masq;Windows;11564659;7573409100;1.22_(17642);;Masquerada:  Songs and Shadows;;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;0;;;;1;;;;21.07.20;;
+;Stable 6.0.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;RolePlaying\;X-RTwP\;;;;;;
+masquerada_songs_and_shadows;Masquerada:  Songs and Shadows;Masquerada - Songs and Shadows;masq;Windows;11564659;7573409100;1.22_(17642);;Masquerada:  Songs and Shadows;;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;0;;;;1;AdventureGame\;;;;21.07.20;;
 jotun;Jotun:  Valhalla Edition;Jotun;jotun;Linux;3850597;1502246152;12_09_2019_32415;;Jotun:  Valhalla Edition;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;1;;;;;;
-mutant_year_zero_road_to_eden_demo;Mutant Year Zero:  Road to Eden Demo;;;Windows;0;0;1.07-348_cl-20543-ship_(64bit)_(28838);DEMO;Mutant Year Zero:  Road to Eden Demo [Demo];Partial install\; test again and remove\
+mutant_year_zero_road_to_eden_demo;Mutant Year Zero:  Road to Eden Demo;;;Windows;0;3221142792;1.07-348_cl-20543-ship_(64bit)_(28838);DEMO;Mutant Year Zero:  Road to Eden Demo [Demo];Partial install\; test again and remove\
 ;Was way too dark and slow\; works OK now (still a little slow with decent settings)\
 \
 ;;Stable 4.0.3;;;;;;;;;;;;;;;1;;1;;;;0;;;;;;;;;;
 apocalipsis_wormwood_edition;Apocalipsis - Wormwood Edition;Apocalipsis - Wormwood Edition;apoc;Windows;0;1024813936;2.0.0.2;;Apocalipsis:  Wormwood Edition;;Bad voice stuttering, but with subtitles it's OK\
 ;Got 2 endings\; did side quests\; good enough.  Uninstalled.\
-;Stable 4.0;none?;user dir:  Application Data/Apocalipsis/savegame;;;;;1;;;;;;;1;;;;;;;0;;;;;AdventureGame\;;;;;;
+;;none?;user dir:  Application Data/Apocalipsis/savegame;;;;;1;;;;;;;1;;;;;;;0;;;;;AdventureGame\;;;;;;
 fell_seal_arbiters_mark;Fell Seal:  Arbiter's Mark;Fell Seal Arbiters Mark;fells;Linux;1376774;1074648277;1_5_2_45376;;Fell Seal:  Arbiter's Mark;;Game saves & config in ~/Fell Seal\
 Setting $HOME is insufficient\; must set PWD as well\
 -J xpad_swts (swap tri & square\; trigger is button)\
@@ -3356,8 +3392,9 @@ Moved ScreenSelector.so to the side to remove resultion setting dialog at start\
 Windows:\
    graphics OK\
    uses xinput:  x360ce doesn't work, so use SDL for controller (broken in 4.0-stable, so use dev)\
-;;Development 4.12.1;registry: Software\\Anima Project Studio\\GateofMemories;registry: Software\\Anima Project Studio\\GateofMemories;;;;;;1;;;;;;;;;;;;;0;;;;1;ActionGame\;;;; 2.03.20;;
-superhero_league_of_hoboken;Superhero League of Hoboken;Superhero League of Hoboken;sloh;DOS;189300;124472259;gog_1_26845;;Superhero League of Hoboken;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
+     needs remapping (e.g. dpad rotated)\
+;;Stable 6.0.1;registry: Software\\Anima Project Studio\\GateofMemories;registry: Software\\Anima Project Studio\\GateofMemories;;;;;;1;;;;;;;;;;;;;0;;;;1;ActionGame\;;;;12.07.21;;
+superhero_league_of_hoboken;Superhero League of Hoboken;Superhero League of Hoboken;sloh;DOS;189300;124472259;gog_1_26845;;Superhero League of Hoboken;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 dead_in_vinland;Dead in Vinland;Dead in Vinland;vinl;Windows;1948002;701430696;1.4_(29004);;Dead in Vinland;;Weird jittery mouse, causing tooltips to disappear immediately if ds4 plugged in\
 \
 ;-r/-s -> Profile saves (1 2 ...);Stable 4.0.1;User dir: AppData/LocalLow/CCCP/Dead In Vinland/Global(1).dls;User dir: AppData/LocalLow/CCCP/Dead In Vinland/Profile*;;;;;;;;;;;;;;;;;;;0;;;;;Simulation\;;;;;;
@@ -3380,7 +3417,7 @@ https://www.exotica.org.uk/wiki/Flashback (music)\
 neo_scavenger;NEO Scavenger;NEO Scavenger;neos;Linux;77144;58902029;2.8.0.12;;NEO Scavenger;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 herou_rogue_to_redemption;Hero U: Rogue to Redemption;Hero U Rogue to Redemption;herou;Linux;2277908;951806968;20200720_39940;;Hero-U:  Rogue to Redemption;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
 obduction;Obduction;Obduction;obd;Windows;9009766;5092959864;1.8.4.1_(33737);;Obduction®;Reinstall 64-bit\
-;;;;;;;;;;;;;;;;;;;;1;;;;0;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;1;;;;0;;;;;AdventureGame\;;;;;;
 sorcerer_king_rivals;Sorcerer King:  Rivals;Sorcerer King - Rivals;sork;Windows;4814541;3549896843;2.3.0.1_(41750);;Sorcerer King - Rivals;Add options for quest editor?\
 Play at lower resolution or bigger font size or less tired\
 ;;;Stable 4.0.3;;;;;;;;;;;;;;;1;;;;;;0;;;;;;;;;;
@@ -3413,10 +3450,15 @@ creatures_exodus;Creatures Exodus;Creatures Exodus;crt3;Windows;355985;182858224
 creatures_village;Creatures Village;Creatures Village;crt4;Windows;564977;267948208;1.0_(19428);;Creatures Village;;Why even bother trying:  same engine as crt3\
 ;;Stable 4.0.1;;;;;1;;;;;;;;;;;;;;;;0;;;;;Simulation\;;;;;;
 mechoecho;MechoEcho;MechoEcho;mecho;Windows;1416267;361330872;2.1.0.3;;MechoEcho;;;;;;;;;;;;;;;;;;;;;;;;;0;;;;;;;;;;
-shardlight;Shardlight;Shardlight;shl;AGS;1132722;576764112;2.1.0.4;;Shardlight;Finished\; uninstall\
-(maybe try alternate ending[s]);;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;;;;22.07.20;;
-battlestar_galactica_deadlock;Battlestar Galactica Deadlock;Battlestar Galactica Deadlock;bsgd;Windows;6650082;5028188811;1.5.113_(43479);;Battlestar Galactica Deadlock;;No movies w/o LAVFilters-0.74\
-;;Stable 4.0.3;user dir: My Documents/Black Lab Games/BSG/*.txt;user dir: My Documents/Black Lab Games/BSG/*.bsgsave;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
+shardlight;Shardlight;Shardlight;shl;ScummVM;1132722;576764112;2.1.0.4;;Shardlight;Finished\; uninstall\
+(maybe try alternate ending[s])\
+Figure out if I can still use old AGS saves w/ scummvm\
+;Now uses scummvm-ags\
+;;;;;;;;;1;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;22.07.20;;
+battlestar_galactica_deadlock;Battlestar Galactica Deadlock;Battlestar Galactica Deadlock;bsgd;Windows;6650082;5028188811;1.5.113_(43479);;Battlestar Galactica Deadlock;Controller: maybe needs different name?\
+;No movies w/o LAVFilters-0.74\
+Config for controller, but controller non-responsive\
+;;Stable 6.0.1;user dir: My Documents/Black Lab Games/BSG/*.txt;user dir: My Documents/Black Lab Games/BSG/*.bsgsave;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;13.07.21;;
 stellaris;Stellaris;Stellaris;stel;Linux;14197221;9130650002;3_0_3_47193;;Stellaris:  Galaxy Edition;;complete_soundtrack, infinite_frontiers_ebook extras only\; win installers only\; available as zip\
 signed_wallpaper, digital_artbook extras only\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;StrategyGame\;;;;;;
@@ -3432,7 +3474,7 @@ hiveswap;HIVESWAP;HIVESWAP Act 1;hsw;Linux;3704519;886075885;en_gog_1_20238;;HIV
 Requires ig2-hack.so to fix invalid shaders\
 ;;;;;;;;;;;;;;;;;;;;;;;0;;;;;AdventureGame\;;;;;;
 noctropolis;Noctropolis;Noctropolis;noct;Linux;637176;542788336;en_1_0_16066;;Noctropolis;;;Note:  this is a remaster/port, not the original DOS game.\
-;;;;;;;;;;;;;;;;;;;;;;0;;;1;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;0;;;1;;AdventureGame\;;;;;;
 silence;Silence;Silence;silence;Linux;7355078;4619878749;2.1.0.3;;Silence;Needs more tinkering with controller mapping;Supposedly controller w/ vibration support, but non-functional.\
    Works with sufficient xobxdrv options, but not -J\
 ;;;;;;;;;;;;;1;;;;;;;;;;0;;;;1;;;;;;
@@ -3464,7 +3506,7 @@ Screwed up dir selection\; should be a space before 2\
 No movies, just black screen (esc to bypass)\; nothing helps\
   Play manually from Avi directory\
 Menu in lower-right pops down instead of up\; use hotkeys or run in window/desktop where there is space below\
-;;Stable 4.0.1;;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;
+;;Stable 4.0.1;;;;;;;;;;1;;;;;;;;;;;;;;;;StrategyGame\;;;;;;
 egypt_old_kingdom;Egypt:  Old Kingdom;Egypt Old Kingdom;egypt;Linux;881194;420227933;2_0_4d_44192;;Egypt:  Old Kingdom;;master_of_history was free, but pointless to buy:   integrated into Linux build (and only Linux build) probably due to inability to do DLC properly in Linux\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;;;
 venetica;Venetica - Gold Edition;Venetica;ven;Windows;13467440;6662825317;1.0.3_(31094);;Venetica - Gold Edition;;Missing PhysX?  Maybe reinstall?  winetricks for noe\
@@ -3494,22 +3536,24 @@ Must use -x --trigger-as-button --axismap -x1=y1,y1=x1 --\
 Obnoxiously long version:\
 2020_07_06_2bd3f3b7b06af174084d848a4ffadc4fcbc09b8f_39577\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
-loria_demo;Loria DEMO;;;Linux;0;0;1_2_0_31834;DEMO:  RTS, no docs;Loria Demo [Demo];verify actually hidden on gog\
+loria_demo;Loria DEMO;;;Linux;0;763373965;1_2_0_31834;DEMO:  RTS, no docs;Loria Demo [Demo];verify actually hidden on gog\
 move to hidden on usb3[fb]\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 memoranda;Memoranda;Memoranda;memo;Linux;795597;766620843;2.2.0.3;;Memoranda;;Apparently used to not work, but I didn't write down how, and it works now.\
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 sin_slayers_the_first_sin;Sin Slayers:  The First Sin;;;Linux;0;239382900;1_0_90_32240;DEMO too random, punished for progress:  won't buy;Sin Slayers:  The First Sin [Demo];;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-avadon_3_the_warborn;Avadon 3:  The Warborn;Avadon 3 - The Warborn;avadon3;Windows;195664;189991336;2.2.0.3;;Avadon 3:  The Warborn;write down config & save locations\
-;;;Stable 4.0.3;user dir: My Documents/Spiderweb Software/Avadon 3 Saved Games/Avadon3Settings.dat;user dir: My Documents/Spiderweb Software/Avadon 3 Saved Games/Save*;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;; 3.03.20;;
-bound_by_flame;Bound By Flame;Bound By Flame;bbf;Windows;6058068;5505566911;2195b_(32605);;Bound By Flame;icon;No character textures w/ gallium-9\
-;;Stable 4.0.3;;;;;;;;;;;1;;;;;;;;;;;;;;1;;1;;;;
+avadon_3_the_warborn;Avadon 3:  The Warborn;Avadon 3 - The Warborn;avadon3;Windows;195664;189991336;2.2.0.3;;Avadon 3:  The Warborn;;;;Stable 6.0.1;user dir: My Documents/Spiderweb Software/Avadon 3 Saved Games/Avadon3Settings.dat;user dir: My Documents/Spiderweb Software/Avadon 3 Saved Games/Save*;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;; 3.03.20;;
+bound_by_flame;Bound By Flame;Bound By Flame;bbf;Windows;6058068;5505566911;2195b_(32605);;Bound By Flame;;No character textures w/ gallium-9\
+;;Stable 6.0.1;user dir:  My Documents/Bound by Flame/default.profile,graphicconfig.txt;user dir:  My Documents/Bound by Flame/save*.fsav;;;;;;;;;1;;;;;;;;;;;;;;1;RolePlaying\;X-ARPG\;;1;;13.07.21;;
 assault_spy;Assault Spy;Assault Spy;aspy;Windows;3852991;3837572706;1.3_test3_(42285);;Assault Spy;Probably just hide instead of trying to fix\; not sure what possessed me to buy an obvious action game\
 ;Using devel 5.3 enables game, but no sound\
   winetricks xact no longer works, and does nothing anyway\
 Fatal Error with stable 5.0 (sometimes just spins)\
 Crash with stable 4.0.3 (sometimes just spins)\
-;;Development 5.12;User dir:  Local Settings/Application Data/ASSAULT_SPY/Saved/Config/WindowsNoEditor/*.ini;User dir:  Local Settings/Application Data/ASSAULT_SPY/Saved/SaveGames/*;;;1;;;;;;1;;;;1;;1;;;;;;;;1;;;; 4.03.20;;
+Stable 6.0.1 works, mostly:\
+  main menu sound takes a moment to start up\
+  no progress indicator when loading dojo mode\
+;;Stable 6.0.1;User dir:  Local Settings/Application Data/ASSAULT_SPY/Saved/Config/WindowsNoEditor/*.ini;User dir:  Local Settings/Application Data/ASSAULT_SPY/Saved/SaveGames/*;;;;;;;;;1;;;;1;;1;;;;;;;;1;ActionGame\;;;; 4.03.20;;
 the_next_big_thing;The Next BIG Thing;The Next BIG Thing;nbig;Windows;6589493;4749637170;1.0_(32177);;The Next BIG Thing;Install\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 iratus_lord_of_the_dead;Iratus:  Lord of the Dead;Iratus Lord of the Dead;iratus;Linux;3355695;1712872740;linux_181_13_00_48040;;Iratus:  Lord of the Dead;Re-enable Halloween skins (or not)\
@@ -3528,7 +3572,7 @@ Requires more work on joystick\
   should work with SDL2 config, but doesn't\; use -J32 xpad_tr (both tr and but works, but probably confuses game)\
 ;;;;;;;;;;;;;1;;;;;;;;;;;;1;;1;;;;;;
 hexplore;Hexplore;Hexplore;hexp;Windows;391613;426342296;1.0_(34049);;Hexplore;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-blade_runner;Blade Runner;Blade Runner;blr;ScummVM;1543575;1277526096;1_0_svm_src_34722;;Blade Runner;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+blade_runner;Blade Runner;Blade Runner;blr;ScummVM;1543575;1277526096;1_0_svm_src_34722;;Blade Runner;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 pathway;Pathway;Pathway;pw;Linux;981045;570525863;1_3_3a_48206;;Pathway;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 i_am_not_a_monster_first_contact;I am not a Monster:  First Contact;I am not a Monster First Contact;notamon;Windows;9303463;1179775440;1.2_(34732);;I am not a Monster:  First Contact;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 galaxy_trucker;Galaxy Trucker:  Extended Edition;Galaxy Trucker;gt;Windows;264147;181722840;3.1.5_(46304);;Galaxy Trucker:  Extended Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3550,8 +3594,7 @@ figure out if free_dlc_pack is working\
   broken again in 5.4 due to wine implementation of xactengine-3\
     fix: add dll overrides for xactengine_3_0..3_7\
 ;;Staging 5.8;game dir:  resource/bin/v2r_nosteam_en.ini;game dir:  resource/bin/SAVELIST*,SYSTEMSAVE*;;;;;;;;;1;;;;;;1;;;;;;;;1;;;;;;
-crying_suns_demo;Crying Suns Demo;Crying Suns Demo;crysd;Windows;1131282;420289544;2.0.1h1.46_demo_win_(64bit)_(39426);DEMO;Crying Suns Demo [Demo];Reinstall & retry, then uninstall and hide\
-;Now crashes on startup just like main game\
+crying_suns_demo;Crying Suns Demo;;;Windows;0;443467008;2.2.5.60_(64bit)_(46713);DEMO;Crying Suns Demo [Demo];;Now crashes on startup just like main game\
 ;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;
 stellar_tactics;Stellar Tactics;StellarTactics;stelt;Windows;7046857;7303102929;0.579b_(64bit)_(45932);;Stellar Tactics;Harass dev about broken minimap (or maybe it isn't broken?)\
 \
@@ -3564,18 +3607,20 @@ Sometimes starts 1/2-screen up\
   - fix: fullscreen virtual desktop\
 ;In-Dev\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-bear_with_me_the_complete_collection;Bear With Me:  The Complete Collection;Bear With Me The Complete Collection;bwm;Windows;4454612;2607544362;1.5_(64bit)_(31355);;Bear With Me:  The Complete Collection;Finished\; uninstall;;;Development 5.12;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;
-yesterday;Yesterday;Yesterday;yest;Windows;4178215;3791936808;1.0.1_(34047);;Yesterday;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+bear_with_me_the_complete_collection;Bear With Me:  The Complete Collection;Bear With Me The Complete Collection;bwm;Windows;4454612;2607544362;1.5_(64bit)_(31355);;Bear With Me:  The Complete Collection;Finished\; uninstall;Needed mf-install, but no longer functional with it\
+Slightly choppy music\
+;;Stable 6.0.1;None;user dir:  AppData/LocalLow/Exordium Games/Bear With Me - The Lost Robots/*.save;;;;;1;;;;;;;;;;1;;;;;;;;;AdventureGame\;;1;;13.07.21;;
+yesterday;Yesterday;Yesterday;yest;Windows;4178215;3791936808;1.0.1_(34047);;Yesterday;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 firewatch;Firewatch;Firewatch;firew;Linux;4138439;2258991574;en_1_09_20938;;Firewatch;;Needs dpad-vertical inverted (can do it with SDL_CONTROLLERCONFIG).  May need horizontal adjustment as well (can't verify)\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
-alders_blood_prologue;Alder's Blood Prologue;Alder's Blood Prologue;alblp;Windows;359442;218460576;1.0.20a_(64bit)_(37554);;Alder's Blood Prologue [Demo];;;Essentially a demo\
-;Stable 4.0.3;;;;;;;;;;;;;;;;;1;;;;;;;;;RolePlaying\;;;; 2.03.20;;
-secret_files_tunguska;Secret Files:  Tunguska;Secret Files Tunguska;sfil;DOS;2557385;2695549732;1.02_(33223);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-lost_horizon;Lost Horizon;Lost Horizon;lhoz;Windows;3951076;4057219733;1.00_(33204);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-secret_files_2_puritas_cordis;Secret Files 2:  Puritas Cordis;Secret Files Puritas Cordis;sfil2;Windows;1971329;2106070918;1.02_(33224);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-secret_files_sam_peters;Secret Files:  Sam Peters;Secret Files Sam Peters;sfil2p;Windows;676365;764632784;1.01_(33225);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-lost_horizon_2;Lost Horizon 2;Lost Horizon 2;lhoz2;Windows;5470945;2959649212;1.00_(33204);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-secret_files_3;Secret FIles 3;Secret Files 3;sfil3;Windows;2191914;2305944611;1.3_(33224);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+alders_blood_prologue;Alder's Blood Prologue;Alder's Blood Prologue;alblp;Windows;359442;218460576;1.0.20a_(64bit)_(37554);;Alder's Blood Prologue [Demo];Controller?;;Essentially a demo\
+;Stable 6.0.1;user dir:  AppData/LocalLow/Shockwork Games/Alder's Blood Prologue/config.data;user dir:  AppData/LocalLow/Shockwork Games/Alder's Blood Prologue/Saves;;;;;;;;;;;;;;;1;;;;;;;;;RolePlaying\;;;;12.07.21;;
+secret_files_tunguska;Secret Files:  Tunguska;Secret Files Tunguska;sfil;DOS;2557385;2695549732;1.02_(33223);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+lost_horizon;Lost Horizon;Lost Horizon;lhoz;Windows;3951076;4057219733;1.00_(33204);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+secret_files_2_puritas_cordis;Secret Files 2:  Puritas Cordis;Secret Files Puritas Cordis;sfil2;Windows;1971329;2106070918;1.02_(33224);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+secret_files_sam_peters;Secret Files:  Sam Peters;Secret Files Sam Peters;sfil2p;Windows;676365;764632784;1.01_(33225);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+lost_horizon_2;Lost Horizon 2;Lost Horizon 2;lhoz2;Windows;5470945;2959649212;1.00_(33204);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+secret_files_3;Secret FIles 3;Secret Files 3;sfil3;Windows;2191914;2305944611;1.3_(33224);;Animation Arts Collection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 wizardry_labyrinth_of_lost_souls_game;Wizardry:  Labyrinth of Lost Souls;Wizardry Labyrinth of Lost Souls;wizlols;Windows;738024;850320536;1.0.14_(35878);;Wizardry:  Labyrinth of Lost Souls;vibration?\
 icon\
 ;Some logos look broken in HD-fullscreen\
@@ -3589,10 +3634,10 @@ the_alliance_alive_hd_remastered;The Alliance Alive HD Remastered;The Alliance A
 ;Requires mf-install for movies (still sometimes requires replay to work) and exit w/o hang\
 Requires winetricks corefonts to correct lack of spaces in text\
 ;;Stable 4.0.3;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;
-supreme_league_of_patriots_episode_1;Supreme League of Patriots - Episode 1;Supreme League of Patriots Episode 1;slop1;Linux;3136652;2742418864;2.1.0.6;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-supreme_league_of_patriots_episode_2;Supreme League of Patriots - Episode 2;Supreme League of Patriots Episode 2;slop2;Linux;2275551;1906169660;2.1.0.5;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-supreme_league_of_patriots_episode_3;Supreme League of Patriots - Episode 3;Supreme League of Patriots Episode 3;slop3;Linux;2632432;2222151422;2.1.0.4;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-attack_of_the_earthlings;Attack of the Earthlings;Attack of the Earthlings;aoe;Linux;2559516;1127652286;en_v_1_0_4_20170;;Attack of the Earthlings;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;; 3.03.20;;
+supreme_league_of_patriots_episode_1;Supreme League of Patriots - Episode 1;Supreme League of Patriots Episode 1;slop1;Linux;3136652;2742418864;2.1.0.6;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+supreme_league_of_patriots_episode_2;Supreme League of Patriots - Episode 2;Supreme League of Patriots Episode 2;slop2;Linux;2275551;1906169660;2.1.0.5;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+supreme_league_of_patriots_episode_3;Supreme League of Patriots - Episode 3;Supreme League of Patriots Episode 3;slop3;Linux;2632432;2222151422;2.1.0.4;;Supreme League of Patriots:  Season Pass;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+attack_of_the_earthlings;Attack of the Earthlings;Attack of the Earthlings;aoe;Linux;2559516;1127652286;en_v_1_0_4_20170;;Attack of the Earthlings;;;;;~/.config/unity3d/Junkfish/Attack of the Earthlings/prefs;~/.config/unity3d/Junkfish/Attack of the Earthlings/Slots;;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;; 3.03.20;;
 the_quest;The Quest;The Quest;tq;Windows;224068;292090608;1.9.10_(36445);;The Quest Deluxe Edition;;Dies with DX error.  Recommends visiting website, but I won't.  Same with or without Gallium-9, regardless of wine version, with or without "winetricks d3d9".\
 \
 The Quest v1.9.10:  Error in source\\Quest\\Display\\Driver\\D3D9.cpp at line 2354.  (HRESULT:  0x8876086C (FAacility: 2166, Code: 2156))\
@@ -3600,7 +3645,7 @@ The Quest Editor v1.0: <same error> \
 \
 ;-e -> Editor\
 ;Stable 4.0.3;;;;;;1;;;;;;;;;;;;;;;;;;;;;1;;15.03.20;;
-dark_quest;Dark Quest;Dark Quest;dq;Windows;156891;63973032;1.0.2_(36275);;Dark Quest 1 & 2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+dark_quest;Dark Quest;Dark Quest;dq;Windows;156891;63973032;1.0.2_(36275);;Dark Quest 1 & 2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;;;
 dark_quest_2;Dark Quest 2;Dark Quest 2;dq2;Windows;1557321;383446688;1.0.0_(36776);;Dark Quest 1 & 2;;Much missing text.  Editor and config is unusable as a result.\
   Fixed by winetricks corefonts\
 Editor load/save dialogs kill game due to focus loss\
@@ -3609,24 +3654,25 @@ Editor load/save dialogs kill game due to focus loss\
 Not sure what DLC does (just an enabler?)\
 \
 ;-r/-s -> slotted save states (0-3)\
-;Stable 4.0.3;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;
+;Stable 4.0.3;;;;;;1;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;;;
 heroes_of_the_monkey_tavern;The Heroes of the Monkey Tavern;Heroes of the Monkey Tavern;hmt;Windows;1026528;671084784;1.0.8b_(36236);;Heroes of the Monkey Tavern;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 conglomerate_451;Conglomerate 451;Conglomerate 451;c451;Linux;8205665;3827670795;1_5_6_40142;;Conglomerate 451;;Moved ScreenSelector.so to the side to remove resultion setting dialog at start\
   May need manual adjustment of prefs file to 1920x1080 due to weird resizing to 1280x720 at every startup\
 ;multi-slot save support:\
--s/-r -> save/restore\; add +<slot> for specific slot;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
+-s/-r -> save/restore\; add +<slot> for specific slot;;;;;;;;;;;;;;;;;;;;;;;;;;1;RolePlaying\;;;;;;
 iris_and_the_giant_deckbuilding_roguelike;Iris and the Giant;Iris and the Giant;iag;Linux;520289;398440871;1_1_1_2_37953;;Iris and the Giant;;Moved ScreenSelector.so to the side to remove resultion setting dialog at start\
 When using ds4 for mouse, controller interferes if not functional\
    use -J xpad_tr\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
-bioshock_infinite;BioShock Iniinite Complete Edition;BioShock Infinite;biosi;Windows;45490699;41256679028;1.0.1643565_(29748);;BioShock Infinite Complete Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+bioshock_infinite;BioShock Iniinite Complete Edition;BioShock Infinite;biosi;Windows;45490699;41256679028;1.0.1643565_(29748);;BioShock Infinite Complete Edition;;;;Stable 6.0.1;user dir:  My Documents/My Games/BioShock Infinite/XGame/Config;user dir:  My Documents/My Games/BioShock Infinite/XGame/SaveData;;;;;;;;;;;;;;;;;;;;;;;;ActionGame\;;;;13.07.21;;
 machinarium_collectors_edition;Machinarium Collector's Edition;Machinarium;mach;Linux;359471;362210758;2.0.0.2;;Machinarium Collector's Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-mission_critical;Mission Critical;Mission Critical;misc;DOS;1466810;1208468476;en_gog_1_20609;;Mission Critical;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mission_critical;Mission Critical;Mission Critical;misc;DOS;1466810;1208468476;en_gog_1_20609;;Mission Critical;;;Adventure game with action game elements\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 nethergate_resurrection;Nethergate:  Resurrection;Nethergate Resurrection;nethg;Windows;53967;19686312;1.0.1_(32350);;Nethergate:  Resurrection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 murder_by_numbers;Murder by Numbers;Murder by Numbers;mbn;Windows;939119;549175568;1.26_(39758);;Murder by Numbers;Done\; uninstall\
 ;Requires mf-install for intro movie & exit w/o hang\
 ;;Stable 4.0.3;user dir: AppData/LocalLow/Mediatonic/Murder by Numbers/settings.txt;user dir: AppData/LocalLow/Mediatonic/Murder by Numbers/save*.txt, MemoryProgress.txt;;;;;1;;;;;;;;;;;;;;;;;;;LogicGame\;;;;15.03.20;;
-whispers_of_a_machine;Whispers of a Machine;Whispers of a Machine;wom;Windows;764164;667557464;1.0.6d_(35876);;Whispers of a Machine;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+whispers_of_a_machine;Whispers of a Machine;Whispers of a Machine;wom;Windows;764164;667557464;1.0.6d_(35876);;Whispers of a Machine;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 mordheim_city_of_the_damned;Mordheim:  City of the Damned;Mordheim;mord;Windows;5395492;5215357838;1.4.4.4_(64bit)_(36463);;Mordheim:  City of the Damned;;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;21.07.20;;
 moleksyntez;MOLEK-SYNTEZ;MOLEK SYNTEZ;mols;Linux;192423;159382634;11_14_2020_43139;;MOLEK-SYNTEZ;;Like all ZakTech games, evaluation/bar charts require internet connection (doesn't even cache);;;;;;;;;;;;;;;;;;;;;;;;;;;;LogicGame\;X-Programming\;;;; 1.05.20;;
 the_dark_crystal_age_of_resistance_tactics;The Dark Crystal:  Age of Resistance Tactics;The Dark Crystal Age of Resistance Tactics;dcr;Windows;4959055;2578148541;496_(64bit)_(35872);;The Dark Crystal:  Age of Resistance Tactics;Only one save\; probably add save-slots\
@@ -3644,16 +3690,20 @@ mistover;MISTOVER;MISTOVER;mo;Windows;1354663;1251142016;1.0.9a_(64bit)_(38642);
 ;;Stable 4.0.3;;user dir:  AppData/LocalLow/KRAFTON/MISTOVER/Save;;;;;;;;;;;;;;;1;;;;;;;;;;;; 1.05.20;;
 filament;Filament;Filament;fil;Linux;1314361;1226235626;1_0_2825_39570;;Filament;;FMOD: sound won't work with any other ALSA users\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;; 2.05.20;;
-alders_blood;Alder's Blood;Alder's Blood;albl;Windows;3012942;504967656;1.0.14_(64bit)_(39326);;Alder's Blood;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-barrow_hill_curse_of_the_ancient_circle;Barrow Hill:  Curse of the Ancient Circle;Barrow Hill - Curse of the Ancient Circle;bh1;Windows;1514779;1310182936;bh1-gog2_(37382);;Barrow Hill:  Curse of the Ancient Circle;probably uninstall & hide (horror);;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 2.05.20;;
-barrow_hill_the_dark_path;Barrow Hill:  The Dark Path;Barrow Hill - The Dark Path;bh2;Windows;4012619;3601221601;bh2-gog1_(36924);;Barrow Hill:  The Dark Path;probably uninstall & hide (horror);No video with gallium-9;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;1;; 2.05.20;;
+alders_blood;Alder's Blood;Alder's Blood;albl;Windows;3012942;504967656;1.0.14_(64bit)_(39326);;Alder's Blood;Controller?;;;Stable 6.0.1;user dir:  AppData/LocalLow/Shockwork Games/Alder's Blood/config.data;user dir:  AppData/LocalLow/Shockwork Games/Alder's Blood/Saves;;;;;;;;;;;;;;;1;;;;;;;;;RolePlaying\;;;;12.07.21;;
+barrow_hill_curse_of_the_ancient_circle;Barrow Hill:  Curse of the Ancient Circle;Barrow Hill - Curse of the Ancient Circle;bh1;Windows;1514779;1310182936;bh1-gog2_(37382);;Barrow Hill:  Curse of the Ancient Circle;Find config & save loc\
+probably uninstall & hide (horror)\
+;;;Stable 6.0.1;game dir:  settings.mat?;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;13.07.21;;
+barrow_hill_the_dark_path;Barrow Hill:  The Dark Path;Barrow Hill - The Dark Path;bh2;Windows;4012619;3601221601;bh2-gog1_(36924);;Barrow Hill:  The Dark Path;Find config & save loc\
+probably uninstall & hide (horror);No video with gallium-9\
+;;Stable 6.0.1;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;1;;13.07.21;;
 broken_lines;Broken Lines;Broken Lines;brln;Linux;6038392;3372626259;1_0_3_5_37596;;Broken Lines;Make a usable controller binding\
   Uses SDL2 but ignores SDL2 maping\
   No amount of xboxdrv magic seems to correct this\
 \
 ;"Rapid input change detected" with raw ds4 (controller unusable)\
 Completely screwed up non-rebindable mapping\
-;;;;;;;;;;;;;;;;;;;;;;;;;1;;1;;;; 2.05.20;;
+;;;;;;;;;;;;;;;;;;;;;;;;;1;;1;StrategyGame\;;;; 2.05.20;;
 deus_ex_mankind_divided;Deus Ex 4:  Mankind Divided;Deus Ex Mankind Divided;deusex4;Windows;71655020;37262716417;1.19_hotfix_(38078);;Deus Ex:  Mankind Divided - Digital Deluxe Editon;;-benchmark -> skip intro/logo videos\
 ;;;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;
 deus_ex_human_revolution_directors_cut;Deus Ex 3:  Human Revolution Director's Cut;Deus Ex HRDC;deusex3;Windows;18580540;16532300350;2.0_(37758);;Deus Ex:  Human Revolution - Director's Cut;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3690,16 +3740,14 @@ agent_a_a_puzzle_in_disguise;Agent A:  A Puzzle in Disguise;Agent A A Puzzle in 
 ;Crash on startup w/ Stable-4.0.3\; using 5.0\
 On mission select, blank black screen & hang (video? mf-install does nothing)\
   gets further (no sound, but video) w/ devel-55.3, but still ends up hanging eventually\
-  seems to be fine with devel-5.7;;Development 5.18;Registry: Software\\Yak & Co\\Agent A;Registry: Software\\Yak & Co\\Agent A;;;;;1;;;;;;;;;;1;;;;;;;;;AdventureGame\;;;;21.01.21;;
+  seems to be fine with devel-5.7;;Stable 6.0.1;Registry: Software\\Yak & Co\\Agent A;Registry: Software\\Yak & Co\\Agent A;;;;;1;;;;;;;;;;1;;;;;;;;;AdventureGame\;;;;21.01.21;;
 wintermoor_tactics_club;Wintermoor Tactics Club;Wintermoor Tactics Club;wmtc;Windows;814355;569816240;ship_jun23_(39265);;Wintermoor Tactics Club;;;;Stable 4.0.3;user dir:  My Documents/My Games/Wintermoor/Saves/PlayerPrefs;user dir:  My Documents/My Games/Wintermoor/Saves/WTCSM*;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
 iron_danger;Iron Danger;Iron Danger;idng;Windows;12511252;6531076436;1.03.02-gog_(64bit)_(42338);;Iron Danger;;Crashes on startup.  Gets a startup window at least;;;;;;;1;;;;;;;;;;;;1;;;;;;;;;;;;;;
-cris_tales_demo;Cris Tales Demo;Cris Tales Demo;cris;Windows;2785521;732308608;1.5.1_(64bit)_(38489);DEMO won't buy\; too twitchy;Cris Tales Demo [Demo];play & hide (probably hide\; too twitchy)\
-\
+cris_tales_demo;Cris Tales Demo;;;Windows;0;732308608;1.5.1_(64bit)_(38489);DEMO won't buy\; too twitchy;Cris Tales Demo [Demo];\
 ;needs mfinstall, which crashes in 5.x-stable\
 crashes on 4.x\
 ;;Staging 5.8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-vagrus_the_riven_realms_prologue;Vagrus - The Riven Realms:  Prologue;Vagrus The Riven Realms Prologue;vagrus;Linux;1285768;1040842115;0_5_12_39659;DEMO too much of a mgmt sim;Vagrus - The Riven Realms:  Prologue [Demo];demo - play & hide (probably hide - too much mgmt sim)\
-;Needs writable game dir or hang\
+vagrus_the_riven_realms_prologue;Vagrus - The Riven Realms:  Prologue;;;Linux;0;1072301538;0_5_31_47024;DEMO too much of a mgmt sim;Vagrus - The Riven Realms:  Prologue [Demo];;Needs writable game dir or hang\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 urtuk_the_desolation;Urtuk:  The Desolation;Urtuk The Desolation;urtuk;Linux;677083;665851955;1_0_0_62_47462;;Urtuk:  The Desolation;;;In-Dev\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3709,7 +3757,13 @@ launcher:  dowser.exe (doesn't work)\
 game: AowPF.exe\
 Ignored so far:  AowPF_Debug.exe AoWPF_WS.exe ContentEd.exe LevelEd.exe ResourceEd.exe PackageManager.exe\
 \
-;;Stable 4.0.3;;;;;;1;;;;;;;;;;;1;;;;;;;;;StrategyGame\;;;;;;
+New issue:  HLSL shader compiler error\; fix w/ winetricks d3dcompiler_47\
+;-p -> Package Manager\
+-ec -> Content Editor (broken)\
+-el -> Level Editor (broken)\
+-er -> Resource Editor (broken)\
+-l -> Launcher\
+;Stable 6.0.1;user dir:  My Documents/Paradox Interactive/Age of Wonders Planetfall/Config;user dir:  My Documents/Paradox Interactive/Age of Wonders Planetfall/Saves;;;;1;;;;;;;;;1;;1;1;;;;;;;;StrategyGame\;;;;12.07.21;;
 xcom_2;XCOM 2;XCOM 2;xcom2;Windows;77553303;34111923039;374751_(64bit)_(35526);;XCOM® 2;Figure out why main game is unresponsive\
 Figure out why game is so slow for coms\
 ;slow as hell to load/prep com voiceovers\
@@ -3724,21 +3778,20 @@ crying_suns;Crying Suns;Crying Suns;crys;Windows;1047340;449934080;2.2.5.134_win
 \
 Obnoxiously long version number:\
 2.0.1h1_normal_win32.120_win64.123_gog_(64bit)_(39426)\
-;;;;;;;1;;;;;;;;;;1;;1;;;;;;;;;;;;;;
-ara_fell;Ara Fell;Ara Fell;araf;Linux;696945;553141680;1_0_3_37906;;Ara Fell:  Enhanced Edition;icon\
-Finished\; uninstall\
-;;;;;;;;;;1;;;;;;;;;;;;;;;;1;;1;;;;;;
-atom_rpg_trudograd;ATOM RPG:  Trudograd;ATOM RPG Trudograd;atomt;Linux;13915405;9237137520;0_9_linux_47996;;ATOM RPG:  Trudograd;;;In-Dev\
-;;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;
+;;;;;;;1;;;;;;;;;;1;;1;;;;;;;;;StrategyGame\;;;;;;
+ara_fell;Ara Fell;Ara Fell;araf;Linux;696945;553141680;1_0_3_37906;;Ara Fell:  Enhanced Edition;Finished\; uninstall\
+;;;;~/.config/unity3d/Stegosoft Games/Ara Fell/prefs,Custom Input Config.json;~/.config/unity3d/Stegosoft Games/Ara Fell/Save*,Autosave*;;;;;1;;;;;;;;;;;;;;;;1;;1;RolePlaying\;;;;;;
+atom_rpg_trudograd;ATOM RPG:  Trudograd;ATOM RPG Trudograd;atomt;Linux;13915405;9237137520;0_9_linux_47996;;ATOM RPG:  Trudograd;;Odd, Atom has controller support, but this doesn't.  Maybe when no longer in-dev.\
+;In-Dev\
+;;~/.config/unity3d/AtomTeam/Atom_Trudograd/prefs;~/.config/unity3d/AtomTeam/Atom_Trudograd/Save*;;;;;;;;;;;;;;;1;;;;;;1;;;RolePlaying\;;;;13.07.21;;
 blocks_that_matter;Blocks That Matter;Blocks That Matter;btm;Linux;185715;114861699;2.0.0.3;;Blocks That Matter;Stop using shell script launcher\
 ;Java game\; use *openjdk* launcher with native java\
-;;;;;;;;1;;;;;;;;;;;;;;;;;;1;1;;;;;;
+;;;;;;;;1;;;;;;;;;;;;;;;;;;1;1;LogicGame\;;;;;;
 caves_of_qud;Caves of Qud;Caves of Qud;coq;Linux;485918;293251957;2_0_201_106_47743;;Caves of Qud;;;In-Dev\
-;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
-dead_age;Dead Age;Dead Age;dage;Linux;1776807;739705696;1_1_38216;;Dead Age;exe, icon\
-Vibration?\
+;;;;;;;;;;;;;;;;;;;;;;;;1;;;RolePlaying\;;;;;;
+dead_age;Dead Age;Dead Age;dage;Linux;1776807;739705696;1_1_38216;;Dead Age;Vibration?\
 Controller remapping?\
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;StrategyGame\;;;;;;
 tainted_grail;Tainted Grail;Tainted Grail;tgr;Windows;7096968;6084093829;1.49_(64bit)_(48222);;Tainted Grail:  Conquest;;Crash on startup w/ stable-4\
 No avatar except on lowest settings\
 No card graphics, enemy graphics in battle\
@@ -3819,8 +3872,7 @@ the_uncertain_last_quiet_day;The Uncertain:  Last Quiet Day;The Uncertain Last Q
 Controller non-responsive and required if plugged in\; needs config\
 \
 ;;Stable 4.0.3;;;;;;;;;;;;;;;;;1;;;;;;;;1;;;;;;
-against_the_moon_prologue;Against the Moon Prologue;Against the Moon Prologue;atm;Windows;2788508;534010345;3_(39973);DEMO won't buy\; see TODO;Aganst the Moon:  Prologue [Demo];Demo - finished - uninstall - hide\
-Probably not worth buying\
+against_the_moon_prologue;Against the Moon Prologue;;;Windows;2788508;686804736;129_(42110);DEMO won't buy\; see TODO;Aganst the Moon:  Prologue [Demo];Probably not worth buying\
   Bombastic dialog is a big turnoff\
   Only 3 fixed chars, apparently\
   combat is on three lanes\; mostly no lane jumping\
@@ -3828,11 +3880,10 @@ Probably not worth buying\
 ;Crash on startup w/ stable-4\
 Black screen on startup (after unity logo) w/ stable-5\
 Finally works w/ dev-5.12 + mf-install (but still sometimes fails on initial movie - maybe mf-install did nothing)\
-\
-;;Development 5.12;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;
 clash;Clash;Clash;clash;Windows;509737;479029728;1.0_(32003);;Clash;;Includes DOSBOX.  Maybe try getting to work w/ Linux dosbox?\
   No game executable other than the "clash95.exe" win exe, though\
-;;Stable 4.0.3;game dir:  options.cfg;game dir:  save;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Stable 4.0.3;game dir:  options.cfg;game dir:  save;;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;;;;;;
 vampires_fall_origins;Vampire's Fall:  Origins;Vampire's Fall Origins;vfo;Windows;1399037;615723152;1.6.3_(39787);;Vampire's Fall:  Origins;Maybe just forget it and uninstall:\
   Mobile port, and UI shows it\
     Awkward interactions\
@@ -3844,8 +3895,7 @@ Try w/ controller again:  does it vibrate?\
 ;;-s/-r for game save slots\; entire dir including\
   pointless logs and Unity collection info\; no individual save slot support\
 ;Stable 4.0.3;user dir:  AppData/LocalLow/Early Morning Studio/Vampire's Fall_ Origins/savedata.vfo;user dir:  AppData/LocalLow/Early Morning Studio/Vampire's Fall_ Origins/*.es;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
-ring_of_pain_demo;Ring of Pain Demo;Ring of Pain Demo;rop;Windows;739145;0;0.9.74_(41963);DEMO too random, no meat:  won't buy;Ring of Pain Demo [Demo];DEMO\; won't buy:  hide & uninstall\
-;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ring_of_pain_demo;Ring of Pain Demo;;;Windows;0;579550264;0.9.74_(41963);DEMO too random, no meat:  won't buy;Ring of Pain Demo [Demo];;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 fae_tactics;Fae Tactics;Fae Tactics;faet;Windows;1063411;1004756120;v1.010_(46793);;Fae Tactics;Maybe throw away due to wonky saves and annoying UI\
 ;Game only recognizes axes, not buttons\
   and disables keyboard if controller plugged in, so use -J32 none\
@@ -3853,22 +3903,20 @@ fae_tactics;Fae Tactics;Fae Tactics;faet;Windows;1063411;1004756120;v1.010_(4679
 ;Stable 4.0.3;user dir:  Local Settings/Application Data/fae_tactics/lofconfig.ini;user dir:  Local Settings/Application Data/fae_tactics/lof{sav,res*}.ini;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 beautiful_desolation_game;BEAUTIFUL DESOLATION;BEAUTIFUL DESOLATION;bdes;Linux;15746639;11662323225;1_0_5_5_44769;;BEAUTIFUL DESOLATION;;From support, to fix missing PDA functionality:\
   MESA_VK_WSI_PRESENT_MODE=fifo %command% -force-vulkan\
-;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
+;;;~/.config/unity3d/THE BROTHERHOOD/BEAUTIFUL DESOLATION/prefs,config.ini;~/.config/unity3d/THE BROTHERHOOD/BEAUTIFUL DESOLATION/savegame*,progress.dat,gamestate.dat;;;;;;;;;;;;;;;;;;;;;1;;;AdventureGame\;;;;13.07.21;;
 zoria_age_of_shattering_prologue;Zoria:  Age of Shattering Prologue;Zoria Age of Shattering Prologue;zas;Linux;4632225;2358071730;0_3_6_081815_40619;;Zoria:  Age of Shattering Prologue [Demo];Demo:  buy full game or chuck\
    battle system not the greatest\
    seems to force a party, but may just be nature of demo\
 \
 ;Can't open unity.lock for writing, but works anyway (no -w needed)\
 ;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;;
-gamedec_demo;Gamedec Demo;Gamedec Demo;gdec;Windows;11763700;0;gamedecdemo_(64bit)_(40616);DEMO not interested in full game;Gamedec Demo [Demo];update\; check if nasty ambient occlusion gone\
+gamedec_demo;Gamedec Demo;;;Windows;0;8326915249;20210326_0.115.82.r33611_(64bit)_(45879);DEMO not interested in full game;Gamedec Demo [Demo];update\; check if nasty ambient occlusion gone\
 demo:  get full game or chuck\
-;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 talisman_origins;Talisman:  Origins;Talisman Origins;taliso;Windows;1320130;1335346896;74605_(40792);;Talisman:  Origins;determine why there are missing pieces even though I bought all DLC\
 ;;Main game menu includes "missing" pieces for purchase\
 ;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-talisman_digital_edition;Talisman:  Digital Edition;Talisman Digital Edition;talis;Windows;1220141;0;74722_(41247);WONTPLAY too random\; designed for multiplayer;Talisman:  Digital Edition;Determine if DLC is worth buying (way too many)\
-Maybe even just hide/chuck (too random\; designed for multiplayer)\
-;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+talisman_digital_edition;Talisman:  Digital Edition;;;Windows;0;1250712720;76842_(48180);WONTPLAY too random\; designed for multiplayer;Talisman:  Digital Edition;;;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 silverfall_complete;Silverfall:  Complete;Silverfall;sf;Windows;15155815;10949492016;gold_edition_1.50_(41166);;Silverfall:  Complete;;Font's illegible @1920x1080\; use font mod ;-s -> run setup utility\
 ;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 tetrobot_and_co;Tetrobot and Co.;Tetrobot and Co;tetro;Linux;523165;258424825;2.1.0.6;;Tetrobot and Co.;Finished\; uninstall\
@@ -3881,16 +3929,14 @@ Write down endless list of codes?\
   no videos :( but also no unskippable intro :)\
   different music :|\
 ;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-star_renegades;Star Renegades;Star Renegades;sren;Windows;2245622;0;1.0.0.3_(41098);WONTPLAY see game notes;Star Renegades;;;Game sucks:\
+star_renegades;Star Renegades;;;Windows;2245622;1857826905;1.4.0.0_(48040);WONTPLAY see game notes;Star Renegades;;;Game sucks:\
   Fixed, unappealing party\
   Stupid out-of-combat mechanics\
     Camping BS\
     Single path of many BS\
   Combat only Grandia-like on surface\; underneath you have too many ways to attack, only some of which break enemy attack some of the time\
 ;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-werewolf_the_apocalypse_heart_of_the_forest_demo;Werewolf:  The Apocalypse -- Heart of the Forest Demo;Werewolf the Apocalypse Heart of the Forest Demo;;Linux;0;0;0_1_13_2009031142_41125;DEMO too vague with decisions\; too much of a VN;Werewolf:  The Apocalypse - Heart of the Forest Demo [Demo];demo:  hide & uninstall\
-  Game is too vague with decisions\; too much of a VN (not that it claims to be otherwise)\
-;FMOD.  Need I say more?\
+werewolf_the_apocalypse_heart_of_the_forest_demo;Werewolf:  The Apocalypse -- Heart of the Forest Demo;;;Linux;0;315743886;0_1_13_2009031142_41125;DEMO too vague with decisions\; too much of a VN;Werewolf:  The Apocalypse - Heart of the Forest Demo [Demo];;FMOD.  Need I say more?\
   Killing everything & removing asoundrc makes game, but without sound\
   Otherwise, just sits and spins\
 Fails to create unity.lock in game dir, but works anyway (no -w needed)\
@@ -3915,13 +3961,18 @@ non_applicable_tjm;Extras Only;N/A;;;0;0;;;;;Not really a game:  just gog IDs of
 gordian_quest;Gordian Quest;Gordian Quest;gq;Windows;2740774;1036450784;early_access_build_101n_(44816);;Gordian Quest;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 warhammer_40000_gladius_relics_of_war;Warhammer 40000 Gladius:  Relics of War;Warhammer 40 000 Gladius Relics of War;wh40kgl;Linux;2520371;1713973569;1_08_02_00_48060;;Warhammer 40000 Gladius:  Relics of War;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 the_dark_heart_of_uukrul;The Dark Heart of Uukrul;The Dark Heart of Uukrul;dhu;DOS;82603;86350177;1_0_42612;;The Dark Heart of Uukrul;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-inkulinati_demo;Inkulinati Demo;Inkulinati Demo;;Windows;0;0;;DEMO not interested in full game;Inkulinati Demo [Demo];;;Uses strength meters for battle\
+inkulinati_demo;Inkulinati Demo;;;Windows;0;623908200;1.1_(42755);DEMO not interested in full game;Inkulinati Demo [Demo];;;Uses strength meters for battle\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-bloodrayne_terminal_cut_base;BloodRayne Terminal Cut;BloodRayne Terminal Cut;rayne;Windows;11084260;8748177929;1.04_(46994);;BloodRayne:  Terminal Cut;test;;;Stable 4.0;game dir: system/raine.ini system/RENDER.INI;game dir: savegame;;;;;;;;1;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
-bloodrayne_2_terminal_cut_base;BloodRayne 2 Terminal Cut;BloodRayne 2 Terminal Cut;rayne2;Windows;13661382;8673434663;1.03_(46996);;BloodRayne 2:  Terminal Cut;test;;;Stable 4.0;game dir: system/rayne.ini;game dir: savegame?;;;;;;;;;;;;;;;;;;;0;;;;1;ActionGame\;;;;;;
-bloodwych;Bloodwych;Bloodwych;bwy;DOS;15648;19737912;english_1_1_42586;;Bloodwych;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+bloodrayne_terminal_cut_base;BloodRayne Terminal Cut;BloodRayne Terminal Cut;rayne;Windows;11084260;8748177929;1.04_(46994);;BloodRayne:  Terminal Cut;Need to figure out controller mapping\
+  e.g. Button 3 = X\
+;;;Stable 6.0.1;game dir: system/raine.ini system/RENDER.INI;game dir: savegame;;;;;;;;1;;;;;;;;;;;0;;;;1;ActionGame\;;;;13.07.21;;
+bloodrayne_2_terminal_cut_base;BloodRayne 2 Terminal Cut;BloodRayne 2 Terminal Cut;rayne2;Windows;13661382;8673434663;1.03_(46996);;BloodRayne 2:  Terminal Cut;Need to figure out controller mapping\
+  e.g. Button 3 = X\
+;;;Stable 6.0.1;game dir: system/rayne.ini;game dir: savegame?;;;;;;;;;;;;;;;;;;;0;;;;1;ActionGame\;;;;13.07.21;;
+bloodwych;Bloodwych;Bloodwych;bwy;DOS;15648;19737912;english_1_1_42586;;Bloodwych;Check Amiga version;uses munt/mt32\
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;13.07.21;;
 drakensang;Drakensang;Drakensang;drak;Windows;8614136;5124718023;1.03_(40759);;Drakensang;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-daemonsgate;Daemonsgate;Daemonsgate;daeg;DOS;85117;89803986;gog_1_40160;;Daemonsgate;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+daemonsgate;Daemonsgate;Daemonsgate;daeg;DOS;85117;89803986;gog_1_40160;;Daemonsgate;Combat style?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;13.07.21;;
 dread_nautical;Dread Nautical;Dread Nautical;drn;Windows;2386291;1128101824;1.1.9995_(64bit)_(42660);;Dread Nautical;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 imperium_galactica_ii_alliances;Imperium Galactica II:  Alliances;Imperium Galactica II Alliances;ig2;Linux;670681;652860422;2.1.0.2;;Imperium Galactica II:  Alliances;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 lords_of_magic_special_eddition;Lords of Magic:  Special Edition;Lords of Magic SE;lom;Windows;575077;552660744;3.01_(19308);;Lords of Magic:  Special Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3944,19 +3995,20 @@ shores_unknown_demo;Shores Unknown:  Arrival;Shores Unknown Arrival;shua;Windows
 adom;ADOM (Ancient Domains Of Mystery);ADOM Ancient Domains Of Mystery English;adom;Linux;587749;553578180;3_3_4_1_42660;;ADOM (Ancient Domains Of Mystery);Compare with gentoo's installed adom;;;;~/.adom.data;~/.adom.data/savedg;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;25.05.21;;
 the_hand_of_merlin;The Hand of Merlin Deluxe Edition;The Hand of Merlin;hom;Windows;5228585;5206027607;673810_(64bit)_(48349);;The Hand of Merlin Deluxe Edition Bundle;;Claims my machine doesn't meet minimum reqs and then just gives gray screen\
 ;;Stable 6.0;;;;;1;;;;;;;;;;1;;1;;;;;;;;;;;;25.05.21;;
-knights_of_the_chalice_demo;Knights of the Chalice Demo;Knights of the Chalice Demo;kotc;Windows;49810;0;1.3604_(42638);DEMO not interested in full game;Knights of the Chalice Demo [Demo];;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+knights_of_the_chalice_demo;Knights of the Chalice Demo;;;Windows;49810;120391192;1.3604_(42638);DEMO not interested in full game;Knights of the Chalice Demo [Demo];;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 out_there_o_edition;Out There:  Ω Edition;Out There Edition;outt;Linux;448249;186642346;3_2_43305;;Out There:  Ω Edition + Soundtrack;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sengoku_jidai_gold;Sengoku Jidai GOLD;Sengoku Jidai GOLD;sj;Windows;1589088;234424648;1.4.0_(26964);;Sengoku Jidai GOLD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 interstellar_space_genesis;Interstellar Space:  Genesis;Interstellar Space Genesis;isg;Windows;7620954;3286304999;1.3.4_(64bit)_(48376);;Interstellar Space:  Genesis;;soundtrack dlc is extras only\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-akibas_trip_undead_undressed;AKIBA'S TRIP:  Undead & Undressed;Akibas Trip Undead & Undressed;akiba;Windows;2653900;2370544353;2021.01.20_(44326);;AKIBA'S TRIP:  Undead & Undressed;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+akibas_trip_undead_undressed;AKIBA'S TRIP:  Undead & Undressed;Akibas Trip Undead & Undressed;akiba;Windows;2653900;2370544353;2021.01.20_(44326);;AKIBA'S TRIP:  Undead & Undressed;;Hangs after logos w/ stable-6\
+Sometimes hangs on area transition w/ devel-6.12;;Stable 5.0.5;user dir:  My Documents/AKIBA'S TRIP/config.dat;user dir:  My Documents/AKIBA'S TRIP/savedata;;;;;;;;;;;;;1;;;;;;;;;;1;ActionGame\;;;;12.07.21;;
 ;Tainted Grail:  The Fall of Avalon;;;Windows;0;0;;;Tainted Grail:  The Fall of Avalon [from in-dev];Install [preorder];;;;;;;;;;;;;;;;;1;;;;;;;;;;;;;;;;;
 huniepop_2_double_date;HuniePop 2:  Double Date;HuniePop 2 - Double Date;hpop2;Windows;1260991;764698824;1.1.0_(64bit)_(48094);;HuniePop 2:  Double Date;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cardaclysm_shards_of_the_four;Cardaclysm:  Shards of the Four;Cardaclysm;carda;Windows;2754873;1293406680;1.0.2_(45465);;Cardaclysm:  Shards of the Four;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+cardaclysm_shards_of_the_four;Cardaclysm:  Shards of the Four;Cardaclysm;carda;Windows;2754873;1293406680;1.0.2_(45465);;Cardaclysm:  Shards of the Four;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;BoardGame\;;;;;;
 orwells_animal_farm;Orwell's Animal Farm;Orwell's Animal Farm;afarm;Windows;746847;217456104;1.0_(64bit)_(44624);;Orwell's Animal Farm;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 loop_hero;Loop Hero;Loop Hero;loop;Linux;149670;116559771;1_101_48149;;Loop Hero;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mobius_front_83;Möbius Front '83;M bius Front 83;mf83;Linux;1607550;1046304785;03_01_2021_45297;;Möbius Front '83;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-the_life_and_suffering_of_sir_brante_chapter_12;The Life and Suffering of Sir Brante - Chapter 1 & 2;The Life and Suffering of Sir Brante Prologue;brante;Windows;0;0;;DEMO not interested in full game;The Life and Suffering of Sir Brante - Chapter 1 & 2 [Demo];;;Too much Visual Novel, not enough RPG;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+the_life_and_suffering_of_sir_brante_chapter_12;The Life and Suffering of Sir Brante - Chapter 1 & 2;;;Windows;0;616736872;1.01_(45277);DEMO not interested in full game;The Life and Suffering of Sir Brante - Chapter 1 & 2 [Demo];;;Too much Visual Novel, not enough RPG;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 gurumin_a_monstrous_adventure;Gurumin:  A Monstrous Adventure;Gurumin - A Monstrous Adventure;guruma;Windows;1846184;1021719720;1.4_(18466);;Gurumin:  A Monstrous Adventure;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 zwei_the_arges_adventure;Zwei:  The Arges Adventure;Zwei The Arges Adventure;zwaa;Windows;2479181;1715348450;1.0.10_(18651);;Zwei:  The Arges Adventure;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 zwei_the_ilvard_insurrection;Zwei:  The Ilvard Insurrection;Zwei - The Ilvard Insurrection;zwii;Windows;4891848;3194327063;20180120_(18291);;Zwei:  The Ilvard Insurrection;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3966,14 +4018,18 @@ nothing - choice menu\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 1971_project_helios;1971 Project Helios;1971 Project Helios;1971;Windows;2226740;843866048;1.0.1.1_(64bit)_(39806);;1971 Project Helios;config location?\
 vibration?;Impossible to tune visual effects;;Stable 6.0.1;save file?;user dir:  My Documents/RecoTechnology/PH1971/*.sav;;;;;;;;;;;;;1;;;;;;;;;;1;StrategyGame\;X-SRPG\;;;; 5.07.21;;
-episode_1_fright_of_the_bumblebees;Wallace & Gromit's Grand Adventures Ep. 1;Wallace and Gromit's Episode 1 - Fright of the Bumblebees;wg1;Windows;339377;440843080;1.0_(43021);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+episode_1_fright_of_the_bumblebees;Wallace & Gromit's Grand Adventures Ep. 1;Wallace and Gromit's Episode 1 - Fright of the Bumblebees;wg1;Windows;339377;440843080;1.0_(43021);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 xiii;XIII;XIII;xiii;Windows;2600209;2227904513;1.0_update_(32942);;XIII;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 immortal_realms_vampire_wars;Immortal Realms:  Vampire Wars;Immortal Realms Vampire Wars;irvw;Windows;12833510;7638060819;1.02.1_(64bit)_(42418);;Immortal Realms:  Vampire Wars;;;;Stable 6.0;;;;;;;;;;;;;;;;;1;;;;;;;;;;;;26.05.21;;
 inferno_beyond_the_7th_circle;Inferno - Beyond the 7th Circle;Inferno Beyond the 7th Circle;ib7c;Windows;833282;695867934;1_0_10_47652;;Inferno - Beyond the 7th Circle;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 the_7th_circle_endless_nightmare;The 7th Circle - Endless Nightmare;The 7th Circle Endless Nightmare;7thcem;Linux;566225;455278299;2_0_13_46664;;The 7th Circle - Endless Nightmare;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-bad_mojo_redux;Bad Mojo Redux;Bad Mojo;bmj;Windows;710981;441877104;2.0.0.3;;Bad Mojo Redux;;Supposedly using winetricks quicktime76 fixes this, but it doesn't.;;Stable 4.0.3;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;26.05.21;;
+bad_mojo_redux;Bad Mojo Redux;Bad Mojo;bmj;Windows;710981;441877104;2.0.0.3;;Bad Mojo Redux;;small video playback window\
+  use virtual 640x480 desktop\
+  xrandr to magnify it\
+Supposedly using winetricks quicktime76 fixes this, but it doesn't.\
+;;Stable 6.0.1;game dir:  BADMOJO.ini;game dir: SAVE;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;13.07.21;;
 daikatana;Daikatana;Daikatana;dk;Linux;632851;518876064;1.0_(22142);;Daikatana;Gamepad?  Can't enable for some reason\
-;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;26.05.21;;
+;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;X-ARPG-FPS\;;;;26.05.21;;
 deathtrap_dungeon;Deattrap Dungeon;Deathtrap Dungeon;dtd;Windows;249977;179040472;1.0_hotfix_(26008);;Deattrap Dungeon;;Using vkd3d9;;Stable 4.0.3;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;26.05.21;;
 metal_fatigue;Metal Fatigue;Metal Fatigue;metf;Windows;785777;595593224;1.04_hotfix_(21665);;Metal Fatigue;Need to play with res until legible;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26.05.21;;
 revenant;Revenant;Revenant;rvt;Windows;813180;780134104;1.22l_(21853);;Revenant;;Need to use software rendering (via Launcher), which looks ugly, or dgVoodoo2\
@@ -3992,18 +4048,18 @@ timelapse;Timelapse;Timelapse;tl;Windows;1789111;1441001720;2.0.0.1;;Timelapse;;
     from exe, dies some time in intro movie\
 ;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;26.05.21;;
 king_of_seas;King of Seas;King of Seas;kos;Windows;1436281;1462181552;1.15_(47868);;King of Seas [preorder];vibrate?;Slow dialog text (selectable to be even slower);;Stable 6.0;;;;;;;;;;;;;;;1;;;;;;;;;;1;;;;25.05.21;;
-episode_2_the_last_resort;Wallace & Gromit's Grand Adventures Ep. 2;Wallace and Gromit's Episode 2 - The Last Resort;wg2;Windows;503372;497203952;1.0_(43021);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-episode_3_muzzled;Wallace & Gromit's Grand Adventures Ep. 3;WaG - Episode 3;wg3;Windows;473755;400563912;2.0_(42668);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-episode_4_the_bogey_man;Wallace & Gromit's Grand Adventures Ep. 4;Wallace and Gromit's Episode 4 - The Bogey Man;wg4;Windows;449748;475361352;1.0_(43022);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+episode_2_the_last_resort;Wallace & Gromit's Grand Adventures Ep. 2;Wallace and Gromit's Episode 2 - The Last Resort;wg2;Windows;503372;497203952;1.0_(43021);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+episode_3_muzzled;Wallace & Gromit's Grand Adventures Ep. 3;WaG - Episode 3;wg3;Windows;473755;400563912;2.0_(42668);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+episode_4_the_bogey_man;Wallace & Gromit's Grand Adventures Ep. 4;Wallace and Gromit's Episode 4 - The Bogey Man;wg4;Windows;449748;475361352;1.0_(43022);;Wallace & Gromit's Grand Adventures;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 edge_of_eternity;Edge of Eternity;EdgeOfEternity;eoe;Windows;19532492;15251103528;1.0.2_(64bit)_(48036);;Edge Of Eternity - Digital Deluxe Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 rise_eterna;Rise Eterna;Rise Eterna;re;Windows;2845216;2378848071;1.0.0_r6_(47961);;Rise Eterna;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-colony_ship_a_postearth_role_playing_game;Colony Ship:  A Post-Earth Role Playing Game;Colony Ship RPG;csrpg;Windows;7686764;4072945429;0.8.127_(64bit)_(48232);;Colony Ship:  A Post-Earth Role Playing Game;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+colony_ship_a_postearth_role_playing_game;Colony Ship:  A Post-Earth Role Playing Game;Colony Ship RPG;csrpg;Windows;7686764;4072945429;0.8.127_(64bit)_(48232);;Colony Ship:  A Post-Earth Role Playing Game;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;RolePlaying\;;;;;;
 queens_wish_the_conqueror;Queen's Wish:  The Conqueror;Queen's Wish The Conqueror;qw;Windows;125808;102569776;1.0.3_(64bit)_(34414);;Queen's Wish:  The Conqueror;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 panzer_general_2;Panzer General 2;Panzer General 2;pg2;Windows;521138;444523064;2.0.0.2;;Panzer General 2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mad_max;Mad Max;Mad Max;mmax;Windows;33416596;34123315506;1.0.3_(45175);;Mad Max;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 siege_of_avalon_anthology;Siege of Avalon:  Anthology;Siege of Avalon Anthology;soa;Windows;1158521;618711480;1.03.1_(46736);;Siege of Avalon:  Anthology;Find old source\; port?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 legends_of_amberland_the_forgotten_crown;Legends of Amberland:  The Forgotten Crown;Legends of Amberland;loa;Windows;89080;60743968;1.23_(45994);;Legends of Amberland:  The Forgotten Crown;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-black_legend;Black Legend;Black Legend;bleg;Windows;13570566;6284261838;1.0.8_(64bit)_(47635);;Black Legend;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+black_legend;Black Legend;Black Legend;bleg;Windows;13570566;6284261838;1.0.8_(64bit)_(47635);;Black Legend;;;;;user dir:  Local Settings/Application Data/blacklegend/Saved/SaveGames/Settings*.sav;user dir:  Local Settings/Application Data/blacklegend/Saved/SaveGames;;;;;;;;;;;;;;;;;;;;;;;;StrategyGame\;X-SRPG\;;;;13.07.21;;
 pendragon;Pendragon;Pendragon;pen;Windows;1391816;296531528;1.2.16_(64bit)_(42178);;Pendragon;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 phoenix_point_year_one_edition;Phoenix Point:  Year One Edition;Phoenix Point Year One Edition;phpt;Windows;37162804;23602702298;1.11.1_(64bit)_(48001);;Phoenix Point:  Year One Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 skald_against_the_black_priory_the_prologue;SKALD: Against the Black Priory - The Prologue;SKALD Against the Black Priory - The Prologue;skald;Windows;285296;219426528;2.0.0_(48133);;SKALD: Against the Black Priory - The Prologue [Demo];;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4017,20 +4073,20 @@ space_empires_v;Space Empires V;Space Empires V;se5;Windows;793892;493954448;1.7
 neverwinter_nights_enhanced_edition;Neverwinter Nights:  Enhanced Edition;Neverwinter Nights Enhanced Edition;nwne;Windows;9356523;3343233081;83_8193_23_47201;;Neverwinter Nights:  Enhanced Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 greedfall_game;GreedFall;GreedFall;gfl;Windows;20979083;20721130387;1.0_(5685)_(64bit)_(48322);;GreedFall;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 myst_masterpiece_edition;Myst Masterpiece Edition;Myst Masterpiece Edition;myst;ScummVM;1384735;1109061012;1.0_svm_update_4_(22598);;Myst Masterpiece Edition;Next scummvm rev switch to myste;Using myst engine (instead of myste)\
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-riven_the_sequel_to_myst;Riven:  The Sequel to Myst;Riven - The Sequel to Myst;myst2;ScummVM;6912632;5498940153;1.2_svm_update3_(22594);;Riven:  The Sequel to Myst;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-uru_complete_chronicles;Uru:  Complete Chronicles;Uru - Complete Chronicles;uru;Windows;2583560;2088388616;1.0_hotfix3_(22502);;Uru:  Complete Chronicles;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-myst_5_end_of_ages;Myst V:  End of Ages Limited Edition;Myst V End Of Ages;myst5;Windows;5021273;3415766779;2.0.0.9;;Myst V:  End of Ages Limited Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-real_myst_masterpiece_edition;realMyst:  Masterpiece Edition;Real Myst Masterpiece Edition;mystr;Windows;2736209;1889998800;2.2_rev_10535_(64bit)_(23829);;realMyst:  Masterpiece Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+riven_the_sequel_to_myst;Riven:  The Sequel to Myst;Riven - The Sequel to Myst;myst2;ScummVM;6912632;5498940153;1.2_svm_update3_(22594);;Riven:  The Sequel to Myst;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+uru_complete_chronicles;Uru:  Complete Chronicles;Uru - Complete Chronicles;uru;Windows;2583560;2088388616;1.0_hotfix3_(22502);;Uru:  Complete Chronicles;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+myst_5_end_of_ages;Myst V:  End of Ages Limited Edition;Myst V End Of Ages;myst5;Windows;5021273;3415766779;2.0.0.9;;Myst V:  End of Ages Limited Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+real_myst_masterpiece_edition;realMyst:  Masterpiece Edition;Real Myst Masterpiece Edition;mystr;Windows;2736209;1889998800;2.2_rev_10535_(64bit)_(23829);;realMyst:  Masterpiece Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 myst_3_exile;Myst III:  Exile;Myst 3;myst3;Windows;2410068;2372461242;1.27_rvm_(21807);;Myst III:  Exile;Next rev of scummvm: convert to scummvm\
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-myst_4;Myst IV:  Revelation;Myst 4;myst4;Windows;7354043;9623295093;1.03_hotfix_2_(22142);;Myst IV:  Revelation;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+myst_4;Myst IV:  Revelation;Myst 4;myst4;Windows;7354043;9623295093;1.03_hotfix_2_(22142);;Myst IV:  Revelation;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 divinity_dragon_commander;Divinity:  Dragon Commander Imperial Edition;Divinity - Dragon Commander;ddc;Windows;13121728;10586977923;1.0.124_hotfix_(16402);;Divinity: Dragon Commander Imperial Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 trials_of_fire;Trials of Fire;Trials of Fire;tof;Windows;3303813;2244103751;1.053_(64bit)_(48035);;Trials of Fire Inferno Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 privateer_2_the_darkening;Privateer 2:  The Darkening;Privateer 2 - The Darkening;wcp2;DOS;1594128;1525230757;1.7.0e_(28167);;Privateer 2:  The Darkening;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-legend_of_kyrandia;The Legend of Kyrandia (Book One);Legend of Kyrandia;kyr1;ScummVM;87698;54434128;1.1_(20270);;The Legend of Kyrandia (Book One);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-legend_of_kyrandia_hand_of_fate;The Legend of Kyrandia:  Hand of Fate (Book Two);Legend of Kyrandia - Hand of Fate;kyr2;ScummVM;206150;145206928;1.0_(20270);;The Legend of Kyrandia: Hand of Fate (Book Two);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-legend_of_kyrandia_malcolms_revenge;The Legend of Kyrandia:  Malcolm's Revenge (Book Three);Legend of Kyrandia - Malcolms Revenge;kyr3;ScummVM;397242;337881864;1.0_(20270);;The Legend of Kyrandia: Malcolm's Revenge (Book Three);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+legend_of_kyrandia;The Legend of Kyrandia (Book One);Legend of Kyrandia;kyr1;ScummVM;87698;54434128;1.1_(20270);;The Legend of Kyrandia (Book One);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+legend_of_kyrandia_hand_of_fate;The Legend of Kyrandia:  Hand of Fate (Book Two);Legend of Kyrandia - Hand of Fate;kyr2;ScummVM;206150;145206928;1.0_(20270);;The Legend of Kyrandia: Hand of Fate (Book Two);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+legend_of_kyrandia_malcolms_revenge;The Legend of Kyrandia:  Malcolm's Revenge (Book Three);Legend of Kyrandia - Malcolms Revenge;kyr3;ScummVM;397242;337881864;1.0_(20270);;The Legend of Kyrandia: Malcolm's Revenge (Book Three);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
 saboteur;The Saboteur™;The Saboteur;sab;Windows;7590941;6977151232;1.3_hotfix_(22140);;The Saboteur™;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sleeping_dogs_definitive_edition;Sleeping Dogs: Definitive Edition;Sleeping Dogs Definitive Edition;sldog;Windows;17349398;16757448355;1.0_(45681);;Sleeping Dogs: Definitive Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 wing_commander;Wing Commander;Wing Commander;wc1;DOS;31360;36831328;1.0_(28045);;Wing Commander™ 1+2;;;s2 -> Secret Missions 2\
@@ -4049,13 +4105,13 @@ wing_commander_privateer;Wing Commander:  Privateer;Wing Commander Privateer;wcp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 wing_commander_secret_ops;Wing Commander V:  Secret Ops;Wing Commander Secret Ops;wc5s;Windows;194923;104361552;2.1.0.14;;Wing Commander™ 5:  Prophecy Gold Edition;Check:  is this really standalone exp?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 hostile_waters_antaeus_rising;Hostile Waters:  Antaeus Rising;Hostile Waters - Antaeus Rising;hwar;Windows;616947;576696496;1.0_(19572);;Hostile Waters:  Antaeus Rising;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cognition_episode_1_the_hangman;Cognition Episode 1:  The Hangman;Cognition - Episode 1 GOTY;cog1;Windows;2391801;1491250592;1.0_(21634);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cognition_episode_2_the_wise_monkey;Cognition Episode 2:  The Wise Monkey;Cognition - Episode 2 GOTY;cog2;Windows;1748341;1160282968;1.0_(21634);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cognition_episode_3_the_oracle;Cognition Episode 3:  The Oracle;Cognition - Episode 3 GOTY;cog3;Windows;1917953;1239045272;1.0_(21635);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cognition_episode_4_the_cain_killer;Cognition Episode 4:  The Cain Killer;Cognition - Episode 4 GOTY;cog4;Windows;1675549;1142279952;1.0_(21635);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-bleeding_moons;Bleeding Moons;Bleeding Moons;blm;Windows;270226;277975040;1.1_(40956);;Bleeding Moons;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-ys_ix_monstrum_nox_demo;Ys IX:  Monstrum Nox (Demo);Ys IX Monstrum Nox (Demo);ys9;Windows;3178622;0;;;Ys IX:  Monstrum Nox (Demo) [DEMO];Verify vibration actually works\
-Buy full game\
+cognition_episode_1_the_hangman;Cognition Episode 1:  The Hangman;Cognition - Episode 1 GOTY;cog1;Windows;2391801;1491250592;1.0_(21634);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+cognition_episode_2_the_wise_monkey;Cognition Episode 2:  The Wise Monkey;Cognition - Episode 2 GOTY;cog2;Windows;1748341;1160282968;1.0_(21634);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+cognition_episode_3_the_oracle;Cognition Episode 3:  The Oracle;Cognition - Episode 3 GOTY;cog3;Windows;1917953;1239045272;1.0_(21635);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+cognition_episode_4_the_cain_killer;Cognition Episode 4:  The Cain Killer;Cognition - Episode 4 GOTY;cog4;Windows;1675549;1142279952;1.0_(21635);;Cognition:  Game of the Year Edition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;;;
+bleeding_moons;Bleeding Moons;Bleeding Moons;blm;Windows;270226;277975040;1.1_(40956);;Bleeding Moons;;;Visual novel;Stable 6.0.1;;;;;;;;;;;;;;;;;;;;;;;;;;AdventureGame\;;;;13.07.21;;
+ys_ix_monstrum_nox_demo;Ys IX:  Monstrum Nox (Demo);Ys IX Monstrum Nox (Demo);ys9;Windows;3178622;2405653600;1.0.0_(64bit)_(47844);;Ys IX:  Monstrum Nox (Demo) [DEMO];Verify vibration actually works\
+Buy full game & hide & uninstall\
 ;;;Stable 6.0.1;;;;;;;;;;;1;;;;;;;;;;;;;;1;;;; 8.07.21;;
 ys_seven;Ys SEVEN;Ys SEVEN;ys7;Windows;1500641;1467821904;1.0.0.8_(15191);;Ys SEVEN;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ys_i;Ys I;Ys I;ys1;Windows;697980;698089736;2020.08.10_(40401);;Ys I & II Chronicles+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4066,4 +4122,6 @@ ys_vi_the_ark_of_napishtim;Ys VI:  The Ark of Napishtim;Ys VI - The Ark of Napis
 ys_viii_lacrimosa_of_dana;Ys VIII:  Lacrimosa of DANA;Ys VIII - Lacrimosa of DANA;ys8;Windows;29279427;17021154453;ph3_update_(texpack)_(64bit)_(35702);;Ys VIII: Lacrimosa of DANA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ys_memories_of_celceta;Ys:  Memories of Celceta;Ys Memories of Celceta;ys4;Windows;2508544;1938364844;1.0.0.15_(33196);;Ys: Memories of Celceta;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 panzer_corps_2;Panzer Corps 2;Panzer Corps 2;pc2;Windows;13920303;5511613873;1.02.00_(48329);;Panzer Corps 2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-ancient_enemy;Ancient Enemy;Ancient Enemy;ae;Windows;146395;137447720;v1.03_(48157);;Ancient Enemy;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ancient_enemy;Ancient Enemy;Ancient Enemy;ae;Windows;146395;137447720;v1.03_(48157);;Ancient Enemy;;;;Stable 6.0.1;user dir:  My Documents/Grey Alien Games/Ancient Enemy/AncientEnemy.ini;user dir:  My Documents/Grey Alien Games/Ancient Enemy/profiles;;;;;;;;;;;;;;;;;;;1;;;;;BoardGame\;;;;12.07.21;;
+syberia;Syberia;;syb;Windows;0;0;;;Syberia I & II;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+syberia_2;Syberia II;;syb2;Windows;0;0;;;Syberia I & II;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1,0 +1,17 @@
+#!/bin/sh
+fgrep "no icon" ~/c-t | cut -d: -f1 | while read id; do
+  cmd=$(echo "\\{FOREACH}\\{_cmd}\\{END}" |
+    grok -x gog_games + "{_id==\"$id\"}")
+  echo $cmd
+  grok -x gog_games wicon "{_id==\"$id\"}" |
+    (while read -r x; do
+       case "$x" in
+         */ICON)
+	   y="${x#*=}"
+	   for y in "${y%/*}"/*.png; do :; done
+	   echo "Icon=$y"
+	   ;;
+	 *) echo "$x" ;;
+       esac
+     done) > $cmd.desktop
+done

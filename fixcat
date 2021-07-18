@@ -1,0 +1,5 @@
+#!/bin/sh
+
+fgrep "has category" ~/c-t | while read a a f a a oc a a nc; do
+  sudo sed -i -e 's%\(Categories=\)'${oc//\'}'$%\1'${nc//\'}% "$f"
+done

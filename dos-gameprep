@@ -5,7 +5,12 @@ test -d game/data -a ! -d data && ln -s game/data .
 if [ ! -f support/icon.png ]; then
   for x in goggame-*.ico gfw_high.ico; do
     test -f "$x" || continue
+    gid=$(fgrep rootGameId "${x%.ico}.info" 2>/dev/null)
+    gid="${gid%\"*}"
+    gid="${gid##*\"}"
+    test -n "$gid" -a "$x" != goggame-${gid}.ico -a -f goggame-${gid}.ico && continue
     convert "$x" "${x%.ico}.png"
+    break
   done
   for x in *-{,1}[0-9].png; do
     test -f "$x" || continue

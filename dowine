@@ -302,7 +302,7 @@ case "$1" in
      test wine-wait = "$prg" -a "${wp%-[0-9]*}" = "$wp" && set -- -e "$wpver" "$@"
      test wine-wait = "$prg" -a "${wp%-[0-9]*}" != "$wp" && set -- -e "$wpver"-"$winever" "$@"
      nonet env LD_PRELOAD="$LD_PRELOAD" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" WINEDEBUG="$wdb" $prg "$@" & pid=$!
-     trap "kill $pid $pidk" TERM
+     trap "kill $pid $pidk; wineserver$wpver -k" TERM
      wait $pid; ret=$?
      test -n "$pidk" && kill $pidk
      $wp regedit -E 'c:\'reg.$$.new

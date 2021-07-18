@@ -165,6 +165,13 @@ things needed.
     controller remapping.  This can be used instead of `xboxdrv` for
     a slightly less invasive remapper.
 
+  - I create a directory in `~/.local/share` and use it as `$HOME` for
+    games that insist on Windows-like save/config locations.
+    Game-private stuff should remain private.  Soft links are made to
+    the real `~/.local`, `~/.config` and `~/.mono` dirs.  The contents
+    of the subdir the game writes to can be made to be stored in the
+    created dir directly by making soft links to `.`.
+
 If `dogame` manages to survive running the game, it will then try to
 restore things as they were.  If nothing else, I can run "`dogame true`"
 to force the cleanup items to happen:
@@ -207,6 +214,8 @@ name and its arguments:
      re to *sec*
    - `-x` *args* `--` -> start up `xboxdrv` supplying extra *args* up to `--`;
      note that `--` is mandatory, even if no extra *args* given.
+   - `-h` *name* *dir* -> set $HOME to $HOME/.local/share/*name* and
+     link *dir* to that new $HOME.
 
 I generally make short names for all of my games, and create a
 launcher script with that name in `/usr/local/bin`.  During
@@ -468,27 +477,22 @@ the `data` subdirectory with the game.
 
 ags scummvm
 ===========
-For games that use Adventure Game Studio and scummvm, I use the
-gentoo-supplied ebuilds and system binaries and delete the supplied
-interpreters.   For AGS, I also delete the supplied `acsetup.cfg`, since
-that seems to cure full-screen mode and sound issues.  I stick AGS
-games in `/usr/local/games/ags` and sscummvm games in
-`/usr/local/games/scummvm`, all with the same directory structure.  The
-GOG.com installer's root directory name, with the game itself in a
-subdirectory (`game` for ags and `data` for scummvm).  A typical ags
-launcher looks like:
+I use gentoo's scummvm instead of anything that gog packs for most
+games that scummvm supports (not the Eye of the Beholder games,
+because I think the random drops and some other random things don't
+work quite right).  I used to use the gentoo-supplied ags for
+Adventure Game Studio games, but recent gentoo shenanigans have made
+ags unusable, so I now use scummvm's ags interpreter for them as well.
+I stick scummvm games in `/usr/local/games/scummvm`, all with the same
+directory structure.  The GOG.com installer's root directory name,
+with the game itself usually in a subdirectory (usually `data` or
+`game`).  A typical scummvm launcher looks like:
 
     #!/bin/sh
     cd
-    exec dogame ags /usr/local/games/ags/Game\ Name/game
+    exec dogame scummvm -p /usr/local/games/scummvm/Game\ Name/data gameid
 
-A typical scummvm launcher looks like:
-
-    #!/bin/sh
-    cd
-    exec dogame scummvm -p /usr/local/games/scummvm/Game\ Name/data engname
-
-In this case, *engname* is the name of the engine to use to execute the
+In this case, *gameid* is the scummvm game ID to use to execute the
 game.  Finding this out may require looking it up on the 'net, or
 using the scummvm configuration GUI to add the game first, and looking
 at what that picked.  The `--detect` option may help as well.  For
@@ -496,9 +500,8 @@ example, the engine used by Toonstruck is `toon`.
 
 Note that to install, I just use the installer and install it as if it
 were a native game, and then I move things around to have the correct
-directory structure.  I suppose I should have an `ags-gameprep` and
-`scummvm-gameprep`, but it's not that much trouble to just move things
-around.
+directory structure.  I suppose I should have a `scummvm-gameprep`,
+but it's not that much trouble to just move things around.
 
 Some games require additional work, such as Return To Zork; see the
 gog forum for details.
@@ -516,9 +519,10 @@ that just invokes zoom.  The soft link is placed in `/usr/local/bin`,
 and, as with other such games, an appropriate desktop file is placed
 in `/usr/local/share/applications`.  I use `dos-gameprep` for the Windows
 installers to extract the icon, and then delete everything but the
-game data (DATA/*.DAT), icon and manuals.  The only game for which I
-retain the DOSBox version is Beyond Zork, since zoom doesn't support
-this game.
+game data (DATA/*.DAT), icon and manuals.  The only game I don't run
+in zooom is Beyond Zork, since zoom doesn't support this game.
+Instead, I use scummvm.  Technically, I could run all the others in
+scummvm as well, but I have not yet made that move.
 
 wine
 ====
@@ -659,12 +663,13 @@ environment.  This is done automatically if the prefix is already
 initialized.
 
   - Version selection:
-      - `-s` = `-s5` = current stable (5.0.x), which is also the default wine
+      - `-s` = `-s6` = current stable (6.0.x), which is also the default wine
+      - `-s5` = 5.0.x (must be manually linked as wine-5)
       - `-s4` = 4.0.x (must be manually linked as wine-4)
       - `-s3` = 3.0.x (must be manually linked as wine-3)
       - `-s2` = 2.0.x (must be manually linked as wine-2)
       - `-d` = wine-vanilla:  latest vanilla wine
-      - `-S` = wine-staging: latest with staging
+      - `-S` = wine-staging:  latest with staging
       - `-V` *exe* = use exe as the wine executable; probably doesn't work
       - `-D` = use winedbg for debugging; probably doesn't work right
    - Other:
@@ -672,9 +677,17 @@ initialized.
       - `-m` = mount the windows overlay
       - `-M` = dismount the windows overlay
       - `-w` = assume exe will exit before program finishes; use wine-wait
-      - `-n` = allow built-in mono/.net install/usage (never works)
+      - `-n` = allow mono/.net install/usage (rarely works)
       - `-g` = allow built-in gecko install/usage (never works)
       - `-b` = change what's installed based on -n/-g flags
+
+Note that `-s`, `-d`, and `-S` rely on using `eselect wine` to set the
+system default wine, wine-vanilla (`--vanilla`) and wine-staging
+(`--staging`).  The others need symbolic links to `wine-`*major* and
+`wine64-`*major* to exist and be manually updated.  After my next
+round of testing, I will probably remove versions below current stable
+which are no longer used by any installed game, even if an uninstalled
+game depended on it.
 
 Note that `wine-wait` just waits for wine to finish instead of killing
 wine as soon as the main executable finishes.  It takes an optional
@@ -768,52 +781,58 @@ it's all just too much trouble.
 A quick note on the templates: `gcs` outputs to a native GCStar
 database I used before I switched to grok.  `sql-gcs` exported to the
 same format exported by GCStar's SQL exporter, although I'm not sure
-what the point was, since GCStar can't import that format.  The `sql`
-template gives a more normal SQL export so I can use sqlite3 to query
-the database (which is sometimes easier than grok's own language).
-This is obsoleted by grok's generic SQL exporter, though, and is hard
-to maintain in any case.  Finally, `summary` is an attempt at
-maintaining `gog_status`' global information more easily, and has the
-advantage of having some of its info read from the database itself.
-This is my current output from `summary`; judge for yourself if I have
-too many games (I do):
+what the point was, since GCStar can't import that format.  Both of
+these are broken now due to my switching of DLC info to a separate
+databse, and of course missing new fields.  Finally, `summary` is an
+attempt at maintaining `gog_status`' global information more easily,
+and has the advantage of having some of its info read from the
+database itself.  This is my current output from `summary`; judge for
+yourself if I have too many games (I do):
 
-    232 Linux games (12 nonfunctional; 2 converted to wine; 1 uninstalled)
-    
-    102 DOS games (1 uninstalled, 11 w/ Amiga alternates)
+    258 Linux games (10 nonfunctional; 2 converted to wine; 2 uninstalled)
+
+    111 DOS games (1 uninstalled, 11 w/ Amiga alternates)
       note:  bt1-3 are hidden in a Linux game; this accounts for 3 more Amiga games
-    
-    381 Wine games (44 nonfunctional; 2 converted from Linux; 1 uninstalled)
+
+    485 Wine games (56 nonfunctional; 2 converted from Linux; 2 uninstalled)
       4 non-GOG
-    
-    40 hidden games (18 Linux, 15 Windows, 7 DOS)
-    
-    Currently 44 unusable Wine-only games:
-       aspy bg1 bgtutu bge cmbo cons crt1 crt2 crt3 crt4 crys deusex dist fench 
-       fenchlh fallh fo3 gciv inst idng lohtocs legr mh mirror mi2 pc prod ppin 
-       rtk smbtas smstw civ3 spra lohtocs2 tb txex tr6 tron2 2w2 underrail 
-       wh40kcg wh40krow x2 xnext   [note: in my recent game retest, I skipped 5 or so games and just marked
+
+    57 hidden games (20 Linux, 30 Windows, 7 DOS)
+      15 because they are superceded by later games
+      26 because I don't want to play them
+      16 because they are demos and I either got the main game or don't want to
+           note that some demos I keep because they are prologues
+
+    Currently 57 unusable Wine-only games:
+       bg2 bg1 bgtutu cmbo cons crt1 crt2 crt3 crt4 crys  deusex dist fench
+       fenchlh fallh fo3 gciv inst idng lohtocs legr mh mirror mi2 pc phantd
+       prod ppin rtk smbtas smstw shaw civ3 spra smb smfffd smsoc smp tgr hom
+       lohtocs2 tb tl txex tr6 tron2 2w2 underrail ven vikw wh40kcg wh40krow
+       wots4 x2 xnext xcom2
+      [note: in my recent game retest, I skipped 5 or so games and just marked
        them broken for now, to be processed later]
-    
+      [note: I am way behind in retesting again especially given wine-5.x]
+
     Currently 2 unusable Linux games: (at least barely usable in wine)
-       trine2 trine3 
+       trine2 trine3
     Currently 8 games unusable in both Linux and Wine
-       diablo halcyon hofate mable obs styg bt4 vran 
-    
-    Currently 27 games with serious movie playback issues
-       anb bcn bdivinity rayne ctp2 cors mfc2 darkstone ga gmast gothic inq kq8 
-       konung2 konung msn mh nwn omikron sacred silver kotor txex tr6 2w u9 
-       xnext 
+       halcyon hofate mable obs bt4 unmech vran
+       werewolf_the_apocalypse_heart_of_the_forest_demo
+
+    Currently 26 games with serious movie playback issues
+       anb bloodrayne rayne ctp2 cors mfc2 darkstone ga gmast gothic inq kq8
+       konung2 konung msn mh nwn omikron sacred silver kotor txex tr6 2w u9
+       xnext
     Currently 5 games with no music (not sure if Konung ever had any)
-       bast konung2 konung se4 war3 
-    Currently 14 games with broken editors
-       divos dao elvenlegacy etherlords2 grimd homm5 homm5-toe ja2ub eisen nwn2 
-       spellforce witcher2 titq torch 
-    
+       bast konung2 konung se4 war3
+    Currently 16 games with broken editors
+       aowp divos dao elvenlegacy etherlords2 eu2 grimd homm5 homm5-toe ja2ub
+       eisen nwn2 spellforce witcher2 titq torch
+
     Note: the following have 3rd party Linux ports, so no point in messing
     with Windows (except nwn editor, and ctp2 until movies work):
-       aoc2 diablo eadorg ehtb expconq fbk fs2 ja2 nwn oriente morrowind u4 
-       exult exult openxcom openxcom 
+       aoc2 dk diablo eadorg ehtb expconq fbk fs2 ja2 nwn oriente po morrowind
+       ultima_iv exult exult xcomtftd xcomud
 
 The `list` template is used by the `chklst` tool to verify that I have
 updated the database after mass updates/installs.  The tool's `-t`
@@ -827,7 +846,16 @@ the file name (rather than the `gameinfo` file(s)).  In fact, it is a
 good idea to manually edit the result to remove spurious errors (e.g.
 due to stupid version number extraction).  The tool obviously also
 expects my own way of storing games in `/usr/local/games`, with soft
-links to the installeers in `/mnt/usb3f/gog`.
+links to the installers in `/mnt/usb3f/gog`.  The `chklst` tool also
+checks some other things, like missing executables and icons.  To help
+with building those missing icons, the `wicon` template, combined with
+the `mkwi` tool generates them from the database and tries to set the
+icon path correctly, at least according to my way of arranging things.
+I fix up the generated desktop files for other game types as well, if
+the installer didn't generate one itself.  The `fixcat` tool extracts
+category errors from the `chklst` output and updates the desktop files
+as well.  Both tools expect me to write the results of `chklst` to
+`~/c-t`, as well as relying on my way of storing things.
 
 ds4
 ===
