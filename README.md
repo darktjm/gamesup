@@ -252,8 +252,8 @@ like so:
 While I'm installing and trying a game for the first time, I can use
 `FvwmCommmand` to temporarily issue one of the latter style commands for
 testing.  i added flags in my grok database (see below) to track these
-pesky games as well.  I currently have 14 games that need FullScreen
-and 14 that need NoIconify.
+pesky games as well.  I currently have 24 games that need FullScreen
+and 20 that need NoIconify.
 
 save-slots.sh
 =============
@@ -352,7 +352,7 @@ From that hack was born a similar hack, ig2-hack.c, for Imperium
 Glactica II: Alliances.  I have decided to place that one here instead
 of creating a new project for it.  Both games used GLSL features not
 available in the version of GLSL advertised in the shaders.  Mesa is
-strict about this, so the sahders failed to compile on Mesa.  The hack
+strict about this, so the shaders failed to compile on Mesa.  The hack
 simply edits the version before submitting to Mesa.  Compile and usage
 instructions are in the top comment block.
 
@@ -672,6 +672,7 @@ initialized.
       - `-S` = wine-staging:  latest with staging
       - `-V` *exe* = use exe as the wine executable; probably doesn't work
       - `-D` = use winedbg for debugging; probably doesn't work right
+      - `-c` = use wineconsole instead of wine
    - Other:
       - `-k` = kill wine in this prefix
       - `-m` = mount the windows overlay

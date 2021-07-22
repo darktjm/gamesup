@@ -12,9 +12,14 @@
 \{i} Wine games (\{n} nonfunctional; \{l} converted from Linux; \{u} uninstalled)
   \{t} non-GOG
 
-\{(i=l=w=d=0);""}\{FOREACH (len(_hidden) > 0)}
-\{(++i,w+={_cmdtype=="Windows"},d+={_cmdtype=="DOS"},l+={_cmdtype!="Windows"}&&{_cmdtype!="DOS"});""}\{END}
+\{(i=l=w=d=n=e=o=0);""}\{FOREACH (len(_hidden) > 0)}
+\{(++i,w+={_cmdtype=="Windows"},d+={_cmdtype=="DOS"},l+={_cmdtype!="Windows"}&&{_cmdtype!="DOS"},
+n+={substr(_hidden,0,8)=="WONTPLAY"},e+={substr(_hidden,0,4)=="DEMO"},o+={substr(_hidden,0,8)=="OBSOLETE"});""}\{END}
 \{i} hidden games (\{l} Linux, \{w} Windows, \{d} DOS)
+  \{o} because they are superceded by later games
+  \{n} because I don't want to play them
+  \{e} because they are demos and I either got the main game or don't want to
+       note that some demos I keep because they are prologues
 
 \{(i=0);""}\{FOREACH (_sn_broken && !_sn_linuxbroken && {_cmdtype == "Windows"})}
 \{(i++);""}\{END}

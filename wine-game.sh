@@ -79,3 +79,19 @@ if [ x-U = "x$1" ]; then
   exit 0
 fi
 cd "$groot/$game"
+
+# support functions for CD emulation
+# note that this requires installation of automatic dbus service activation:
+#   /usr/share/dbus-1/services/net.sf.cdemu.CDEmuDaemon.service
+# not installed by gentoo, and service-example doesn't set Exec correctly:
+#   Exec=/usr/bin/cdemu-daemon --logfile=/dev/null --audio-driver=default
+cdload() {
+  # FIXME: do this in udev
+  if ! cdemu load 0 "$1" 2>/dev/null; then
+    sudo chown root:games /dev/vhba_ctl
+    sudo chmod g+rw /dev/vhba_ctl
+    cdemu load 0 "$1" || exit 1
+  fi
+  eval "set -- $(trap | fgrep EXIT)"
+  trap "cdemu unload 0; killall -2 cdemu-daemon; $3" 0
+}

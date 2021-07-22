@@ -1,5 +1,5 @@
 #!/bin/sh
-fgrep "no icon" ~/c-t | cut -d: -f1 | while read id; do
+grep "no icon\$" ~/c-t | cut -d: -f1 | while read id; do
   cmd=$(echo "\\{FOREACH}\\{_cmd}\\{END}" |
     grok -x gog_games + "{_id==\"$id\"}")
   echo $cmd

@@ -8,6 +8,7 @@ Usage:
   Forces WINEARCH for the program if detected in registry; otherwise
   respects WINEARCH, if set (i.e., use WINEARCH=win64 for 64-bit)
   opts:
+    -c  Use wineconsole instead of wine
     -w  Use wine-wait instead of wine (for programs that run in background)
     -n  Allow built-in mono (.net) install/usage
     -g  Allow built-in gecko install/usage
@@ -74,6 +75,7 @@ while :; do
      -V) wp="$2" ; shift ;;
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;
+     -c) prg=wineconsole ;;
      -w)
         prg=wine-wait ;;
      -D)
@@ -97,6 +99,7 @@ winever="${winever#wine-}"
 wpver="${wp%-[0-9]*}" # strip off explicit ver from -V
 wpver="${wpver#wine}"
 test -n "$wpver" || type wineserver"$wpver"-"$winever" >/dev/null 2>&1 || wpver=-vanilla
+wpver="$wpver-$winever"
 
 prefix_setup() {
 (
@@ -299,8 +302,8 @@ case "$1" in
      else
        pidk=
      fi
-     test wine-wait = "$prg" -a "${wp%-[0-9]*}" = "$wp" && set -- -e "$wpver" "$@"
-     test wine-wait = "$prg" -a "${wp%-[0-9]*}" != "$wp" && set -- -e "$wpver"-"$winever" "$@"
+     test wine-wait = "$prg" && set -- -e "$wpver" "$@"
+     test wineconsole = "$prg" && prg="${prg}${wpver}"
      nonet env LD_PRELOAD="$LD_PRELOAD" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" WINEDEBUG="$wdb" $prg "$@" & pid=$!
      trap "kill $pid $pidk; wineserver$wpver -k" TERM
      wait $pid; ret=$?
