@@ -10,6 +10,7 @@ Usage:
   opts:
     -c  Use wineconsole instead of wine
     -w  Use wine-wait instead of wine (for programs that run in background)
+    -nc Keep current directory with more recent wine
     -n  Allow built-in mono (.net) install/usage
     -g  Allow built-in gecko install/usage
     -b  install/uninstall built-in mono/gecko based on current flags
@@ -63,6 +64,7 @@ dis_gecko=y
 builtin_inst=
 kill_wine=
 mnt_wine=
+no_cd=
 while :; do
   case "$1" in
      -S) wp=wine-staging ;;
@@ -76,6 +78,7 @@ while :; do
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;
      -c) prg=wineconsole ;;
+     -nc) no_cd=y ;;
      -w)
         prg=wine-wait ;;
      -D)
@@ -295,7 +298,7 @@ case "$1" in
   "") : ;;
   winetricks|*/winetricks) env WINE="$wp" WINESERVER="wineserver$wpver" "$@"; ret=$? ;;
   *) rm -f reg.[0-9]*.diff # ignore old diffs; probably not worth reading
-     $wp regedit -E 'c:\'reg.$$
+     $wp regedit -E c:\\reg.$$
      if [ -f wine-keys.exe ]; then
        echo Running wine-keys
        nonet $wp wine-keys.exe & pidk=$!
@@ -304,11 +307,24 @@ case "$1" in
      fi
      test wine-wait = "$prg" && set -- -e "$wpver" "$@"
      test wineconsole = "$prg" && prg="${prg}${wpver}"
+     # recent wine no longer changes to program dir by default
+     # this can be good, but it breaks some of my old scripts
+     if [ -z "$no_cd" ]; then
+       case "$1" in
+	 *[/\\]*) pn="${1##*[/\\]}"; pp="${1%[/\\]*}"; shift; set -- "$pn" "$@"
+		  pp="${pp//\\//}"; cd "$pp" ;;
+	 *) pp= ;;
+       esac
+     fi
      nonet env LD_PRELOAD="$LD_PRELOAD" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" WINEDEBUG="$wdb" $prg "$@" & pid=$!
+     if [ -z "$no_cd" -a -n "$pp" ]; then
+       pp="${pp//[^\/]}"
+       cd "${pp//\//../}"
+     fi
      trap "kill $pid $pidk; wineserver$wpver -k" TERM
      wait $pid; ret=$?
      test -n "$pidk" && kill $pidk
-     $wp regedit -E 'c:\'reg.$$.new
+     $wp regedit -E c:\\reg.$$.new
      diff -au "$d/reg.$$" "$d/reg.$$.new" >"$d/reg.$$.diff"
      rm "$d/reg.$$" "$d/reg.$$.new"
      test -s "$d/reg.$$.diff" || rm "$d/reg.$$.diff" ;;

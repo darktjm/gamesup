@@ -6,6 +6,18 @@
   <Menu>
     <Name>Games</Name>
     <Exclude><Category>X-Broken</Category></Exclude>
+    <Menu>
+      <Name>Broken</Name>
+      <!-- XFCE ignores Name tags and uses parent's tag.  -->
+      <!-- To correct, Directory entries must be used -->
+      <Directory>Broken.directory</Directory>
+      <Include>
+        <And>
+	  <All/>
+	  <Category>X-Broken</Category>
+	</And>
+      </Include>
+    </Menu>
 \{d="X-Broken";l=""}\{FOREACH -cat (len(_cat)>0)}
 \{IF ({_cat!=l})}
 \{"close opened menus";""
@@ -29,8 +41,6 @@
         	            gsub(c,"([^A-Z])([A-Z][^A-Z])","\1 \2")
 	, "_", " ")
       }</Name>
-      <!-- XFCE ignores Name tags and uses parent's tag.  -->
-      <!-- To correct, Directory entries must be used -->
       <Directory>\{c}.directory</Directory>\{d=d|+esc(c."|".n);""}
       <Include>
       	<And>
@@ -57,3 +67,9 @@ Version=1.0
 Type=Directory
 Name=\{sub(c[1]," Game$","")}
 \{END}
+\{FILE $HOME."/.local/share/desktop-directories/Broken.directory"}
+[Desktop Entry]
+Version=1.0
+Type=Directory
+Name=Broken
+

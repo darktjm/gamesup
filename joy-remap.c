@@ -1183,7 +1183,7 @@ static void init(void)
 		if(*ln++ != ',')
 		    abort_parse("js mappings should be ,-separated list of numbers");
 		if(nax) {
-		    sec->jsaxmap = malloc((int)nax * sizeof(*sec->jsaxmap));
+		    sec->jsaxmap = malloc((int)(nax + 1) * sizeof(*sec->jsaxmap));
 		    if(!sec->jsaxmap)
 			abort_parse("no mem");
 		    sec->jsaxmap[0] = nax;
@@ -1196,7 +1196,7 @@ static void init(void)
 		}
 		nbt = strtol(ln, (char **)&ln, 10);
 		if(nbt) {
-		    sec->jsbtmap = malloc((int)nbt * sizeof(*sec->jsbtmap));
+		    sec->jsbtmap = malloc((int)(nbt + 1) * sizeof(*sec->jsbtmap));
 		    if(!sec->jsbtmap)
 			abort_parse("no mem");
 		    sec->jsbtmap[0] = nbt;
@@ -1695,7 +1695,7 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 				    cap->js_extra->out_ax_map[i] = idx++;
 			if(cap->conf->jsbtmap)
 			    for(i = 0; i < cap->conf->jsbtmap[0]; i++)
-				cap->js_extra->out_ax_map[cap->conf->jsbtmap[i + 1] - BTN_MISC] = i;
+				cap->js_extra->out_btn_map[cap->conf->jsbtmap[i + 1] - BTN_MISC] = i;
 			else
 			    for(i = BTN_MISC, idx = 0; i < KEY_MAX; i++)
 				if(ULISSET(cap->keysout, i))
@@ -1884,6 +1884,69 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
     int ret = ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
     EN_SYSCALL;
     return ret;
+}
+#endif
+
+#if 0 /* nobody does this, that I know of (only fork-dups, which work) */
+/* dup/dup2 duplicates capture */
+static void ev_dup(int fd, int nfd)
+{
+    struct evfdcap *o = cap_of(fd), *n;
+    if(!o)
+	return;
+    pthread_mutex_lock(&lock);
+    if(!(n = free_ev_fd))
+	n = malloc(sizeof(*n));
+    else
+	free_ev_fd = free_ev_fd->next;
+    if(!n) {
+	fprintf(logf, "dup: %s\n", strerror(errno));
+	nconf = 0;
+	pthread_mutex_unlock(&lock);
+	return;
+    }
+    memcpy(n, o, sizeof(*n));
+    if(n->js_extra) {
+	n->js_extra = malloc(sizeof(*n->js_extra));
+	if(!n->js_extra) {
+	    fprintf(logf, "dup: %s\n", strerror(errno));
+	    nconf = 0;
+	    free(n);
+	    pthread_mutex_unlock(&lock);
+	    return;
+	}
+	memcpy(n->js_extra, o->js_extra, sizeof(*n->js_extra));
+    }
+    n->fd = nfd;
+    n->next = ev_fd;
+    ev_fd = n;
+    pthread_mutex_unlock(&lock);
+    fprintf(logf, "dupped %d into %d\n", fd, nfd);
+}
+
+
+int dup(int fd)
+{
+    static int (*next)(int) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "dup");
+    int nfd = next(fd);
+    if(nfd < 0)
+	return nfd;
+    ev_dup(fd, nfd);
+    return nfd;
+}
+
+int dup2(int fd, int nfd)
+{
+    static int (*next)(int, int) = NULL;
+    if(!next)
+	next = dlsym(RTLD_NEXT, "dup2");
+    nfd = next(fd, nfd);
+    if(nfd < 0)
+	return nfd;
+    ev_dup(fd, nfd);
+    return nfd;
 }
 #endif
 
@@ -2241,10 +2304,11 @@ int ioctl(int fd, unsigned long request, ...)
 	memcpy(argp, s, (len = _IOC_SIZE(request))); \
 } while(0)
 #define cpmem(n, m) do { \
-    fprintf(logf, "%d: altered EVIOC" n "\n", fd); \
     len = _IOC_SIZE(request); \
+    fprintf(logf, "%d: altered EVIOC" n " -> %d/%d\n", fd, (int)len, (int)sizeof(m)); \
     if(len > sizeof(m)) { \
-	memset((char *)argp + sizeof(m), 0, len - sizeof(m)); \
+	/* some pass len in bits to GBITS instead of len in bytes */ \
+	/* memset((char *)argp + sizeof(m), 0, len - sizeof(m)); */ \
 	len = sizeof(m); \
     } \
     memcpy(argp, &m, len); \
