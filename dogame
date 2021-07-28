@@ -2,9 +2,23 @@
 ldp="$LD_PRELOAD"
 unset LD_PRELOAD
 test 0 = `id -u` && exit 1
-spid=`pidof syndaemon`
-test -n "$spid" && kill $spid
-test -n "$spid" && synclient TouchpadOff=0
+# I don't support multiple syndaemons running.  It's probably an error, anyway
+spid=`pidof syndaemon | cut -d\  -f1`
+if [ -n "$spid" ]; then
+  IFS='
+' scmd=($(tr \\0 \\n </proc/$spid/cmdline))
+  # -D is an option in my own custom version of synclient/syndaemon
+  # note that numeric device might change, so copying won't work
+  dopt=; larg=; for x in "${scmd[@]}"; do
+    if [ x-D = "x$larg" ]; then
+      dopt="$x"
+      break
+    fi
+    larg="$x"
+  done
+  kill $spid
+  synclient ${dopt:+-D} ${dopt:+"$dopt"} TouchpadOff=0
+fi
 docd=
 doum=
 dounm=
@@ -145,7 +159,7 @@ test -n "$doum" && fusermount -u "$mdir"
 test -n "$xpad" && mkxpad -r
 test $emu || FvwmCommand "DesktopSize 3x2"
 #test $emu || FvwmCommand "EdgeScroll 100 100 wrap"
-test -n "$spid" && syndaemon -k -d
+test -n "$spid" && "${scmd[@]}"
 xgamma -g 1 >/dev/null 2>&1
 xrandr -s 0
 xset s on

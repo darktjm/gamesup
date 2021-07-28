@@ -1,0 +1,301 @@
+diff -ruN xf86-input-synaptics-1.9.1/man/synclient.man xf86-input-synaptics-1.9.1/man/synclient.man
+--- xf86-input-synaptics-1.9.1/man/synclient.man	2018-05-28 22:18:45.000000000 -0500
++++ xf86-input-synaptics-1.9.1/man/synclient.man	2021-07-28 00:38:42.640543205 -0500
+@@ -7,7 +7,7 @@
+ options.
+ .SH "SYNOPSIS"
+ .br
+-synclient [\fI\-lV?\fP] [var1=value1 [var2=value2] ...]
++synclient [\fI\-LlV?\fP] [\fI\-D device\fP] [var1=value1 [var2=value2] ...]
+ .SH "DESCRIPTION"
+ .LP
+ This program lets you change your Synaptics TouchPad driver for
+@@ -22,6 +22,15 @@
+ \fB\-V\fR
+ Print version number and exit.
+ .TP
++\fB\-L\fP
++List all synaptics devices currently attached.
++.TP
++\fB\-D\fR <\fIdevice\fP>
++Instead of using the first device found, use the one named in the
++argument.  This can be a decimal number indicating which item from the
++listing (\fI\-L\fP) or the exact name of the device (which can
++also be obtained from the listing).
++.TP
+ \fB\-?\fR
+ Show the help message.
+ .TP
+diff -ruN xf86-input-synaptics-1.9.1/man/syndaemon.man xf86-input-synaptics-1.9.1/man/syndaemon.man
+--- xf86-input-synaptics-1.9.1/man/syndaemon.man	2018-05-28 22:18:45.000000000 -0500
++++ xf86-input-synaptics-1.9.1/man/syndaemon.man	2021-07-28 00:38:32.329543607 -0500
+@@ -8,7 +8,7 @@
+ .SH "SYNOPSIS"
+ .LP
+ syndaemon [\fI\-i idle\-time\fP] [\fI\-m poll-inverval\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
+-[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP]
++[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-L\fP] [\fI\-D device\fP]
+ .SH "DESCRIPTION"
+ .LP
+ Disabling the touchpad while typing avoids unwanted movements of the
+@@ -63,6 +63,17 @@
+ the keyboard state.
+ .LP
+ .TP
++\fB\-L\fP
++List all synaptics devices currently attached.
++.LP
++.TP
++\fB\-D\fR <\fIdevice\fP>
++Instead of using the first device found, use the one named in the
++argument.  This can be a decimal number indicating which item from the
++listing (\fI\-L\fP) or the exact name of the device (which can
++also be obtained from the listing).
++.LP
++.TP
+ \fB\-?\fP
+ Show the help message.
+ .SH "ENVIRONMENT VARIABLES"
+diff -ruN xf86-input-synaptics-1.9.1/tools/synclient.c xf86-input-synaptics-1.9.1/tools/synclient.c
+--- xf86-input-synaptics-1.9.1/tools/synclient.c	2018-05-28 22:18:45.000000000 -0500
++++ xf86-input-synaptics-1.9.1/tools/synclient.c	2021-07-28 00:34:31.304553014 -0500
+@@ -246,7 +246,7 @@
+ }
+ 
+ static XDevice *
+-dp_get_device(Display * dpy)
++dp_get_device(Display * dpy, int skip, const char * match)
+ {
+     XDevice *dev = NULL;
+     XDeviceInfo *info = NULL;
+@@ -263,6 +263,8 @@
+ 
+     while (ndevices--) {
+         if (info[ndevices].type == touchpad_type) {
++	    if (match && strcmp(match, info[ndevices].name))
++		continue;
+             dev = XOpenDevice(dpy, info[ndevices].id);
+             if (!dev) {
+                 fprintf(stderr, "Failed to open device '%s'.\n",
+@@ -283,21 +285,29 @@
+                 if (properties[nprops] == synaptics_property)
+                     break;
+             }
+-            if (!nprops) {
++            if (nprops < 0) {
+                 fprintf(stderr, "No synaptics properties on device '%s'.\n",
+                         info[ndevices].name);
+-                error = 1;
+-                goto unwind;
+-            }
+-
+-            break;              /* Yay, device is suitable */
++		XCloseDevice(dpy, dev);
++		dev = NULL;
++		continue;
++	    }
++
++	    if (!skip || match)
++		break;              /* Yay, device is suitable */
++
++	    if (skip-- < 0)
++		fprintf(stderr, "Found synaptics device %d '%s'.\n",
++			-2 - skip, info[ndevices].name);
++	    XCloseDevice(dpy, dev);
++	    dev = NULL;
+         }
+     }
+ 
+  unwind:
+     XFree(properties);
+     XFreeDeviceList(info);
+-    if (!dev)
++    if (!dev && skip >= 0 && !match)
+         fprintf(stderr, "Unable to find a synaptics device.\n");
+     else if (error && dev) {
+         XCloseDevice(dpy, dev);
+@@ -468,8 +478,10 @@
+ static void
+ usage(void)
+ {
+-    fprintf(stderr, "Usage: synclient [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
++    fprintf(stderr, "Usage: synclient [-h] [-l] [-L] [-D device] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
+     fprintf(stderr, "  -l List current user settings\n");
++    fprintf(stderr, "  -L List currently attached devices\n");
++    fprintf(stderr, "  -D Use this device instead of first one found\n");
+     fprintf(stderr, "  -V Print synclient version string and exit\n");
+     fprintf(stderr, "  -? Show this help message\n");
+     fprintf(stderr, "  var=value  Set user parameter 'var' to 'value'.\n");
+@@ -480,17 +492,15 @@
+ main(int argc, char *argv[])
+ {
+     int c;
+-    int dump_settings = 0;
++    int dump_settings = 0, skip = 0;
++    const char * match = NULL;
+     int first_cmd;
+ 
+     Display *dpy;
+     XDevice *dev;
+ 
+-    if (argc == 1)
+-        dump_settings = 1;
+-
+     /* Parse command line parameters */
+-    while ((c = getopt(argc, argv, "lV?")) != -1) {
++    while ((c = getopt(argc, argv, "lLD:V?")) != -1) {
+         switch (c) {
+         case 'l':
+             dump_settings = 1;
+@@ -498,6 +508,21 @@
+         case 'V':
+             printf("%s\n", VERSION);
+             exit(0);
++	case 'D':
++	    if (skip >= 0) {
++		char * e;
++		skip = strtol(optarg, &e, 10);
++		if (*e || skip < 0) {
++		    skip = 0;
++		    match = optarg;
++		} else
++		    match = NULL;
++	    }
++	    break;
++	case 'L':
++	    skip = -1;
++	    match = NULL;
++	    break;
+         case '?':
+         default:
+             usage();
+@@ -505,11 +530,11 @@
+     }
+ 
+     first_cmd = optind;
+-    if (!dump_settings && first_cmd == argc)
+-        usage();
++    if (first_cmd == argc)
++        dump_settings = 1;
+ 
+     dpy = dp_init();
+-    if (!dpy || !(dev = dp_get_device(dpy)))
++    if (!dpy || !(dev = dp_get_device(dpy, skip, match)))
+         return 1;
+ 
+     dp_set_variables(dpy, dev, argc, argv, first_cmd);
+diff -ruN xf86-input-synaptics-1.9.1/tools/syndaemon.c xf86-input-synaptics-1.9.1/tools/syndaemon.c
+--- xf86-input-synaptics-1.9.1/tools/syndaemon.c	2018-05-28 22:18:45.000000000 -0500
++++ xf86-input-synaptics-1.9.1/tools/syndaemon.c	2021-07-28 00:27:18.906569890 -0500
+@@ -79,7 +79,7 @@
+ usage(void)
+ {
+     fprintf(stderr,
+-            "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-t] [-k]\n");
++            "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-D device] [-L] [-t] [-k]\n");
+     fprintf(stderr,
+             "  -i How many seconds to wait after the last key press before\n");
+     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
+@@ -93,6 +93,8 @@
+             "  -k Ignore modifier keys when monitoring keyboard activity.\n");
+     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
+     fprintf(stderr, "  -R Use the XRecord extension.\n");
++    fprintf(stderr, "  -L List currently attached devices.\n");
++    fprintf(stderr, "  -D Use this device instead of first one found.\n");
+     fprintf(stderr, "  -v Print diagnostic messages.\n");
+     fprintf(stderr, "  -? Show this help message.\n");
+     exit(1);
+@@ -503,7 +505,7 @@
+ #endif                          /* HAVE_X11_EXTENSIONS_RECORD_H */
+ 
+ static XDevice *
+-dp_get_device(Display * dpy)
++dp_get_device(Display * dpy, int skip, const char * match)
+ {
+     XDevice *dev = NULL;
+     XDeviceInfo *info = NULL;
+@@ -519,6 +521,8 @@
+ 
+     while (ndevices--) {
+         if (info[ndevices].type == touchpad_type) {
++	    if (match && strcmp(match, info[ndevices].name))
++		continue;
+             dev = XOpenDevice(dpy, info[ndevices].id);
+             if (!dev) {
+                 fprintf(stderr, "Failed to open device '%s'.\n",
+@@ -542,18 +546,26 @@
+             if (nprops < 0) {
+                 fprintf(stderr, "No synaptics properties on device '%s'.\n",
+                         info[ndevices].name);
+-                error = 1;
+-                goto unwind;
++		XCloseDevice(dpy, dev);
++		dev = NULL;
++		continue;
+             }
+ 
+-            break;              /* Yay, device is suitable */
++	    if (!skip || match)
++		break;              /* Yay, device is suitable */
++
++	    if (skip-- < 0)
++		fprintf(stderr, "Found synaptics device %d '%s'.\n",
++			-2 - skip, info[ndevices].name);
++	    XCloseDevice(dpy, dev);
++	    dev = NULL;
+         }
+     }
+ 
+  unwind:
+     XFree(properties);
+     XFreeDeviceList(info);
+-    if (!dev)
++    if (!dev && skip >= 0 && !match)
+         fprintf(stderr, "Unable to find a synaptics device.\n");
+     else if (error && dev) {
+         XCloseDevice(dpy, dev);
+@@ -568,10 +580,12 @@
+     double idle_time = 2.0;
+     int poll_delay = 200000;    /* 200 ms */
+     int c;
++    int skip = 0;
++    const char * match = NULL;
+     int use_xrecord = 0;
+ 
+     /* Parse command line parameters */
+-    while ((c = getopt(argc, argv, "i:m:dtp:kKR?v")) != EOF) {
++    while ((c = getopt(argc, argv, "i:m:dtp:kKRD:L?v")) != EOF) {
+         switch (c) {
+         case 'i':
+             idle_time = atof(optarg);
+@@ -601,6 +615,21 @@
+         case 'v':
+             verbose = 1;
+             break;
++	case 'D':
++	    if (skip >= 0) {
++		char * e;
++		skip = strtol(optarg, &e, 10);
++		if (*e || skip < 0) {
++		    skip = 0;
++		    match = optarg;
++		} else
++		    match = NULL;
++	    }
++	    break;
++	case 'L':
++	    skip = -1;
++	    match = NULL;
++	    break;
+         case '?':
+         default:
+             usage();
+@@ -617,7 +646,7 @@
+         exit(2);
+     }
+ 
+-    if (!(dev = dp_get_device(display)))
++    if (!(dev = dp_get_device(display, skip, match)))
+         exit(2);
+ 
+     /* Install a signal handler to restore synaptics parameters on exit */

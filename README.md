@@ -112,6 +112,30 @@ things needed.
     really wish somebody made a laptop with the touchpad to the side,
     rather in the center.  Or maybe use something else, like trackpoint.
 
+    Note that if my ds4 is plugged in, syndaemon and synclient always
+    apply to that instead of my laptop's touchpad (it always picks the
+    first one it detects, and always scans from the last to first).
+    To correct this, I have made a patch to xf86-input-synaptics,
+    which contains the synaptics driver and these two tools, to support
+    multiple devices better, through use of a `-L` option to list all
+    attached devices, and a `-D` option to select one of them.  The
+    patch is here under the name `xf86-input-synaptics-multi.patch`.
+
+    Since I'm usually typing the command to execute the game just
+    before the game launches, the touchpad is usually off at the time.
+    To correct this, `dogame` runs `synclient` to turn it back on,
+    using the same `-D` option that `syndaemon` was using.  Due to the
+    way it scans from back to front, numeric `-D` parameters will
+    likely be different than when `syndaemon` was first started, so
+    it's best to always use the full name.  For example, in my
+    `.xinitrc`, I start `syndaemon` with:
+
+          /usr/bin/syndaemon -k -d -D "$(/usr/bin/syndaemon -L 2>&1 | fgrep -v Wireless | cut -d\' -f2)"
+
+    Since the internal touchpad should always appear first (and
+    therefore last in the listing), I could've used `tail -n 1`
+    instead of the `fgrep`.
+
   - If the game wants it, I change to its directory
 
   - If the game needs it, I set up two directories in `~/.local/share`:
@@ -681,6 +705,7 @@ initialized.
       - `-n` = allow mono/.net install/usage (rarely works)
       - `-g` = allow built-in gecko install/usage (never works)
       - `-b` = change what's installed based on -n/-g flags
+      - `-nc` = don't change into exe's directory (if wine supports this)
 
 Note that `-s`, `-d`, and `-S` rely on using `eselect wine` to set the
 system default wine, wine-vanilla (`--vanilla`) and wine-staging
@@ -895,25 +920,25 @@ probably do.
 Note that I have recently restarted an LD_PRELOAD-based remapper
 (although not exactly what I envisiaged when I wrote the line above).
 It's in this project as joy-remap.c, and the top documentation block
-describes its usage.  I have replaced all of my uses of `xboxdrv` with
-this except for one (a Java-based game which mysteriously crashes with
-joy-remap.so, and, as usual, there's nobody I can ask about why it's
-broken, and the crash can't even be caught by gdb).  It's easy enough
-to configure and may be faster than any uinput-based solution since it
-doesn't go though an extra driver layer.  It's only real advantages
-are that it's temporary (only applies to the program it's preloaded
-into) and that it doesn't require root (which uinput doesn't, either,
-if configured via udev to be that way, but I don't want a user to be
-able to create arbitrary input devices).  It does nothing to prevent
-occasional disconnects mid-game like my ds4 does; that will require
-uinput.  Rather than use one of the below uinput drivers, I will
-probalby write a simplified one that does nothing but make devices
-persistent, since Linux apparently has no other way of doing it.  Then
-again, maybe I'll just live with it the way it is.  Maybe LD_PRELOAD
-wasn't the right path, after all, although it's the only way I'll ever
-make a remapper that can also do macros based on audiovisual changes
-in the program (part of my original vision, which, as I said, isn't
-even remotely there yet).
+describes its usage.  I have replaced all of my uses of `xboxdrv` and
+`jscal` with this except for one (a Java-based game which mysteriously
+crashes with joy-remap.so, and, as usual, there's nobody I can ask
+about why it's broken, and the crash can't even be caught by gdb).
+It's easy enough to configure and may be faster than any uinput-based
+solution since it doesn't go though an extra driver layer.  Its only
+real advantages are that it's temporary (only applies to the program
+it's preloaded into) and that it doesn't require root (which uinput
+doesn't, either, if configured via udev to be that way, but I don't
+want a user to be able to create arbitrary input devices).  It does
+nothing to prevent occasional disconnects mid-game like my ds4 does;
+that will require uinput.  Rather than use one of the below uinput
+drivers, I will probably write a simplified one that does nothing but
+make devices persistent, since Linux apparently has no other way of
+doing it.  Then again, maybe I'll just live with it the way it is.
+Maybe LD_PRELOAD wasn't the right path, after all, although it's the
+only way I'll ever make a remapper that can also do macros based on
+audiovisual changes in the program (part of my original vision, which,
+as I said, isn't even remotely there yet).
 
 [MoltenGamePad](https://github.com/jgeumlek/MoltenGamepad/) seemed
 pretty nice on first look, but its only advantage over `xboxdrv` is
@@ -947,6 +972,13 @@ prevent reading, but AER, the game I originally started this remapping
 mess for, crashes silently if it can't read an event device.  As a
 side note, `MoltenGamePad` "auto-removes" devices via permissions
 changes, as well, so it probably isn't compatible with AER, either.
+
+Note that with any of the above remapping methods, recent SDL2
+bypasses the event and joystick devices, and accesses the raw HID
+device instead.  To stop SDL2 from doing this, set `SDL_JOYSTICK_HIDAPI=0`
+in the environment.  If some game insists on bypassing this, the HID
+device nodes (`/dev/hidraw*`) will probably need to be removed or
+protected.
 
 For a while, my ds4 was extremely flaky.  It wouldn't connect just
 by pressing the button; I had to set it to pairing mode and use a
