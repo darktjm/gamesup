@@ -17,6 +17,9 @@ query_q    (#_todo>0)
 query_s    0
 query_n    Installed
 query_q    (!#_hidden && !_sn_uninstalled)
+query_s    0
+query_n    untested win
+query_q    ({_cmdtype._hidden._sn_uninstalled=='Windows'}&&(year(_tested)<122||month(_tested)<2))
 
 item
 type       Input
@@ -39,6 +42,7 @@ pos        716 12
 size       340 28
 mid        56 8
 column     9
+search     1
 timewidget 2
 label      Bought
 lfont      0
@@ -362,7 +366,7 @@ search     1
 label      Wine Version
 lfont      0
 invis      (({"Windows"!=_cmdtype})&&!_sn_wineditor&&!_sn_linuxbroken)
-dcombo     1
+dcombo     2
 maxlen     32
 ifont      0
 

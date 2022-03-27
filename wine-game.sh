@@ -80,7 +80,7 @@ if [ x-U = "x$1" ]; then
 fi
 cd "$groot/$game"
 
-# support functions for CD emulation
+# support function for CD emulation
 # note that this requires installation of automatic dbus service activation:
 #   /usr/share/dbus-1/services/net.sf.cdemu.CDEmuDaemon.service
 # not installed by gentoo, and service-example doesn't set Exec correctly:

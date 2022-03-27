@@ -12,11 +12,11 @@ index bc85639..5cdaf16 100644
  
      do
      {
--        std::string response = this->getResponse("https://www.gog.com/account/getFilteredProducts?hiddenFlag=" + std::to_string(iHidden) + "&isUpdated=" + std::to_string(iUpdated) + "&mediaType=1&sortBy=title&system=&page=" + std::to_string(i));
-+        std::string response = this->getResponse("https://www.gog.com/account/getFilteredProducts?hiddenFlag=" + std::to_string(iHidden) + "&isUpdated=" + std::to_string(iUpdated) + "&mediaType=1&system=&page=" + std::to_string(i));
-         std::istringstream json_stream(response);
- 
-         try {
+-        std::string url = "https://www.gog.com/account/getFilteredProducts?hiddenFlag=" + std::to_string(iHidden) + "&isUpdated=" + std::to_string(iUpdated) + "&mediaType=1&sortBy=title&system=&page=" + std::to_string(i);
++        std::string url = "https://www.gog.com/account/getFilteredProducts?hiddenFlag=" + std::to_string(iHidden) + "&isUpdated=" + std::to_string(iUpdated) + "&mediaType=1&system=&page=" + std::to_string(i);
+         if (!tags.empty())
+             url += "&tags=" + tags;
+         std::string response = this->getResponse(url);
 @@ -242,10 +242,7 @@ std::vector<gameItem> Website::getGames()
      } while (!bAllPagesParsed);
      std::cerr << std::endl;

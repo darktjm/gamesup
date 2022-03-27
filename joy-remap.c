@@ -162,7 +162,7 @@
  * pass_axes
  *   Normally, if there are any axes keywords at all, any inputs not
  *   explicilty mapped are ignored.  This passes through any inputs not
- *   conflicting with outputs through.
+ *   conflicting with outputs.
  *
  * buttons <list>
  *   This remaps buttons (key events).  It is a comma-separated list of input
@@ -200,7 +200,7 @@
  * pass_buttons
  *   Normally, if there are any buttons keywords at all, any inputs not
  *   explicilty mapped are ignored.  This passes through any inputs not
- *   conflicting with outputs through.
+ *   conflicting with outputs.
  *
  * jsremap [remappings]
  *   If present, do remapping as if the js device was generated from the
@@ -249,6 +249,64 @@
  * Note that you have to use -lpthread in order to have this use pthread's
  * open64 rather than libc's.  This code uses pthread code, anyway.  Code
  * that hard-codes use of the errno var might not work quite right.
+ *
+ *****************************************
+ * Known Bugs:
+ *
+ * There are some applications that refuse to work with this.  Java in
+ * particular tends to crash.  Some games using Unity3D/Mono dynamically
+ * load libc, which undoes the libc overrides.  Some clear the environment
+ * using execve(2), losing the LD_PRELOAD.  Some are setuid, losing the
+ * LD_PRELOAD even earlier.
+ *
+ * See also the FIXMEs below.
+ *
+ *****************************************
+ * Missing featuers:
+ *
+ * It's not possible to report a button or axis that isn't mapped.  It would
+ * generate no events, but allow one to insert dummy inputs for games that
+ * ignore labels.  e.g. [axis=]none or [button=]none
+ *
+ * There is no chording support.
+ *
+ * It's possible to produce the same output from multiple inputs, but not
+ * to produce multiple outputs from the same input.  This might require
+ * intercepting poll(2) and select(2).
+ *
+ * It's not possible to get inputs from other sources.  This definitely
+ * requires interception of poll(2) and select(2) for event injection.
+ *
+ * There is no auto-repeat (auto-fire) mode.  This would require event
+ * injection, definitely requiring interception of poll(2) and select(2).
+ * The timeouts for those two functions could be used to do the timing, but
+ * the most reliable would require creating a timer as well, and hopefully
+ * not having that timer interfere with the parent process in any way (e.g.
+ * spurious signals).
+ *
+ * It's not possible to generate or intercept keyboard events.  This requires
+ * interception of the input stream, which is generally standard input or
+ * X's event interface (and maybe xkb & such as well).  While it is possible
+ * to receive keyboard events from input devices, it is not possible to
+ * suppress them for a particular application without intercepting the
+ * higher level routines.  Similarly, it would require a kernel driver to
+ * inject keyboard events into applications without intercepting the higher
+ * level routines.
+ *
+ * At a higher level, significantly more complex missing features:
+ *
+ * Macros: inject A, wait .5 sec, inject X, etc.  Similar to auto-repeat.
+ *
+ * Dynamic macros:  start recording, end recording, save to this key, save as
+ * config file
+ *
+ * Other events:  a particular sound played, or a particular GL update was
+ * made, or a part of the window was updated in a particular way.  These
+ * events would most likely invoke macros rather than individual keypresses,
+ * or provide a way for looping macros to end.  This requires many mmore
+ * interceptions, as well as a way to configure such events (e.g. start and
+ * end capture, or pause and select a part of the screen) and detect them
+ * (e.g. fuzzy matching).
  */
 
 /* Every intercept takes time, albeit usually unnoticabbly little */

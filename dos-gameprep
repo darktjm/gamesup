@@ -1,6 +1,6 @@
 #!/bin/sh
 cd "$1" || exit 1
-rm -rf .mojosetup DOSBOX dosbox game/dosbox cloud_saves
+rm -rf .mojosetup [Dd][Oo][Ss][Bb][Oo][Xx] game/dosbox cloud_saves
 test -d game/data -a ! -d data && ln -s game/data .
 if [ ! -f support/icon.png ]; then
   for x in goggame-*.ico gfw_high.ico; do

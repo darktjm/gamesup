@@ -53,8 +53,8 @@ index 6ec0064..b5dfdbf 100644
              ("repair", bpo::value<bool>(&Globals::globalConfig.bRepair)->zero_tokens()->default_value(false), "Repair downloaded files\nUse --repair --download to redownload files when filesizes don't match (possibly different version). Redownload will rename the old file (appends .old to filename)")
              ("game", bpo::value<std::string>(&Globals::globalConfig.sGameRegex)->default_value(""), "Set regular expression filter\nfor download/list/repair (Perl syntax)")
              ("create-xml", bpo::value<std::string>(&Globals::globalConfig.sXMLFile)->implicit_value("automatic"), "Create GOG XML for file\n\"automatic\" to enable automatic XML creation")
-@@ -606,21 +607,31 @@ int main(int argc, char *argv[])
-     bool bIsLoggedin = downloader.isLoggedIn();
+@@ -606,20 +607,30 @@ int main(int argc, char *argv[])
+         Globals::globalConfig.bLogin = true;
  
      // Login because we are not logged in
 -    while (iLoginTries++ < Globals::globalConfig.iRetries && !bIsLoggedin)
@@ -70,7 +70,6 @@ index 6ec0064..b5dfdbf 100644
 -    if (!bLoginOK && !bIsLoggedin)
 -    {
 -        curl_global_cleanup();
--        ssl_thread_cleanup();
 -        return 1;
 +    // But only if necessary -- for now, disable if checking for orphans
 +    // and using cache and not also downloading (there are other conditions
@@ -94,13 +93,12 @@ index 6ec0064..b5dfdbf 100644
 +	if (!bLoginOK && !bIsLoggedin)
 +	{
 +	    curl_global_cleanup();
-+	    ssl_thread_cleanup();
 +	    return 1;
 +	}
      }
  
      // Make sure that config file and cookie file are only readable/writable by owner
-@@ -717,12 +728,20 @@ int main(int argc, char *argv[])
+@@ -717,11 +728,19 @@ int main(int argc, char *argv[])
          }
      }
  
@@ -108,7 +106,6 @@ index 6ec0064..b5dfdbf 100644
 -    if (!bInitOK)
 -    {
 -        curl_global_cleanup();
--        ssl_thread_cleanup();
 -        return 1;
 +    // don't init downloader just for orphan check from cache
 +    // or download dry run
@@ -121,7 +118,6 @@ index 6ec0064..b5dfdbf 100644
 +	if (!bInitOK)
 +	{
 +	    curl_global_cleanup();
-+	    ssl_thread_cleanup();
 +	    return 1;
 +	}
      }

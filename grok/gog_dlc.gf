@@ -100,7 +100,6 @@ lfont      0
 ifont      0
 fk_db      gog_purchases
 fk_header  1
-fk_search  1
 nfkey      3
 fkey       title
 _fk_key    1
@@ -116,7 +115,7 @@ name       type
 pos        308 120
 size       132 76
 mid        60 28
-sumwid     2
+sumwid     6
 sumcol     4
 column     6
 search     1
@@ -125,9 +124,12 @@ lfont      0
 nmenu      3
 menu       Expansion
 _m_code    X
+_m_codetxt Expansion
 menu       Extras
 _m_code    G
+_m_codetxt Extras
 menu       Both
 _m_code    GX
+_m_codetxt Both
 ijust      1
 ifont      0

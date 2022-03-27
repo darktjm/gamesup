@@ -7,6 +7,9 @@ size       434 124
 query_s    0
 query_n    Unused
 query_q    {Z="x";I=_title;@"gog_games":foreach("{_bought==I}","Z=''");@"gog_dlc":foreach("{_bought==I}","Z=''");Z}
+query_s    0
+query_n    Unusedf
+query_q    (!referenced)
 
 item
 type       Input
@@ -48,11 +51,12 @@ mid        52 28
 sumwid     8
 sumcol     2
 column     2
+search     1
 timewidget 2
 label      Price
 ljust      1
 lfont      0
-range      0 inf
+range      -1000 1000
 digits     2
 ifont      0
 

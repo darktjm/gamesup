@@ -240,6 +240,9 @@ name and its arguments:
      note that `--` is mandatory, even if no extra *args* given.
    - `-h` *name* *dir* -> set $HOME to $HOME/.local/share/*name* and
      link *dir* to that new $HOME.
+   - `--X` *res* -> run in Xephyr (use for 8-bit or 16-bit display
+     requirement).  *res* is WidthxHeight[xDepth].  If unspecified,
+     Depth is 8.
 
 I generally make short names for all of my games, and create a
 launcher script with that name in `/usr/local/bin`.  During
@@ -399,11 +402,16 @@ dosbox-tjm.conf -config `...".  In particular, I use ALSA
 virtual MIDI with timidity++ attached (on 128:0).  I also use IRQ 7
 for Sound Blaster, and enable GUS emulation on 5.
 
-I currently use dosbox-SVN-4227 with the mt32 patch.  I could've sworn
-I had other patches as well (at least for glide and keyboard
-injection), but I haven't dealt with that in so long I've forgotten.
-In fact, I can't reinstall using the dosbox-9999 ebuild on gentoo any
-more, so I should probably investigate why and fix/update it.
+I used to use dosbox-SVN-4227 with mt32, glide, and addkey patches.
+Now I use SVN-4302, as supplied by gentoo's 0.75_pre4302 ebuild, with
+mt32, glide (supplied by the ebuild), and addkey patches (SVN is
+currently at 4665, but it doesn't work with the glide patch, so I'll
+stick with this for now).  I have not included the patches here; good
+luck finding them.  The mt32 and glide patches' functions are obvious;
+the addkey patch gives you an "addkey" command to insert keystrokes
+into the key buffer.  I use this in several games to bypass initial
+prompts  (e.g. Starflight: addkey 5 p600 enter, Eye of the Beholder:
+addkey 4 1 Y)
 
 Note that I have the GUS installation in `/usr/local/share/dosbox` (I've
 no idea where to get it any more, and I'm sure I am not permitted to
@@ -420,9 +428,10 @@ and add the lines from `mt32.conf` to each per-game launcher config.
 
 I use gentoo's openglide 0.09_rc9_p20160913 ebuild
 (http://openglide.sourceforge.net) for glide support.  I have no idea
-where the glide2x.ovl file I use came from, but I soft link that from
-its central location into the root dir of games that support glide,
-and just add the following to each launcher config:
+where the glide2x.ovl file I use came from (maybe openglide?), but I
+soft link that from its central location into the root dir of games
+that support glide, and just add the following to each launcher
+config:
 
     [glide]
     glide=true
@@ -630,7 +639,7 @@ I also may want key rebinding.  If you create a standalone executable
 from AutoHotKey, you can call it `wine-keys.exe` and `dowine` will
 execute it before the game, and kill it afterwards.  I have included a
 few scripts as examples.  `cosh.ahk` is what I use when playing Cosmic
-Space Heroine (the game I added this feature for), and `bge.ahk` is
+Star Heroine (the game I added this feature for), and `bge.ahk` is
 what I use for Beyond Good & Evil (although the latter is mostly
 untested).  Both add joystick support (cosh has built-in joystick
 support, but it uses wine's mostly broken (at least in 4.0 and before)

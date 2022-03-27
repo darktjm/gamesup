@@ -24,7 +24,8 @@ Usage:
     -s3 use wine-3 (stable - 3.0.x)
     -s4 use wine-4 (stable - 4.0.x)
     -s5 use wine-5 (stable - 5.0.x)
-    -s6 use wine (stable 6.0.x)
+    -s6 use wine-6 (stable - 6.0.x)
+    -s7 use wine (stable 7.0.x)
     -D  use winedbg/gdb
     -V <exe> use <exe> as wine; may not work right
 EOF
@@ -73,7 +74,8 @@ while :; do
      -s3) wp=wine-3 ;;
      -s4) wp=wine-4 ;;
      -s5) wp=wine-5 ;;
-     -s|-s6) wp=wine ;;
+     -s6) wp=wine-6 ;;
+     -s|-s7) wp=wine ;;
      -V) wp="$2" ; shift ;;
      -m) mnt_wine=y ;;
      -M) mnt_wine=d ;;
@@ -133,7 +135,7 @@ prefix_setup() {
   #  using standalone configurator program creates z: and other crap, so don't
   # enable dxvk (FIXME: supposedly d3d10 overrides no longer needed)
   # set default GOG installer options
-  # enable opengl 4.5 (probably not needed any more and maybe counterproductive)
+  # enable opengl 4.6 (probably not needed any more and maybe counterproductive)
   # attempt to set USERPROFILE dir (doesn't work)
 cat <<"EOF" > $$.reg
 REGEDIT4
@@ -156,7 +158,7 @@ REGEDIT4
 
 [HKEY_CURRENT_USER\Software\Wine\Direct3D]
 "csmt"=dword:00000001
-"MaxVersionGL"=dword:00040005
+"MaxVersionGL"=dword:00040006
 
 [HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment]
 "USERPROFILE"="C:\\users\\user"
@@ -274,8 +276,8 @@ test y = "$mnt_wine" && exit 0
 
 if [ -n "$builtin_inst" ]; then
 # This automatically installs gecko/mono if requested and not already done
-test -z "$dis_mono" -a ! -d "$d/windows/mono" && rm -f "$d/windows/.update-timestamp"
-test -z "$dis_gecko" -a ! -d "$d"/windows/system32/gecko/*/wine_gecko &&  rm -f "$d/windows/.update-timestamp"
+test -z "$dis_mono" -a ! -d "$d/.windows/mono" && rm -f "$d/windows/.update-timestamp"
+test -z "$dis_gecko" -a ! -d "$d"/.windows/system32/gecko/*/wine_gecko &&  rm -f "$d/windows/.update-timestamp"
 
 # And this ensures that gecko/mono is *not* installed if not requested
 case "$1" in
