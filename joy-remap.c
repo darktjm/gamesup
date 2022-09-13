@@ -579,16 +579,57 @@ static void free_conf(struct evjrconf *sec);
 #if CAP_SYSCALL
 static long (*real_syscall)(long number, ...);
 #endif
+static int (*real_open)(const char *pathname, int flags, ...);
+static int (*real_open64)(const char *pathname, int flags, ...);
+static int (*real_ioctl)(int fd, unsigned long request, ...);
+static ssize_t (*real_read)(int, void *, size_t);
+static int (*real_close)(int fd);
+#if CAP_OPENAT
+static int (*real_openat)(int dirfd, const char *pathname, int flags, ...);
+static int (*real_openat64)(int dirfd, const char *pathname, int flags, ...);
+#else
+#define real_openat openat // used even if not capturing
+#endif
+#if CAP_FOPEN
+static FILE * (*real_fopen)(const char *, const char *);
+static FILE * (*real_fopen64)(const char *, const char *);
+static int (*real_fclose)(FILE *);
+#endif
+#if 0
+static int (*real_dup)(int);
+static int (*real_dup2)(int, int);
+static void *(*real_dlopen)(const char *, int);
+#endif
 
 /* parse config file */
 /* is this too early for file I/O?  apparently not */
 /* dlopen() docs say this must be exported, but again, apparently not */
 /* note that this attribute works with clang as well */
+
 __attribute__((constructor))
 static void init(void)
 {
 #if CAP_SYSCALL
     real_syscall = dlsym(RTLD_NEXT, "syscall");  /* needs to be first! */
+#endif
+    real_open = dlsym(RTLD_NEXT, "open");
+    real_open64 = dlsym(RTLD_NEXT, "open64");
+    real_ioctl = dlsym(RTLD_NEXT, "ioctl");
+    real_read = dlsym(RTLD_NEXT, "read");
+    real_close = dlsym(RTLD_NEXT, "close");
+#if CAP_OPENAT
+    real_openat = dlsym(RTLD_NEXT, "openat");
+    real_openat64 = dlsym(RTLD_NEXT, "openat64");
+#endif
+#if CAP_FOPEN
+    real_fopen = dlsym(RTLD_NEXT, "fopen");
+    real_fopen64 = dlsym(RTLD_NEXT, "fopen64");
+    real_fclose = dlsym(RTLD_NEXT, "fclose");
+#endif
+#if 0
+    real_dup = dlsym(RTLD_NEXT, "dup");
+    real_dup2 = dlsym(RTLD_NEXT, "dup2");
+    real_dlopen = dlsym(RTLD_NEXT, "dlopen");
 #endif
     const char *fname = getenv("EV_JOY_REMAP_CONFIG"),
 	       *logn = getenv("EV_JOY_REMAP_LOG");
@@ -632,6 +673,7 @@ static void init(void)
 	fprintf(logf, "%s: %s\n", fname, strerror(errno));
 	fclose(f);
 	free(cfg);
+	errno = 0;
 	return;
     }
     fclose(f);
@@ -640,6 +682,7 @@ static void init(void)
 	fprintf(logf, "%s: %s\n", "conf", strerror(errno));
 	free(cfg);
 	nconf = 0;
+	errno = 0;
 	return;
     }
     cfg[fsize] = 0;
@@ -653,6 +696,7 @@ static void init(void)
 	    free(sec->ax_map);
 	if(sec->bt_map)
 	    free(sec->bt_map);
+	errno = 0;
 	return;
     }
     sec->auto_ax = -1;
@@ -666,6 +710,8 @@ static void init(void)
     if(sec->max_##what < sz) { \
 	int old_max = sec->max_##what; \
 	void *old_map = sec->what##_map; \
+	if(!old_max) \
+	    sec->max_##what = sz < 18 ? 18 : sz; \
 	while(sec->max_##what < sz) \
 	    sec->max_##what *= 2; \
 	sec->what##_map = realloc(sec->what##_map, sec->max_##what * sizeof(*sec->what##_map)); \
@@ -1356,10 +1402,12 @@ static void init(void)
 	regfree(&re);
 	if(!nconf) {
 	    fputs("No sections enabled for remapper; disabled\n", logf);
+	    errno = 0;
 	    return;
 	}
     }
     fputs("Installed event device remapper\n", logf);
+    errno = 0;
     return;
 err:
     for(sec = conf; nconf; nconf--, sec++)
@@ -1367,6 +1415,7 @@ err:
     free(conf);
     if(cfg)
 	free(cfg);
+    errno = 0;
 }
 
 static void free_conf(struct evjrconf *sec)
@@ -1394,52 +1443,6 @@ static void free_conf(struct evjrconf *sec)
     if(sec->repl_name)
 	free(sec->repl_name);
 }
-
-/* I use some intercepted functions below, so bypass intercept */
-static int real_ioctl(int fd, unsigned long request, ...)
-{
-    static int (*next)(int, unsigned long, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "ioctl");
-    void *argp = NULL;
-    if(_IOC_SIZE(request)) {
-	va_list va;
-	va_start(va, request);
-	argp = va_arg(va, void *);
-	va_end(va);
-    }
-    return next(fd, request, argp);
-}
-
-static int real_close(int fd)
-{
-    static int (*next)(int) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "close");
-    return next(fd);
-}
-
-static void ev_close(int fd);
-
-static int real_open(const char *pathname, int flags, mode_t mode)
-{
-    static int (*next)(const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "open");
-    return next(pathname, flags, mode);
-}
-
-#if CAP_OPENAT
-static int real_openat(int dirfd, const char *pathname, int flags, mode_t mode)
-{
-    static int (*next)(int, const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "openat");
-    return next(dirfd, pathname, flags, mode);
-}
-#else
-#define real_openat openat
-#endif
 
 /* determine what js device belongs to an event device or vice-versa */
 /* requires /sys (and access to it) */
@@ -1690,6 +1693,8 @@ static struct evfdcap *cap_of(int fd)
     return cap;
 }
 
+static void ev_close(int fd);
+
 /* common code for multiple nearly identical open() functions */
 static int ev_open(const char *fn, const char *pathname, int fd)
 {
@@ -1707,11 +1712,12 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 	/* note: this is char to avoid gcc warning on %d below */
 	char evno = js_ev(minor(st.st_rdev) - JSDEV_MINOR0, 1);
 	if(evno >= 0) {
-	    int d = real_open("/dev/input", O_PATH, 0);
+	    int d = real_open("/dev/input", O_PATH);
 	    if(d >= 0) {
 		char evn[10];
 		sprintf(evn, "event%d", evno);
-		int e = real_openat(d, evn, O_RDONLY, 0);
+		int e = real_openat(d, evn, O_RDONLY);
+		real_close(d);
 		struct evfdcap *cap = NULL;
 		if(e >= 0) {
 		    e = ev_open("ev_open", evn, e);
@@ -1735,7 +1741,6 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 			if(!cap->js_extra) {
 			    /* FIXME:  just bomb out completely */
 			    /* or at least also do an ev_close() */
-			    real_close(d);
 			    real_close(fd);
 			    return -1;
 			}
@@ -1764,7 +1769,6 @@ static int ev_open(const char *fn, const char *pathname, int fd)
 			    cap->conf->jsremap ? "Intercepted" : "Renaming",
 			    pathname);
 		}
-		real_close(d);
 	    }
 	}
 	errno = en;
@@ -1810,10 +1814,13 @@ volatile static int syscalling = 0;
 #define EN_SYSCALL
 #endif
 
+#ifndef O_TMPFILE
+#define O_TMPFILE 0
+#endif
 int open(const char *pathname, int flags, ...)
 {
     mode_t mode = 0;
-    if(flags & O_CREAT) {
+    if(flags & (O_CREAT|O_TMPFILE)) {
 	va_list va;
 	va_start(va, flags);
 	mode = va_arg(va, mode_t);
@@ -1828,18 +1835,15 @@ int open(const char *pathname, int flags, ...)
 /* identical to above, for programs that call this alias */
 int open64(const char *pathname, int flags, ...)
 {
-    static int (*next)(const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "open64");
     mode_t mode = 0;
-    if(flags & O_CREAT) {
+    if(flags & (O_CREAT|O_TMPFILE)) {
 	va_list va;
 	va_start(va, flags);
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
     DIS_SYSCALL;
-    int ret = ev_open("open64", pathname, next(pathname, flags, mode));
+    int ret = ev_open("open64", pathname, real_open64(pathname, flags, mode));
     EN_SYSCALL;
     return ret;
 }
@@ -1914,7 +1918,7 @@ asm volatile (
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
     mode_t mode = 0;
-    if(flags & O_CREAT) {
+    if(flags & (O_CREAT|O_TMPFILE)) {
 	va_list va;
 	va_start(va, flags);
 	mode = va_arg(va, mode_t);
@@ -1928,18 +1932,15 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 
 int openat64(int dirfd, const char *pathname, int flags, ...)
 {
-    static int (*next)(int, const char *, int, ...) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "openat64");
     mode_t mode = 0;
-    if(flags & O_CREAT) {
+    if(flags & (O_CREAT|O_TMPFILE)) {
 	va_list va;
 	va_start(va, flags);
 	mode = va_arg(va, mode_t);
 	va_end(va);
     }
     DIS_SYSCALL;
-    int ret = ev_open("openat64", pathname, next(dirfd, pathname, flags, mode));
+    int ret = ev_open("openat64", pathname, real_openat64(dirfd, pathname, flags, mode));
     EN_SYSCALL;
     return ret;
 }
@@ -1985,10 +1986,7 @@ static void ev_dup(int fd, int nfd)
 
 int dup(int fd)
 {
-    static int (*next)(int) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "dup");
-    int nfd = next(fd);
+    int nfd = real_dup(fd);
     if(nfd < 0)
 	return nfd;
     ev_dup(fd, nfd);
@@ -1997,10 +1995,7 @@ int dup(int fd)
 
 int dup2(int fd, int nfd)
 {
-    static int (*next)(int, int) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "dup2");
-    nfd = next(fd, nfd);
+    nfd = real_dup2(fd, nfd);
     if(nfd < 0)
 	return nfd;
     ev_dup(fd, nfd);
@@ -2042,11 +2037,8 @@ int close(int fd)
 /* however, gcc uses read(), so only fclose() for now */
 FILE *fopen(const char *pathname, const char *mode)
 {
-    static FILE * (*next)(const char *, const char *) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "fopen");
     DIS_SYSCALL;
-    FILE *res = next(pathname, mode);
+    FILE *res = real_fopen(pathname, mode);
     EN_SYSCALL;
     if(!res)
 	return res;
@@ -2064,11 +2056,8 @@ FILE *fopen(const char *pathname, const char *mode)
 
 FILE *fopen64(const char *pathname, const char *mode)
 {
-    static FILE * (*next)(const char *, const char *) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "fopen64");
     DIS_SYSCALL;
-    FILE *res = next(pathname, mode);
+    FILE *res = real_fopen64(pathname, mode);
     EN_SYSCALL;
     if(!res)
 	return res;
@@ -2086,16 +2075,13 @@ FILE *fopen64(const char *pathname, const char *mode)
 
 int fclose(FILE *f)
 {
-    static int (*next)(FILE *) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "fclose");
     if(!f)
-	return next(f);
+	return real_fclose(f);
     int fd = fileno(f);
     if(fd < 0)
-	return next(f);
+	return real_fclose(f);
     ev_close(fd);
-    return next(f);
+    return real_fclose(f);
 }
 #endif
 
@@ -2196,9 +2182,6 @@ static void process_ev_read(struct input_event *ev, const struct evjrconf *sec,
 
 ssize_t read(int fd, void *buf, size_t count)
 {
-    static ssize_t (*next)(int, void *, size_t) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "read");
     /* this is complicated if the caller read less than even multiple of
      * sizeof(ev).  Need to force a read of even multiple from device and
      * keep the excess read for future returns */
@@ -2216,7 +2199,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	    return ret_adj;
 	buf += ret_adj;
     }
-    ssize_t ret = next(fd, buf, count);
+    ssize_t ret = real_read(fd, buf, count);
     if(ret < 0 || !cap)
 	return ret;
     const struct evjrconf *sec = cap->conf;
@@ -2229,7 +2212,7 @@ ssize_t read(int fd, void *buf, size_t count)
 	if(nread < ev_size) {
 	    int todo = cap->excess_read = ev_size - nread;
 	    while(todo > 0) {
-		int r = next(fd, cap->ebuf + cap->excess_read - todo, todo);
+		int r = real_read(fd, cap->ebuf + cap->excess_read - todo, todo);
 		if(r < 0 && errno != EINTR && errno != EAGAIN) {
 		    cap->excess_read = 0;
 		    return r;
@@ -2339,16 +2322,20 @@ int ioctl(int fd, unsigned long request, ...)
 {
     int ret, i, len;
     void *argp = NULL;
-    if(_IOC_SIZE(request)) {
+    // some ioctls need the extra arg even if no size is given.
+//    if(_IOC_SIZE(request)) {
 	va_list va;
 	va_start(va, request);
 	argp = va_arg(va, void *);
 	va_end(va);
-    }
+//    }
 
+    int en = errno;
     struct evfdcap *cap = cap_of(fd);
-    if(!cap)
+    if(!cap) {
+	errno = en;
 	return real_ioctl(fd, request, argp);
+    }
     const struct evjrconf *sec = cap->conf;
     if(!cap->is_js) {
 #define cpstr(n, s) do { \
@@ -2537,11 +2524,8 @@ int ioctl(int fd, unsigned long request, ...)
 /* that is, until/unless I can figure out how to do this safely/reliably */
 void *dlopen(const char *filename, int flags)
 {
-    static void *(*next)(const char *, int) = NULL;
-    if(!next)
-	next = dlsym(RTLD_NEXT, "dlopen");
     if(!filename)
-	return next(filename, flags);
+	return real_dlopen(filename, flags);
     const char *s = strrchr(filename, '/');
     if(!s++)
 	s = filename;
@@ -2558,8 +2542,8 @@ void *dlopen(const char *filename, int flags)
 //	return RTLD_NEXT;
 	/* doing an actual dlopen on NULL should work, but doesn't.  Don't know why. */
 	/* maybe I need to use some magic set of flags */
-//	return next(NULL, RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD);
+//	return real_dlopen(NULL, RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD);
     }
-    return next(filename, flags);
+    return real_dlopen(filename, flags);
 }
 #endif
