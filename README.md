@@ -27,20 +27,19 @@ distro, alternate package sites, or google it to obtain it; I use
 either gentoo's version or the latest git depending on my mood.  Use
 it.  It's the only reasonable way to manage more than 5-10 games on
 gog.  I currently patch mine to not change the shelf search order when
-updating the cache, to ignore SIGPIPE during cache updates, to make
-cache updates fast enough for my current limited Internet access to
-finish, and a way to check orphans and what would be downloaded while
-disconnected.  Look in the `lgogdownloader` subdirectory; it should be
-obvious which patch is which.  I may propose those upstream some day
-if I get things in order.  I also use two support scripts currently:
-`gog-checkpatch` was written before the March 2017 great gog renaming,
-when version numbers could be easily compared, so it no longer really
-works.  Its purpose is to detect if I have to install a patch to the
-latest full download. Currently, only Dragon Age: Origins Ultimate is
-detected by the script (I used to have more, but don't remember
-which).  `chkorph` adds full download directory orphan checks to
-check-orphans.  That way, when I hide a game or gog changes the game
-ID/name, I notice it.
+updating the cache, to make cache updates fast enough for my current
+limited Internet access to finish, and a way to check orphans and what
+would be downloaded while disconnected.  Look in the `lgogdownloader`
+subdirectory; it should be obvious which patch is which.  I may
+propose those upstream some day if I get things in order.  I also use
+two support scripts currently: `gog-checkpatch` was written before the
+March 2017 great gog renaming, when version numbers could be easily
+compared, so it no longer really works.  Its purpose is to detect if I
+have to install a patch to the latest full download. Currently, only
+Dragon Age: Origins Ultimate is detected by the script (I used to have
+more, but don't remember which).  `chkorph` adds full download
+directory orphan checks to check-orphans.  That way, when I hide a
+game or gog changes the game ID/name, I notice it.
 
 nonet
 =====
@@ -802,7 +801,7 @@ of my game installs.  When the number of games became large, and I
 also added more information to the file, I decided a database would be
 better.  To that end, I experimented with some tools and ended up
 making a Qt port of `grok`, available [here as well](
-https://bitbucket.org/darktjm/grok).  I have included my grok database
+https://github.com/darktjm/grok).  I have included my grok database
 definition and templates under the `grok` directory; if you want to
 use them or try them out, copy them to `~/.grok` first.  I have also
 included my current database, woefully in need of updating. (I am in
